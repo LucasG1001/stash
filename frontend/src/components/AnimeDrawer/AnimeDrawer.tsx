@@ -1,17 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import type { AnimeDetail } from "../../types/anime";
-import type { LibraryEntry, LibraryStatus } from "../../types/library";
-import { LIBRARY_STATUS_LABELS } from "../../types/library";
 import { fetchAnimeById } from "../../services/animeService";
 import styles from "./AnimeDrawer.module.css";
 
 interface AnimeDrawerProps {
   animeId: number;
-  libraryEntry: LibraryEntry | undefined;
   onClose: () => void;
-  onAdd: (anime: AnimeDetail, status: LibraryStatus) => void;
-  onUpdate: (id: string, data: { status?: LibraryStatus; score?: number; watchedEpisodes?: number }) => void;
-  onRemove: (id: string) => void;
 }
 
 function getStatusLabel(status: string): string {
@@ -33,12 +27,9 @@ function formatDate(timestamp: number): string {
   });
 }
 
-export function AnimeDrawer({ animeId, libraryEntry, onClose, onAdd, onUpdate, onRemove }: AnimeDrawerProps) {
+export function AnimeDrawer({ animeId, onClose }: AnimeDrawerProps) {
   const [anime, setAnime] = useState<AnimeDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<LibraryStatus>(libraryEntry?.status ?? "plan_to_watch");
-  const [score, setScore] = useState<number>(libraryEntry?.score ?? 0);
-  const [watchedEpisodes, setWatchedEpisodes] = useState<number>(libraryEntry?.watchedEpisodes ?? 0);
 
   useEffect(() => {
     setLoading(true);
@@ -46,14 +37,6 @@ export function AnimeDrawer({ animeId, libraryEntry, onClose, onAdd, onUpdate, o
       .then(setAnime)
       .finally(() => setLoading(false));
   }, [animeId]);
-
-  useEffect(() => {
-    if (libraryEntry) {
-      setStatus(libraryEntry.status);
-      setScore(libraryEntry.score);
-      setWatchedEpisodes(libraryEntry.watchedEpisodes);
-    }
-  }, [libraryEntry]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === "Escape") onClose();
@@ -67,23 +50,6 @@ export function AnimeDrawer({ animeId, libraryEntry, onClose, onAdd, onUpdate, o
       document.body.style.overflow = "";
     };
   }, [handleKeyDown]);
-
-  const handleStatusChange = (newStatus: LibraryStatus) => {
-    setStatus(newStatus);
-    if (libraryEntry) onUpdate(libraryEntry.id, { status: newStatus });
-  };
-
-  const handleScoreChange = (newScore: number) => {
-    const clamped = Math.min(10, Math.max(0, newScore));
-    setScore(clamped);
-    if (libraryEntry) onUpdate(libraryEntry.id, { score: clamped });
-  };
-
-  const handleEpisodesChange = (newEps: number) => {
-    const clamped = Math.max(0, newEps);
-    setWatchedEpisodes(clamped);
-    if (libraryEntry) onUpdate(libraryEntry.id, { watchedEpisodes: clamped });
-  };
 
   const streamingLinks = anime?.externalLinks.filter((l) => l.type === "STREAMING") ?? [];
 
@@ -201,67 +167,6 @@ export function AnimeDrawer({ animeId, libraryEntry, onClose, onAdd, onUpdate, o
                 </div>
               )}
 
-              <div className={styles.divider} />
-
-              <div>
-                <div className={styles.sectionTitle}>Minha Biblioteca</div>
-                <div className={styles.controls}>
-                  <div className={styles.controlRow}>
-                    <span className={styles.controlLabel}>Status</span>
-                    <select
-                      className={styles.controlSelect}
-                      value={status}
-                      onChange={(e) => handleStatusChange(e.target.value as LibraryStatus)}
-                    >
-                      {Object.entries(LIBRARY_STATUS_LABELS).map(([key, label]) => (
-                        <option key={key} value={key}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className={styles.controlRow}>
-                    <span className={styles.controlLabel}>Nota</span>
-                    <input
-                      className={styles.controlInput}
-                      type="number"
-                      min={0}
-                      max={10}
-                      step={0.5}
-                      value={score}
-                      onChange={(e) => handleScoreChange(parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-
-                  <div className={styles.controlRow}>
-                    <span className={styles.controlLabel}>Progresso</span>
-                    <div className={styles.progressWrapper}>
-                      <input
-                        className={styles.controlInput}
-                        type="number"
-                        min={0}
-                        value={watchedEpisodes}
-                        onChange={(e) => handleEpisodesChange(parseInt(e.target.value) || 0)}
-                      />
-                      <span>/ {anime.episodes ?? "?"}</span>
-                    </div>
-                  </div>
-
-                  <div className={styles.actionButtons}>
-                    {libraryEntry ? (
-                      <button className={styles.removeButton} onClick={() => onRemove(libraryEntry.id)}>
-                        Remover
-                      </button>
-                    ) : (
-                      <button
-                        className={styles.addLibraryButton}
-                        onClick={() => onAdd(anime, status)}
-                      >
-                        Adicionar à Biblioteca
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
             </div>
           </>
         ) : null}

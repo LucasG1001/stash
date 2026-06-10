@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
 import { AnimeGrid } from "../../components/AnimeGrid/AnimeGrid";
 import { AnimeDrawer } from "../../components/AnimeDrawer/AnimeDrawer";
+import { LibraryModal } from "../../components/LibraryModal/LibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
 import { useAnime } from "../../hooks/useAnime";
 import { useLibrary } from "../../hooks/useLibrary";
@@ -58,6 +59,7 @@ export function AnimePage() {
   const [activeTab, setActiveTab] = useState("seasons");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAnimeId, setSelectedAnimeId] = useState<number | null>(null);
+  const [selectedAnimeForModal, setSelectedAnimeForModal] = useState<AnimeCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<LibraryStatus | "all">("all");
   const [selectedSeasonObj, setSelectedSeasonObj] = useState(getCurrentRealSeason());
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -87,35 +89,29 @@ export function AnimePage() {
     setSelectedAnimeId(anime.id);
   };
 
-  const handleAddToLibrary = useCallback((anime: AnimeCard) => {
+  const handleOpenLibraryModal = useCallback((anime: AnimeCard) => {
+    setSelectedAnimeForModal(anime);
+  }, []);
+
+  const handleModalSave = useCallback((anime: AnimeCard, data: { status: LibraryStatus; score: number; watchedEpisodes: number }) => {
     const existing = library.findByAnilistId(anime.id);
-    if (existing) return;
-    library.add({
-      anilistId: anime.id,
-      title: anime.title,
-      coverImage: anime.coverImage,
-      status: "plan_to_watch",
-      totalEpisodes: anime.episodes ?? undefined,
-    });
+    if (existing) {
+      library.update(existing.id, data);
+    } else {
+      library.add({
+        anilistId: anime.id,
+        title: anime.title,
+        coverImage: anime.coverImage,
+        totalEpisodes: anime.episodes ?? undefined,
+        ...data,
+      });
+    }
+    setSelectedAnimeForModal(null);
   }, [library]);
 
-  const handleDrawerAdd = useCallback((anime: AnimeDetail, status: LibraryStatus) => {
-    library.add({
-      anilistId: anime.id,
-      title: anime.title,
-      coverImage: anime.coverImage,
-      status,
-      totalEpisodes: anime.episodes ?? undefined,
-    });
-  }, [library]);
-
-  const handleDrawerUpdate = useCallback((id: string, data: { status?: LibraryStatus; score?: number; watchedEpisodes?: number }) => {
-    library.update(id, data);
-  }, [library]);
-
-  const handleDrawerRemove = useCallback((id: string) => {
+  const handleModalRemove = useCallback((id: string) => {
     library.remove(id);
-    setSelectedAnimeId(null);
+    setSelectedAnimeForModal(null);
   }, [library]);
 
   const filteredLibraryEntries = libraryFilter === "all" 
@@ -202,7 +198,7 @@ export function AnimePage() {
         hasNextPage={activeTab !== "library" && hasNextPage}
         onLoadMore={loadMore}
         onCardClick={handleCardClick}
-        onAddToLibrary={handleAddToLibrary}
+        onAddToLibrary={handleOpenLibraryModal}
         getLibraryEntry={(id) => library.findByAnilistId(id)}
         emptyMessage={
           activeTab === "library"
@@ -216,11 +212,17 @@ export function AnimePage() {
       {selectedAnimeId !== null && (
         <AnimeDrawer
           animeId={selectedAnimeId}
-          libraryEntry={library.findByAnilistId(selectedAnimeId)}
           onClose={() => setSelectedAnimeId(null)}
-          onAdd={handleDrawerAdd}
-          onUpdate={handleDrawerUpdate}
-          onRemove={handleDrawerRemove}
+        />
+      )}
+
+      {selectedAnimeForModal !== null && (
+        <LibraryModal
+          anime={selectedAnimeForModal}
+          libraryEntry={library.findByAnilistId(selectedAnimeForModal.id)}
+          onClose={() => setSelectedAnimeForModal(null)}
+          onSave={handleModalSave}
+          onRemove={handleModalRemove}
         />
       )}
     </div>

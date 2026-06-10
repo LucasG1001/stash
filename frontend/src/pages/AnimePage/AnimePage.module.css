@@ -89,3 +89,8 @@
 .seasonSelect:hover, .seasonSelect:focus {
   border-color: var(--color-accent);
 }
+
+.seasonSelect option {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
