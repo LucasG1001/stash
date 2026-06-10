@@ -46,12 +46,10 @@ function getLibraryStatusColor(status?: string): string {
 
 export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView }: AnimeCardProps) {
   let episodeText = "";
-  if (libraryEntry) {
-    episodeText = `${libraryEntry.watchedEpisodes}/${libraryEntry.totalEpisodes ?? "?"}`;
+  if (anime.nextAiringEpisode) {
+    episodeText = `${anime.nextAiringEpisode.episode - 1}/${anime.episodes ?? "?"}`;
   } else {
-    episodeText = anime.nextAiringEpisode
-      ? `${anime.nextAiringEpisode.episode - 1}/${anime.episodes ?? "?"}`
-      : `${anime.episodes ?? "?"}`;
+    episodeText = `${anime.episodes ?? "?"}`;
   }
 
   return (
@@ -102,6 +100,20 @@ export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView }
             <span className={`${styles.statusBadge} ${getStatusStyle(anime.status)}`}>
               {getStatusLabel(anime.status)}
             </span>
+          )}
+          {isLibraryView && libraryEntry && (
+            <>
+              {libraryEntry.status === "watched" && libraryEntry.updatedAt && (
+                <span className={`${styles.statusBadge} ${styles.libraryDateBadge}`}>
+                  {new Date(libraryEntry.updatedAt).toLocaleDateString("pt-BR")}
+                </span>
+              )}
+              {libraryEntry.score > 0 && (
+                <span className={`${styles.statusBadge} ${styles.libraryScoreBadge}`}>
+                  ⭐ {libraryEntry.score}
+                </span>
+              )}
+            </>
           )}
         </div>
 

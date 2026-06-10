@@ -174,3 +174,15 @@
   border-radius: 50%;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
 }
+
+.libraryDateBadge {
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--color-success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.libraryScoreBadge {
+  background: rgba(0, 0, 0, 0.6);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
