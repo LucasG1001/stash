@@ -1,0 +1,47 @@
+# Stack do Media Tracker.
+# O "name" isola este projeto dos demais (volumes/redes/containers ficam
+# prefixados com "media-tracker", então o banco é exclusivo deste projeto).
+name: media-tracker
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      PORT: 3333
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        # As rotas do frontend já incluem o prefixo /api, então a base é a raiz.
+        # O nginx (dentro do container web) faz proxy de /api -> server:3333.
+        VITE_API_URL: "/"
+    restart: unless-stopped
+    ports:
+      # Única porta exposta ao host. Acesse via WireGuard: http://<ip-wg>:${WEB_PORT}
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:
