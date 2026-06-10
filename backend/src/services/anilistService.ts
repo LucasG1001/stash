@@ -151,8 +151,9 @@ export async function fetchAnimeById(id: number): Promise<AnimeDetail> {
 
   const data = await queryAniList<AniListSingleResponse>(query, { id });
   const anime = data.data.Media;
-  const ratingCount = anime.stats?.scoreDistribution.reduce((acc, curr) => acc + curr.amount, 0) || undefined;
-  
+  const total = anime.stats?.scoreDistribution?.reduce((acc, curr) => acc + curr.amount, 0);
+  const ratingCount = total !== undefined && total > 0 ? total : undefined;
+
   return {
     ...toAnimeDetail(anime),
     ratingCount,

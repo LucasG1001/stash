@@ -56,6 +56,14 @@ export async function update(id: string, data: UpdateLibraryEntry): Promise<Libr
   const values: unknown[] = [];
   let paramIndex = 1;
 
+  if (data.title !== undefined) {
+    fields.push(`title = $${paramIndex++}`);
+    values.push(data.title);
+  }
+  if (data.coverImage !== undefined) {
+    fields.push(`cover_image = $${paramIndex++}`);
+    values.push(data.coverImage);
+  }
   if (data.status !== undefined) {
     fields.push(`status = $${paramIndex++}`);
     values.push(data.status);

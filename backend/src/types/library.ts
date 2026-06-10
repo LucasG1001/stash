@@ -26,6 +26,8 @@ export interface CreateLibraryEntry {
 }
 
 export interface UpdateLibraryEntry {
+  title?: string;
+  coverImage?: string | null;
   status?: LibraryStatus;
   score?: number;
   watchedEpisodes?: number;

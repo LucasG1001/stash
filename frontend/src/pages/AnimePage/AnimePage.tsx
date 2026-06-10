@@ -11,42 +11,8 @@ import type { AnimeCard } from "../../types/anime";
 import type { AnimeDetail } from "../../types/anime";
 import type { LibraryStatus } from "../../types/library";
 import { LIBRARY_STATUS_LABELS } from "../../types/library";
+import { SEASON_PT, getCurrentRealSeason, getSurroundingSeasons } from "../../utils/season";
 import styles from "./AnimePage.module.css";
-
-const SEASON_PT: Record<string, string> = {
-  WINTER: "Inverno",
-  SPRING: "Primavera",
-  SUMMER: "Verão",
-  FALL: "Outono",
-};
-
-function getCurrentRealSeason(): { season: string; year: number } {
-  const now = new Date();
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
-  if (month >= 1 && month <= 3) return { season: "WINTER", year };
-  if (month >= 4 && month <= 6) return { season: "SPRING", year };
-  if (month >= 7 && month <= 9) return { season: "SUMMER", year };
-  return { season: "FALL", year };
-}
-
-const SEASONS_ORDER = ["WINTER", "SPRING", "SUMMER", "FALL"];
-
-function getSurroundingSeasons(season: string, year: number) {
-  const idx = SEASONS_ORDER.indexOf(season);
-  
-  const prevIdx = (idx - 1 + 4) % 4;
-  const prevYear = idx === 0 ? year - 1 : year;
-  
-  const nextIdx = (idx + 1) % 4;
-  const nextYear = idx === 3 ? year + 1 : year;
-
-  return [
-    { season: SEASONS_ORDER[prevIdx], year: prevYear },
-    { season, year },
-    { season: SEASONS_ORDER[nextIdx], year: nextYear },
-  ];
-}
 
 const TABS = [
   { id: "seasons", label: "Temporadas" },
@@ -54,6 +20,8 @@ const TABS = [
   { id: "search", label: "Buscar" },
   { id: "library", label: "Minha Biblioteca" },
 ];
+
+const STATUS_OPTIONS = Object.entries(LIBRARY_STATUS_LABELS) as [LibraryStatus, string][];
 
 export function AnimePage() {
   const [activeTab, setActiveTab] = useState("seasons");
@@ -65,7 +33,15 @@ export function AnimePage() {
   const debouncedSearch = useDebounce(searchQuery, 400);
 
   const { animes, loading, error, hasNextPage, loadSeason, loadPopular, search, loadMore } = useAnime();
-  const library = useLibrary();
+  const {
+    entries: libraryEntries,
+    loading: libraryLoading,
+    error: libraryError,
+    add: addEntry,
+    update: updateEntry,
+    remove: removeEntry,
+    findByAnilistId,
+  } = useLibrary();
 
   useEffect(() => {
     switch (activeTab) {
@@ -94,11 +70,11 @@ export function AnimePage() {
   }, []);
 
   const handleModalSave = useCallback((anime: AnimeCard, data: { status: LibraryStatus; score: number; watchedEpisodes: number }) => {
-    const existing = library.findByAnilistId(anime.id);
+    const existing = findByAnilistId(anime.id);
     if (existing) {
-      library.update(existing.id, { ...data, animeStatus: anime.status });
+      updateEntry(existing.id, { ...data, animeStatus: anime.status });
     } else {
-      library.add({
+      addEntry({
         anilistId: anime.id,
         title: anime.title,
         coverImage: anime.coverImage,
@@ -108,15 +84,15 @@ export function AnimePage() {
       });
     }
     setSelectedAnimeForModal(null);
-  }, [library]);
+  }, [findByAnilistId, updateEntry, addEntry]);
 
   const handleModalRemove = useCallback((id: string) => {
-    library.remove(id);
+    removeEntry(id);
     setSelectedAnimeForModal(null);
-  }, [library]);
+  }, [removeEntry]);
 
   const handleAnimeLoad = useCallback((animeDetail: AnimeDetail) => {
-    const entry = library.findByAnilistId(animeDetail.id);
+    const entry = findByAnilistId(animeDetail.id);
     if (entry) {
       const animeEpisodes = animeDetail.episodes ?? null;
       const needsUpdate =
@@ -126,21 +102,19 @@ export function AnimePage() {
         entry.coverImage !== animeDetail.coverImage;
 
       if (needsUpdate) {
-        // Atualiza silenciosamente os dados cacheados do anime
-        library.update(entry.id, {
-          status: entry.status,
-          score: entry.score,
-          watchedEpisodes: entry.watchedEpisodes,
+        updateEntry(entry.id, {
+          title: animeDetail.title,
+          coverImage: animeDetail.coverImage,
           totalEpisodes: animeEpisodes,
           animeStatus: animeDetail.status,
         });
       }
     }
-  }, [library]);
+  }, [findByAnilistId, updateEntry]);
 
-  const filteredLibraryEntries = libraryFilter === "all" 
-    ? library.entries 
-    : library.entries.filter(entry => entry.status === libraryFilter);
+  const filteredLibraryEntries = libraryFilter === "all"
+    ? libraryEntries
+    : libraryEntries.filter(entry => entry.status === libraryFilter);
 
   const libraryAnimeCards: AnimeCard[] = filteredLibraryEntries.map((entry) => ({
     id: entry.anilistId,
@@ -157,18 +131,20 @@ export function AnimePage() {
   }));
 
   const displayAnimes = activeTab === "library" ? libraryAnimeCards : animes;
-  const displayLoading = activeTab === "library" ? library.loading : loading;
-  const displayError = activeTab === "library" ? library.error : error;
+  const displayLoading = activeTab === "library" ? libraryLoading : loading;
+  const displayError = activeTab === "library" ? libraryError : error;
 
   return (
     <div className={styles.page}>
+      <h1 className={styles.srOnly}>Anime</h1>
+
       <div className={styles.tabWrapper}>
         <TabNav tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
 
       {activeTab === "seasons" && (
         <div className={styles.seasonSelectorWrapper}>
-          <select 
+          <select
             className={styles.seasonSelect}
             value={`${selectedSeasonObj.season}-${selectedSeasonObj.year}`}
             onChange={(e) => {
@@ -200,11 +176,11 @@ export function AnimePage() {
             >
               Todos
             </button>
-            {Object.entries(LIBRARY_STATUS_LABELS).map(([status, label]) => (
+            {STATUS_OPTIONS.map(([status, label]) => (
               <button
                 key={status}
                 className={`${styles.filterPill} ${libraryFilter === status ? styles.activeFilter : ""}`}
-                onClick={() => setLibraryFilter(status as LibraryStatus)}
+                onClick={() => setLibraryFilter(status)}
               >
                 {label}
               </button>
@@ -216,7 +192,7 @@ export function AnimePage() {
             onChange={(e) => setLibraryFilter(e.target.value as LibraryStatus | "all")}
           >
             <option value="all">Todos</option>
-            {Object.entries(LIBRARY_STATUS_LABELS).map(([status, label]) => (
+            {STATUS_OPTIONS.map(([status, label]) => (
               <option key={status} value={status}>
                 {label}
               </option>
@@ -233,7 +209,7 @@ export function AnimePage() {
         onLoadMore={loadMore}
         onCardClick={handleCardClick}
         onAddToLibrary={handleOpenLibraryModal}
-        getLibraryEntry={(id) => library.findByAnilistId(id)}
+        getLibraryEntry={(id) => findByAnilistId(id)}
         isLibraryView={activeTab === "library"}
         emptyMessage={
           activeTab === "library"
@@ -255,7 +231,7 @@ export function AnimePage() {
       {selectedAnimeForModal !== null && (
         <LibraryModal
           anime={selectedAnimeForModal}
-          libraryEntry={library.findByAnilistId(selectedAnimeForModal.id)}
+          libraryEntry={findByAnilistId(selectedAnimeForModal.id)}
           onClose={() => setSelectedAnimeForModal(null)}
           onSave={handleModalSave}
           onRemove={handleModalRemove}

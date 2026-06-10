@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { AnimeCard, AnimeListResponse } from "../types/anime";
 import { fetchSeason, fetchPopular, searchAnimes } from "../services/animeService";
 
@@ -7,57 +7,102 @@ interface UseAnimeReturn {
   loading: boolean;
   error: string | null;
   hasNextPage: boolean;
-  loadSeason: (season?: string, year?: number, page?: number) => Promise<void>;
-  loadPopular: (page?: number) => Promise<void>;
-  search: (query: string, page?: number) => Promise<void>;
+  loadSeason: (season?: string, year?: number) => Promise<void>;
+  loadPopular: () => Promise<void>;
+  search: (query: string) => Promise<void>;
   loadMore: () => Promise<void>;
 }
 
 type FetchFunction = (page?: number) => Promise<AnimeListResponse>;
+
+interface CacheEntry {
+  animes: AnimeCard[];
+  page: number;
+  hasNextPage: boolean;
+}
 
 export function useAnime(): UseAnimeReturn {
   const [animes, setAnimes] = useState<AnimeCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasNextPage, setHasNextPage] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [currentFetch, setCurrentFetch] = useState<FetchFunction | null>(null);
 
-  const executeFetch = useCallback(async (fetchFn: FetchFunction, page: number, append: boolean) => {
+  const cache = useRef<Map<string, CacheEntry>>(new Map());
+  const currentKey = useRef<string | null>(null);
+  const currentFetch = useRef<FetchFunction | null>(null);
+
+  const applyEntry = useCallback((entry: CacheEntry) => {
+    setAnimes(entry.animes);
+    setHasNextPage(entry.hasNextPage);
+  }, []);
+
+  const load = useCallback(async (key: string, fetchFn: FetchFunction) => {
+    currentKey.current = key;
+    currentFetch.current = fetchFn;
+
+    const cached = cache.current.get(key);
+    if (cached) {
+      setError(null);
+      setLoading(false);
+      applyEntry(cached);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchFn(page);
-      setAnimes((prev) => (append ? [...prev, ...result.animes] : result.animes));
-      setHasNextPage(result.pageInfo.hasNextPage);
-      setCurrentPage(page);
-      setCurrentFetch(() => fetchFn);
+      const result = await fetchFn(1);
+      const entry: CacheEntry = {
+        animes: result.animes,
+        page: 1,
+        hasNextPage: result.pageInfo.hasNextPage,
+      };
+      cache.current.set(key, entry);
+      if (currentKey.current === key) applyEntry(entry);
     } catch {
-      setError("Erro ao carregar animes. Tente novamente.");
+      if (currentKey.current === key) setError("Erro ao carregar animes. Tente novamente.");
     } finally {
-      setLoading(false);
+      if (currentKey.current === key) setLoading(false);
     }
-  }, []);
+  }, [applyEntry]);
 
-  const loadSeason = useCallback(async (season?: string, year?: number, page = 1) => {
-    const fetchFn = (p?: number) => fetchSeason(season, year, p);
-    await executeFetch(fetchFn, page, false);
-  }, [executeFetch]);
+  const loadSeason = useCallback((season?: string, year?: number) => {
+    return load(`season:${season ?? "current"}:${year ?? ""}`, (p) => fetchSeason(season, year, p));
+  }, [load]);
 
-  const loadPopular = useCallback(async (page = 1) => {
-    await executeFetch(fetchPopular, page, false);
-  }, [executeFetch]);
+  const loadPopular = useCallback(() => {
+    return load("popular", (p) => fetchPopular(p));
+  }, [load]);
 
-  const search = useCallback(async (query: string, page = 1) => {
-    const searchFn = (p?: number) => searchAnimes(query, p);
-    await executeFetch(searchFn, page, false);
-  }, [executeFetch]);
+  const search = useCallback((query: string) => {
+    return load(`search:${query}`, (p) => searchAnimes(query, p));
+  }, [load]);
 
   const loadMore = useCallback(async () => {
-    if (currentFetch && hasNextPage && !loading) {
-      await executeFetch(currentFetch, currentPage + 1, true);
+    const key = currentKey.current;
+    const fetchFn = currentFetch.current;
+    if (!key || !fetchFn || loading) return;
+
+    const entry = cache.current.get(key);
+    if (!entry || !entry.hasNextPage) return;
+
+    setLoading(true);
+    try {
+      const nextPage = entry.page + 1;
+      const result = await fetchFn(nextPage);
+      const updated: CacheEntry = {
+        animes: [...entry.animes, ...result.animes],
+        page: nextPage,
+        hasNextPage: result.pageInfo.hasNextPage,
+      };
+      cache.current.set(key, updated);
+      if (currentKey.current === key) applyEntry(updated);
+    } catch {
+      if (currentKey.current === key) setError("Erro ao carregar animes. Tente novamente.");
+    } finally {
+      if (currentKey.current === key) setLoading(false);
     }
-  }, [currentFetch, hasNextPage, loading, currentPage, executeFetch]);
+  }, [loading, applyEntry]);
 
   return { animes, loading, error, hasNextPage, loadSeason, loadPopular, search, loadMore };
 }

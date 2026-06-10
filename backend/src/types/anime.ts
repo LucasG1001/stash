@@ -48,8 +48,8 @@ export interface AniListAnime {
   nextAiringEpisode: AniListNextAiringEpisode | null;
   externalLinks: AniListExternalLink[];
   stats?: {
-    scoreDistribution: { amount: number }[];
-  };
+    scoreDistribution: { amount: number }[] | null;
+  } | null;
 }
 
 export interface AniListPageInfo {

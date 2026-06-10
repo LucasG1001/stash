@@ -35,9 +35,9 @@ export async function create(req: Request, res: Response): Promise<void> {
 export async function update(req: Request, res: Response): Promise<void> {
   try {
     const id = String(req.params.id);
-    const { status, score, watchedEpisodes, totalEpisodes, animeStatus } = req.body;
+    const { title, coverImage, status, score, watchedEpisodes, totalEpisodes, animeStatus } = req.body;
 
-    const entry = await libraryModel.update(id, { status, score, watchedEpisodes, totalEpisodes, animeStatus });
+    const entry = await libraryModel.update(id, { title, coverImage, status, score, watchedEpisodes, totalEpisodes, animeStatus });
     if (!entry) {
       res.status(404).json({ error: "Anime não encontrado na biblioteca." });
       return;
