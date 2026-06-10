@@ -1,0 +1,26 @@
+.page {
+  padding: var(--spacing-2xl);
+}
+
+.header {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.025em;
+  margin-bottom: var(--spacing-base);
+  background: linear-gradient(135deg, var(--color-text-primary), var(--color-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tabWrapper {
+  margin-bottom: var(--spacing-xl);
+}
+
+.searchWrapper {
+  margin-bottom: var(--spacing-xl);
+}
