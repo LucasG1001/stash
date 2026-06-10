@@ -7,6 +7,7 @@ interface AnimeCardProps {
   libraryEntry?: LibraryEntry;
   onClick: () => void;
   onAdd: (e: React.MouseEvent) => void;
+  isLibraryView?: boolean;
 }
 
 function getStatusStyle(status: string): string {
@@ -43,10 +44,15 @@ function getLibraryStatusColor(status?: string): string {
   }
 }
 
-export function AnimeCard({ anime, libraryEntry, onClick, onAdd }: AnimeCardProps) {
-  const episodeText = anime.nextAiringEpisode
-    ? `${anime.nextAiringEpisode.episode - 1}/${anime.episodes ?? "?"}`
-    : `${anime.episodes ?? "?"}`;
+export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView }: AnimeCardProps) {
+  let episodeText = "";
+  if (libraryEntry) {
+    episodeText = `${libraryEntry.watchedEpisodes}/${libraryEntry.totalEpisodes ?? "?"}`;
+  } else {
+    episodeText = anime.nextAiringEpisode
+      ? `${anime.nextAiringEpisode.episode - 1}/${anime.episodes ?? "?"}`
+      : `${anime.episodes ?? "?"}`;
+  }
 
   return (
     <div className={styles.card} onClick={onClick} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onClick()}>
@@ -55,24 +61,26 @@ export function AnimeCard({ anime, libraryEntry, onClick, onAdd }: AnimeCardProp
 
         <div className={styles.overlay}>
           <div className={styles.title}>{anime.title}</div>
-          <div className={styles.meta}>
-            <span className={styles.episodes}>📺 {episodeText} ep</span>
-            {anime.streamingLinks.length > 0 && (
-              <div className={styles.streamingIcons}>
-                {anime.streamingLinks.slice(0, 3).map((link) =>
-                  link.icon ? (
-                    <img
-                      key={link.site}
-                      className={styles.streamingIcon}
-                      src={link.icon}
-                      alt={link.site}
-                      title={link.site}
-                    />
-                  ) : null
-                )}
-              </div>
-            )}
-          </div>
+          {!isLibraryView && (
+            <div className={styles.meta}>
+              <span className={styles.episodes}>📺 {episodeText} ep</span>
+              {anime.streamingLinks.length > 0 && (
+                <div className={styles.streamingIcons}>
+                  {anime.streamingLinks.slice(0, 3).map((link) =>
+                    link.icon ? (
+                      <img
+                        key={link.site}
+                        className={styles.streamingIcon}
+                        src={link.icon}
+                        alt={link.site}
+                        title={link.site}
+                      />
+                    ) : null
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className={styles.topBadges}>
@@ -90,12 +98,14 @@ export function AnimeCard({ anime, libraryEntry, onClick, onAdd }: AnimeCardProp
               "+"
             )}
           </button>
-          <span className={`${styles.statusBadge} ${getStatusStyle(anime.status)}`}>
-            {getStatusLabel(anime.status)}
-          </span>
+          {!isLibraryView && (
+            <span className={`${styles.statusBadge} ${getStatusStyle(anime.status)}`}>
+              {getStatusLabel(anime.status)}
+            </span>
+          )}
         </div>
 
-        {anime.averageScore && (
+        {!isLibraryView && anime.averageScore && (
           <span className={styles.scoreBadge} style={{ color: getScoreColor(anime.averageScore) }}>
             ★ {(anime.averageScore / 10).toFixed(1)}
           </span>

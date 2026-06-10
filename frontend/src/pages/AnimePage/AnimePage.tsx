@@ -96,13 +96,14 @@ export function AnimePage() {
   const handleModalSave = useCallback((anime: AnimeCard, data: { status: LibraryStatus; score: number; watchedEpisodes: number }) => {
     const existing = library.findByAnilistId(anime.id);
     if (existing) {
-      library.update(existing.id, data);
+      library.update(existing.id, { ...data, animeStatus: anime.status });
     } else {
       library.add({
         anilistId: anime.id,
         title: anime.title,
         coverImage: anime.coverImage,
         totalEpisodes: anime.episodes ?? undefined,
+        animeStatus: anime.status,
         ...data,
       });
     }
@@ -114,6 +115,29 @@ export function AnimePage() {
     setSelectedAnimeForModal(null);
   }, [library]);
 
+  const handleAnimeLoad = useCallback((animeDetail: AnimeDetail) => {
+    const entry = library.findByAnilistId(animeDetail.id);
+    if (entry) {
+      const animeEpisodes = animeDetail.episodes ?? null;
+      const needsUpdate =
+        entry.animeStatus !== animeDetail.status ||
+        entry.totalEpisodes !== animeEpisodes ||
+        entry.title !== animeDetail.title ||
+        entry.coverImage !== animeDetail.coverImage;
+
+      if (needsUpdate) {
+        // Atualiza silenciosamente os dados cacheados do anime
+        library.update(entry.id, {
+          status: entry.status,
+          score: entry.score,
+          watchedEpisodes: entry.watchedEpisodes,
+          totalEpisodes: animeEpisodes,
+          animeStatus: animeDetail.status,
+        });
+      }
+    }
+  }, [library]);
+
   const filteredLibraryEntries = libraryFilter === "all" 
     ? library.entries 
     : library.entries.filter(entry => entry.status === libraryFilter);
@@ -122,7 +146,7 @@ export function AnimePage() {
     id: entry.anilistId,
     title: entry.title,
     coverImage: entry.coverImage ?? "",
-    status: "FINISHED",
+    status: entry.animeStatus || "FINISHED",
     episodes: entry.totalEpisodes,
     averageScore: null,
     season: null,
@@ -200,6 +224,7 @@ export function AnimePage() {
         onCardClick={handleCardClick}
         onAddToLibrary={handleOpenLibraryModal}
         getLibraryEntry={(id) => library.findByAnilistId(id)}
+        isLibraryView={activeTab === "library"}
         emptyMessage={
           activeTab === "library"
             ? "Sua biblioteca está vazia. Adicione animes para começar!"
@@ -213,6 +238,7 @@ export function AnimePage() {
         <AnimeDrawer
           animeId={selectedAnimeId}
           onClose={() => setSelectedAnimeId(null)}
+          onAnimeLoad={handleAnimeLoad}
         />
       )}
 

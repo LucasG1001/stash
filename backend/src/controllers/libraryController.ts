@@ -12,7 +12,7 @@ export async function getAll(_req: Request, res: Response): Promise<void> {
 
 export async function create(req: Request, res: Response): Promise<void> {
   try {
-    const { anilistId, title, coverImage, status, score, watchedEpisodes, totalEpisodes } = req.body;
+    const { anilistId, title, coverImage, status, score, watchedEpisodes, totalEpisodes, animeStatus } = req.body;
 
     if (!anilistId || !title) {
       res.status(400).json({ error: "anilistId e title são obrigatórios." });
@@ -25,7 +25,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const entry = await libraryModel.create({ anilistId, title, coverImage, status, score, watchedEpisodes, totalEpisodes });
+    const entry = await libraryModel.create({ anilistId, title, coverImage, status, score, watchedEpisodes, totalEpisodes, animeStatus });
     res.status(201).json(entry);
   } catch {
     res.status(500).json({ error: "Erro ao adicionar anime à biblioteca." });
@@ -35,9 +35,9 @@ export async function create(req: Request, res: Response): Promise<void> {
 export async function update(req: Request, res: Response): Promise<void> {
   try {
     const id = String(req.params.id);
-    const { status, score, watchedEpisodes, totalEpisodes } = req.body;
+    const { status, score, watchedEpisodes, totalEpisodes, animeStatus } = req.body;
 
-    const entry = await libraryModel.update(id, { status, score, watchedEpisodes, totalEpisodes });
+    const entry = await libraryModel.update(id, { status, score, watchedEpisodes, totalEpisodes, animeStatus });
     if (!entry) {
       res.status(404).json({ error: "Anime não encontrado na biblioteca." });
       return;

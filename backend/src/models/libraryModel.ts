@@ -11,6 +11,7 @@ function toLibraryEntry(row: LibraryRow): LibraryEntry {
     score: parseFloat(row.score),
     watchedEpisodes: row.watched_episodes,
     totalEpisodes: row.total_episodes,
+    animeStatus: row.anime_status,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -33,8 +34,8 @@ export async function findByAnilistId(anilistId: number): Promise<LibraryEntry |
 
 export async function create(entry: CreateLibraryEntry): Promise<LibraryEntry> {
   const result = await pool.query<LibraryRow>(
-    `INSERT INTO anime_library (anilist_id, title, cover_image, status, score, watched_episodes, total_episodes)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO anime_library (anilist_id, title, cover_image, status, score, watched_episodes, total_episodes, anime_status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING *`,
     [
       entry.anilistId,
@@ -44,6 +45,7 @@ export async function create(entry: CreateLibraryEntry): Promise<LibraryEntry> {
       entry.score ?? 0,
       entry.watchedEpisodes ?? 0,
       entry.totalEpisodes ?? null,
+      entry.animeStatus ?? "FINISHED",
     ]
   );
   return toLibraryEntry(result.rows[0]);
@@ -69,6 +71,10 @@ export async function update(id: string, data: UpdateLibraryEntry): Promise<Libr
   if (data.totalEpisodes !== undefined) {
     fields.push(`total_episodes = $${paramIndex++}`);
     values.push(data.totalEpisodes);
+  }
+  if (data.animeStatus !== undefined) {
+    fields.push(`anime_status = $${paramIndex++}`);
+    values.push(data.animeStatus);
   }
 
   if (fields.length === 0) return findById(id);

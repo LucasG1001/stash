@@ -9,6 +9,7 @@ export interface LibraryEntry {
   score: number;
   watchedEpisodes: number;
   totalEpisodes: number | null;
+  animeStatus?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -21,6 +22,7 @@ export interface CreateLibraryEntry {
   score?: number;
   watchedEpisodes?: number;
   totalEpisodes?: number | null;
+  animeStatus?: string;
 }
 
 export interface UpdateLibraryEntry {
@@ -28,6 +30,7 @@ export interface UpdateLibraryEntry {
   score?: number;
   watchedEpisodes?: number;
   totalEpisodes?: number | null;
+  animeStatus?: string;
 }
 
 export const LIBRARY_STATUS_LABELS: Record<LibraryStatus, string> = {

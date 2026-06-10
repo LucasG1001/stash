@@ -6,6 +6,7 @@ import styles from "./AnimeDrawer.module.css";
 interface AnimeDrawerProps {
   animeId: number;
   onClose: () => void;
+  onAnimeLoad?: (anime: AnimeDetail) => void;
 }
 
 function getStatusLabel(status: string): string {
@@ -27,15 +28,27 @@ function formatDate(timestamp: number): string {
   });
 }
 
-export function AnimeDrawer({ animeId, onClose }: AnimeDrawerProps) {
+export function AnimeDrawer({ animeId, onClose, onAnimeLoad }: AnimeDrawerProps) {
   const [anime, setAnime] = useState<AnimeDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     setLoading(true);
     fetchAnimeById(animeId)
-      .then(setAnime)
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (!active) return;
+        setAnime(data);
+        onAnimeLoad?.(data);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+      
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animeId]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {

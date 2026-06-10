@@ -7,6 +7,7 @@ export interface LibraryEntry {
   score: number;
   watchedEpisodes: number;
   totalEpisodes: number | null;
+  animeStatus: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -21,6 +22,7 @@ export interface CreateLibraryEntry {
   score?: number;
   watchedEpisodes?: number;
   totalEpisodes?: number | null;
+  animeStatus?: string;
 }
 
 export interface UpdateLibraryEntry {
@@ -28,6 +30,7 @@ export interface UpdateLibraryEntry {
   score?: number;
   watchedEpisodes?: number;
   totalEpisodes?: number | null;
+  animeStatus?: string;
 }
 
 export interface LibraryRow {
@@ -39,6 +42,7 @@ export interface LibraryRow {
   score: string;
   watched_episodes: number;
   total_episodes: number | null;
+  anime_status: string;
   created_at: string;
   updated_at: string;
 }
