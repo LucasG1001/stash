@@ -140,10 +140,21 @@ export async function fetchAnimeById(id: number): Promise<AnimeDetail> {
     query ($id: Int) {
       Media(id: $id, type: ANIME) {
         ${MEDIA_FIELDS}
+        stats {
+          scoreDistribution {
+            amount
+          }
+        }
       }
     }
   `;
 
   const data = await queryAniList<AniListSingleResponse>(query, { id });
-  return toAnimeDetail(data.data.Media);
+  const anime = data.data.Media;
+  const ratingCount = anime.stats?.scoreDistribution.reduce((acc, curr) => acc + curr.amount, 0) || undefined;
+  
+  return {
+    ...toAnimeDetail(anime),
+    ratingCount,
+  };
 }

@@ -47,6 +47,9 @@ export interface AniListAnime {
   trailer: AniListTrailer | null;
   nextAiringEpisode: AniListNextAiringEpisode | null;
   externalLinks: AniListExternalLink[];
+  stats?: {
+    scoreDistribution: { amount: number }[];
+  };
 }
 
 export interface AniListPageInfo {
@@ -93,4 +96,5 @@ export interface AnimeDetail extends AnimeCard {
   studios: string[];
   trailer: AniListTrailer | null;
   externalLinks: AniListExternalLink[];
+  ratingCount?: number;
 }

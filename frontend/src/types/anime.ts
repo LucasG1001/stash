@@ -47,6 +47,7 @@ export interface AnimeDetail extends AnimeCard {
   studios: string[];
   trailer: AnimeTrailer | null;
   externalLinks: AnimeExternalLink[];
+  ratingCount?: number;
 }
 
 export interface PageInfo {

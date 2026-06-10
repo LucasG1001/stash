@@ -124,7 +124,9 @@ export function AnimeDrawer({ animeId, onClose, onAnimeLoad }: AnimeDrawerProps)
                 <div className={styles.infoItem}>
                   <span className={styles.infoLabel}>Nota Média</span>
                   <span className={styles.infoValue}>
-                    {anime.averageScore ? `★ ${(anime.averageScore / 10).toFixed(1)}` : "N/A"}
+                    {anime.averageScore 
+                      ? `★ ${(anime.averageScore / 10).toFixed(1)}${anime.ratingCount ? ` (${anime.ratingCount.toLocaleString('pt-BR')})` : ''}` 
+                      : "N/A"}
                   </span>
                 </div>
                 <div className={styles.infoItem}>
