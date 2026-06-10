@@ -4,6 +4,20 @@
   gap: var(--spacing-xl);
 }
 
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--spacing-base);
+  }
+}
+
+@media (max-width: 420px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+  }
+}
+
 .emptyState {
   grid-column: 1 / -1;
   text-align: center;

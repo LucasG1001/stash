@@ -193,21 +193,35 @@ export function AnimePage() {
 
       {activeTab === "library" && (
         <div className={styles.filterWrapper}>
-          <button 
-            className={`${styles.filterPill} ${libraryFilter === "all" ? styles.activeFilter : ""}`}
-            onClick={() => setLibraryFilter("all")}
-          >
-            Todos
-          </button>
-          {Object.entries(LIBRARY_STATUS_LABELS).map(([status, label]) => (
+          <div className={styles.filterPills}>
             <button
-              key={status}
-              className={`${styles.filterPill} ${libraryFilter === status ? styles.activeFilter : ""}`}
-              onClick={() => setLibraryFilter(status as LibraryStatus)}
+              className={`${styles.filterPill} ${libraryFilter === "all" ? styles.activeFilter : ""}`}
+              onClick={() => setLibraryFilter("all")}
             >
-              {label}
+              Todos
             </button>
-          ))}
+            {Object.entries(LIBRARY_STATUS_LABELS).map(([status, label]) => (
+              <button
+                key={status}
+                className={`${styles.filterPill} ${libraryFilter === status ? styles.activeFilter : ""}`}
+                onClick={() => setLibraryFilter(status as LibraryStatus)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <select
+            className={`${styles.seasonSelect} ${styles.filterSelect}`}
+            value={libraryFilter}
+            onChange={(e) => setLibraryFilter(e.target.value as LibraryStatus | "all")}
+          >
+            <option value="all">Todos</option>
+            {Object.entries(LIBRARY_STATUS_LABELS).map(([status, label]) => (
+              <option key={status} value={status}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 

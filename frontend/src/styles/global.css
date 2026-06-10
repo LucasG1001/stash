@@ -87,6 +87,9 @@
   --sidebar-width: 240px;
   --sidebar-collapsed: 72px;
   --drawer-width: 520px;
+  --mobile-nav-height: 64px;
+
+  --breakpoint-mobile: 768px;
 }
 
 *, *::before, *::after {

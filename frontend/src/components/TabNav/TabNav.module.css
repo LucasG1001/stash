@@ -31,3 +31,94 @@
   background: var(--color-bg-tertiary);
   box-shadow: var(--shadow-sm);
 }
+
+.mobileMenu {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .tabNav {
+    display: none;
+  }
+
+  .mobileMenu {
+    display: block;
+    position: relative;
+  }
+
+  .mobileTrigger {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-base);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+  }
+
+  .hamburgerIcon {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 18px;
+    flex-shrink: 0;
+  }
+
+  .hamburgerIcon span {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background: var(--color-accent);
+    border-radius: var(--radius-full);
+  }
+
+  .mobileTriggerLabel {
+    flex: 1;
+    text-align: left;
+  }
+
+  .mobileDropdown {
+    position: absolute;
+    top: calc(100% + var(--spacing-xs));
+    left: 0;
+    right: 0;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--spacing-xs);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 50;
+    animation: fadeIn var(--transition-fast) ease;
+  }
+
+  .mobileDropdownItem {
+    text-align: left;
+    padding: var(--spacing-md) var(--spacing-base);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border: none;
+    background: none;
+  }
+
+  .mobileDropdownItem:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-text-primary);
+  }
+
+  .mobileDropdownItemActive {
+    color: var(--color-accent);
+    background: var(--color-accent-subtle);
+  }
+}

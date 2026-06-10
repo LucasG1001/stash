@@ -311,6 +311,35 @@
   color: var(--color-text-tertiary);
 }
 
+@media (max-width: 600px) {
+  .drawer {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .banner {
+    height: 160px;
+  }
+
+  .header {
+    padding: 0 var(--spacing-base);
+  }
+
+  .content {
+    padding: var(--spacing-base);
+    gap: var(--spacing-base);
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .actionButtons {
+    flex-wrap: wrap;
+  }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
