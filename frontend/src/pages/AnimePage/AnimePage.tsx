@@ -162,10 +162,6 @@ export function AnimePage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Anime</h1>
-      </div>
-
       <div className={styles.tabWrapper}>
         <TabNav tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
