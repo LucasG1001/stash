@@ -124,7 +124,7 @@ export function AnimePage() {
         onLoadMore={loadMore}
         onCardClick={handleCardClick}
         onAddToLibrary={handleAddToLibrary}
-        isInLibrary={(id) => !!library.findByAnilistId(id)}
+        getLibraryEntry={(id) => library.findByAnilistId(id)}
         emptyMessage={
           activeTab === "library"
             ? "Sua biblioteca está vazia. Adicione animes para começar!"

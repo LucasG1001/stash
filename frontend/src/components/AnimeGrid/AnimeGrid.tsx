@@ -1,4 +1,5 @@
 import type { AnimeCard as AnimeCardType } from "../../types/anime";
+import type { LibraryEntry } from "../../types/library";
 import { AnimeCard } from "../AnimeCard/AnimeCard";
 import { LoadingSkeleton } from "../LoadingSkeleton/LoadingSkeleton";
 import styles from "./AnimeGrid.module.css";
@@ -11,7 +12,7 @@ interface AnimeGridProps {
   onLoadMore: () => void;
   onCardClick: (anime: AnimeCardType) => void;
   onAddToLibrary: (anime: AnimeCardType) => void;
-  isInLibrary: (anilistId: number) => boolean;
+  getLibraryEntry: (anilistId: number) => LibraryEntry | undefined;
   emptyMessage?: string;
 }
 
@@ -23,7 +24,7 @@ export function AnimeGrid({
   onLoadMore,
   onCardClick,
   onAddToLibrary,
-  isInLibrary,
+  getLibraryEntry,
   emptyMessage = "Nenhum anime encontrado.",
 }: AnimeGridProps) {
   if (loading && animes.length === 0) {
@@ -60,7 +61,7 @@ export function AnimeGrid({
         <AnimeCard
           key={anime.id}
           anime={anime}
-          inLibrary={isInLibrary(anime.id)}
+          libraryEntry={getLibraryEntry(anime.id)}
           onClick={() => onCardClick(anime)}
           onAdd={() => onAddToLibrary(anime)}
         />

@@ -1,9 +1,10 @@
 import type { AnimeCard as AnimeCardType } from "../../types/anime";
+import type { LibraryEntry } from "../../types/library";
 import styles from "./AnimeCard.module.css";
 
 interface AnimeCardProps {
   anime: AnimeCardType;
-  inLibrary: boolean;
+  libraryEntry?: LibraryEntry;
   onClick: () => void;
   onAdd: (e: React.MouseEvent) => void;
 }
@@ -32,7 +33,17 @@ function getScoreColor(score: number): string {
   return "var(--color-score-low)";
 }
 
-export function AnimeCard({ anime, inLibrary, onClick, onAdd }: AnimeCardProps) {
+function getLibraryStatusColor(status?: string): string {
+  switch (status) {
+    case "plan_to_watch": return "var(--color-text-secondary)";
+    case "watching": return "var(--color-info)";
+    case "watched": return "var(--color-success)";
+    case "dropped": return "var(--color-error)";
+    default: return "var(--color-text-secondary)";
+  }
+}
+
+export function AnimeCard({ anime, libraryEntry, onClick, onAdd }: AnimeCardProps) {
   const episodeText = anime.nextAiringEpisode
     ? `${anime.nextAiringEpisode.episode - 1}/${anime.episodes ?? "?"}`
     : `${anime.episodes ?? "?"}`;
@@ -64,9 +75,25 @@ export function AnimeCard({ anime, inLibrary, onClick, onAdd }: AnimeCardProps) 
           </div>
         </div>
 
-        <span className={`${styles.statusBadge} ${getStatusStyle(anime.status)}`}>
-          {getStatusLabel(anime.status)}
-        </span>
+        <div className={styles.topBadges}>
+          <button
+            className={`${styles.addButton} ${libraryEntry ? styles.inLibrary : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdd(e);
+            }}
+            title={libraryEntry ? "Na biblioteca" : "Adicionar à biblioteca"}
+          >
+            {libraryEntry ? (
+              <span className={styles.statusDot} style={{ backgroundColor: getLibraryStatusColor(libraryEntry.status) }} />
+            ) : (
+              "+"
+            )}
+          </button>
+          <span className={`${styles.statusBadge} ${getStatusStyle(anime.status)}`}>
+            {getStatusLabel(anime.status)}
+          </span>
+        </div>
 
         {anime.averageScore && (
           <span className={styles.scoreBadge} style={{ color: getScoreColor(anime.averageScore) }}>
@@ -74,17 +101,6 @@ export function AnimeCard({ anime, inLibrary, onClick, onAdd }: AnimeCardProps) 
           </span>
         )}
       </div>
-
-      <button
-        className={`${styles.addButton} ${inLibrary ? styles.inLibrary : ""}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          onAdd(e);
-        }}
-        title={inLibrary ? "Na biblioteca" : "Adicionar à biblioteca"}
-      >
-        {inLibrary ? "✓" : "+"}
-      </button>
     </div>
   );
 }
