@@ -1,14 +1,13 @@
 import { useState, useCallback } from "react";
 import type { AnimeCard, AnimeListResponse } from "../types/anime";
-import { fetchCurrentSeason, fetchNextSeason, fetchPopular, searchAnimes } from "../services/animeService";
+import { fetchSeason, fetchPopular, searchAnimes } from "../services/animeService";
 
 interface UseAnimeReturn {
   animes: AnimeCard[];
   loading: boolean;
   error: string | null;
   hasNextPage: boolean;
-  loadCurrentSeason: (page?: number) => Promise<void>;
-  loadNextSeason: (page?: number) => Promise<void>;
+  loadSeason: (season?: string, year?: number, page?: number) => Promise<void>;
   loadPopular: (page?: number) => Promise<void>;
   search: (query: string, page?: number) => Promise<void>;
   loadMore: () => Promise<void>;
@@ -40,12 +39,9 @@ export function useAnime(): UseAnimeReturn {
     }
   }, []);
 
-  const loadCurrentSeason = useCallback(async (page = 1) => {
-    await executeFetch(fetchCurrentSeason, page, false);
-  }, [executeFetch]);
-
-  const loadNextSeason = useCallback(async (page = 1) => {
-    await executeFetch(fetchNextSeason, page, false);
+  const loadSeason = useCallback(async (season?: string, year?: number, page = 1) => {
+    const fetchFn = (p?: number) => fetchSeason(season, year, p);
+    await executeFetch(fetchFn, page, false);
   }, [executeFetch]);
 
   const loadPopular = useCallback(async (page = 1) => {
@@ -63,5 +59,5 @@ export function useAnime(): UseAnimeReturn {
     }
   }, [currentFetch, hasNextPage, loading, currentPage, executeFetch]);
 
-  return { animes, loading, error, hasNextPage, loadCurrentSeason, loadNextSeason, loadPopular, search, loadMore };
+  return { animes, loading, error, hasNextPage, loadSeason, loadPopular, search, loadMore };
 }

@@ -12,31 +12,65 @@ import type { LibraryStatus } from "../../types/library";
 import { LIBRARY_STATUS_LABELS } from "../../types/library";
 import styles from "./AnimePage.module.css";
 
+const SEASON_PT: Record<string, string> = {
+  WINTER: "Inverno",
+  SPRING: "Primavera",
+  SUMMER: "Verão",
+  FALL: "Outono",
+};
+
+function getCurrentRealSeason(): { season: string; year: number } {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  if (month >= 1 && month <= 3) return { season: "WINTER", year };
+  if (month >= 4 && month <= 6) return { season: "SPRING", year };
+  if (month >= 7 && month <= 9) return { season: "SUMMER", year };
+  return { season: "FALL", year };
+}
+
+const SEASONS_ORDER = ["WINTER", "SPRING", "SUMMER", "FALL"];
+
+function getSurroundingSeasons(season: string, year: number) {
+  const idx = SEASONS_ORDER.indexOf(season);
+  
+  const prevIdx = (idx - 1 + 4) % 4;
+  const prevYear = idx === 0 ? year - 1 : year;
+  
+  const nextIdx = (idx + 1) % 4;
+  const nextYear = idx === 3 ? year + 1 : year;
+
+  return [
+    { season: SEASONS_ORDER[prevIdx], year: prevYear },
+    { season, year },
+    { season: SEASONS_ORDER[nextIdx], year: nextYear },
+  ];
+}
+
 const TABS = [
-  { id: "current", label: "Temporada Atual" },
-  { id: "next", label: "Próxima Temporada" },
+  { id: "seasons", label: "Temporadas" },
   { id: "popular", label: "Mais Populares" },
   { id: "search", label: "Buscar" },
   { id: "library", label: "Minha Biblioteca" },
 ];
 
 export function AnimePage() {
-  const [activeTab, setActiveTab] = useState("current");
+  const [activeTab, setActiveTab] = useState("seasons");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAnimeId, setSelectedAnimeId] = useState<number | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<LibraryStatus | "all">("all");
+  const [selectedSeasonObj, setSelectedSeasonObj] = useState(getCurrentRealSeason());
   const debouncedSearch = useDebounce(searchQuery, 400);
 
-  const { animes, loading, error, hasNextPage, loadCurrentSeason, loadNextSeason, loadPopular, search, loadMore } = useAnime();
+  const { animes, loading, error, hasNextPage, loadSeason, loadPopular, search, loadMore } = useAnime();
   const library = useLibrary();
 
   useEffect(() => {
     switch (activeTab) {
-      case "current": loadCurrentSeason(); break;
-      case "next": loadNextSeason(); break;
+      case "seasons": loadSeason(selectedSeasonObj.season, selectedSeasonObj.year); break;
       case "popular": loadPopular(); break;
     }
-  }, [activeTab, loadCurrentSeason, loadNextSeason, loadPopular]);
+  }, [activeTab, selectedSeasonObj, loadSeason, loadPopular]);
 
   useEffect(() => {
     if (activeTab === "search" && debouncedSearch.length >= 2) {
@@ -115,6 +149,25 @@ export function AnimePage() {
       <div className={styles.tabWrapper}>
         <TabNav tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
+
+      {activeTab === "seasons" && (
+        <div className={styles.seasonSelectorWrapper}>
+          <select 
+            className={styles.seasonSelect}
+            value={`${selectedSeasonObj.season}-${selectedSeasonObj.year}`}
+            onChange={(e) => {
+              const [s, y] = e.target.value.split("-");
+              setSelectedSeasonObj({ season: s, year: parseInt(y) });
+            }}
+          >
+            {getSurroundingSeasons(selectedSeasonObj.season, selectedSeasonObj.year).map(s => (
+              <option key={`${s.season}-${s.year}`} value={`${s.season}-${s.year}`}>
+                {SEASON_PT[s.season]} {s.year}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {activeTab === "search" && (
         <div className={styles.searchWrapper}>

@@ -1,23 +1,28 @@
 import type { Request, Response } from "express";
-import { fetchSeasonAnimes, fetchPopularAnimes, searchAnimes, fetchAnimeById } from "../services/anilistService.js";
+import { fetchSeasonAnimes, fetchPopularAnimes, searchAnimes, fetchAnimeById, getCurrentSeason } from "../services/anilistService.js";
 
-export async function getCurrentSeason(req: Request, res: Response): Promise<void> {
+export async function getSeason(req: Request, res: Response): Promise<void> {
   try {
+    const reqSeason = req.query.season as string;
+    const reqYear = req.query.year ? parseInt(String(req.query.year)) : NaN;
+    
+    let season: string;
+    let year: number;
+    
+    if (reqSeason && !isNaN(reqYear)) {
+      season = reqSeason.toUpperCase();
+      year = reqYear;
+    } else {
+      const current = getCurrentSeason();
+      season = current.season;
+      year = current.year;
+    }
+
     const page = parseInt(String(req.query.page || "1")) || 1;
-    const result = await fetchSeasonAnimes("current", page);
+    const result = await fetchSeasonAnimes(season, year, page);
     res.json(result);
   } catch {
-    res.status(500).json({ error: "Erro ao buscar animes da temporada atual." });
-  }
-}
-
-export async function getNextSeason(req: Request, res: Response): Promise<void> {
-  try {
-    const page = parseInt(String(req.query.page || "1")) || 1;
-    const result = await fetchSeasonAnimes("next", page);
-    res.json(result);
-  } catch {
-    res.status(500).json({ error: "Erro ao buscar animes da próxima temporada." });
+    res.status(500).json({ error: "Erro ao buscar animes da temporada." });
   }
 }
 

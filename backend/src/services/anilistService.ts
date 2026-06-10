@@ -52,7 +52,7 @@ function toAnimeDetail(anime: AniListAnime): AnimeDetail {
   };
 }
 
-function getCurrentSeason(): { season: string; year: number } {
+export function getCurrentSeason(): { season: string; year: number } {
   const now = new Date();
   const month = now.getMonth() + 1;
   const year = now.getFullYear();
@@ -77,8 +77,7 @@ async function queryAniList<T>(query: string, variables: Record<string, unknown>
   return response.data;
 }
 
-export async function fetchSeasonAnimes(seasonType: "current" | "next", page = 1, perPage = 20): Promise<{ animes: AnimeCard[]; pageInfo: AniListResponse["data"]["Page"]["pageInfo"] }> {
-  const { season, year } = seasonType === "current" ? getCurrentSeason() : getNextSeason();
+export async function fetchSeasonAnimes(season: string, year: number, page = 1, perPage = 20): Promise<{ animes: AnimeCard[]; pageInfo: AniListResponse["data"]["Page"]["pageInfo"] }> {
 
   const query = `
     query ($page: Int, $perPage: Int, $season: MediaSeason, $seasonYear: Int) {
