@@ -9,6 +9,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import type { AnimeCard } from "../../types/anime";
 import type { AnimeDetail } from "../../types/anime";
 import type { LibraryStatus } from "../../types/library";
+import { LIBRARY_STATUS_LABELS } from "../../types/library";
 import styles from "./AnimePage.module.css";
 
 const TABS = [
@@ -23,6 +24,7 @@ export function AnimePage() {
   const [activeTab, setActiveTab] = useState("current");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAnimeId, setSelectedAnimeId] = useState<number | null>(null);
+  const [libraryFilter, setLibraryFilter] = useState<LibraryStatus | "all">("all");
   const debouncedSearch = useDebounce(searchQuery, 400);
 
   const { animes, loading, error, hasNextPage, loadCurrentSeason, loadNextSeason, loadPopular, search, loadMore } = useAnime();
@@ -82,7 +84,11 @@ export function AnimePage() {
     setSelectedAnimeId(null);
   }, [library]);
 
-  const libraryAnimeCards: AnimeCard[] = library.entries.map((entry) => ({
+  const filteredLibraryEntries = libraryFilter === "all" 
+    ? library.entries 
+    : library.entries.filter(entry => entry.status === libraryFilter);
+
+  const libraryAnimeCards: AnimeCard[] = filteredLibraryEntries.map((entry) => ({
     id: entry.anilistId,
     title: entry.title,
     coverImage: entry.coverImage ?? "",
@@ -113,6 +119,26 @@ export function AnimePage() {
       {activeTab === "search" && (
         <div className={styles.searchWrapper}>
           <SearchBar value={searchQuery} onChange={setSearchQuery} loading={loading && searchQuery.length > 0} />
+        </div>
+      )}
+
+      {activeTab === "library" && (
+        <div className={styles.filterWrapper}>
+          <button 
+            className={`${styles.filterPill} ${libraryFilter === "all" ? styles.activeFilter : ""}`}
+            onClick={() => setLibraryFilter("all")}
+          >
+            Todos
+          </button>
+          {Object.entries(LIBRARY_STATUS_LABELS).map(([status, label]) => (
+            <button
+              key={status}
+              className={`${styles.filterPill} ${libraryFilter === status ? styles.activeFilter : ""}`}
+              onClick={() => setLibraryFilter(status as LibraryStatus)}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       )}
 
