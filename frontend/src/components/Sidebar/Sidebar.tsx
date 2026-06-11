@@ -16,12 +16,26 @@ const NAV_ITEMS: NavItem[] = [
   { path: "/jogos", label: "Jogos", icon: "🎮", badge: "Em breve" },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
       <div className={styles.logo}>
         <div className={styles.logoIcon}>📡</div>
         <span className={styles.logoText}>Media Tracker</span>
+        <button
+          type="button"
+          className={styles.toggle}
+          onClick={onToggle}
+          title={collapsed ? "Expandir menu" : "Recolher menu"}
+          aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+        >
+          <span className={styles.toggleIcon}>‹</span>
+        </button>
       </div>
 
       <nav className={styles.nav}>
@@ -29,6 +43,7 @@ export function Sidebar() {
           <NavLink
             key={item.path}
             to={item.path}
+            title={item.label}
             className={({ isActive }) =>
               `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
             }
