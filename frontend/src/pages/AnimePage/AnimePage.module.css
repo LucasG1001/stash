@@ -24,45 +24,59 @@
 
 .filterWrapper {
   margin-bottom: var(--spacing-xl);
-}
-
-.filterPills {
   display: flex;
+  align-items: center;
   gap: var(--spacing-sm);
-  overflow-x: auto;
-  padding-bottom: var(--spacing-xs);
+  flex-wrap: wrap;
 }
 
-.filterPills::-webkit-scrollbar {
-  display: none;
-}
-
-.filterSelect {
-  display: none;
-}
-
-.filterPill {
-  padding: 6px 16px;
-  border-radius: var(--radius-full);
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
   background: var(--color-bg-card);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   white-space: nowrap;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    color var(--transition-fast), transform var(--transition-fast);
+  animation: sortFadeIn 0.25s ease;
 }
 
-.filterPill:hover {
+.sortButton:hover {
   background: var(--color-bg-hover);
+  border-color: var(--color-accent);
   color: var(--color-text-primary);
 }
 
-.activeFilter {
-  background: var(--color-accent);
-  color: #fff;
-  border-color: var(--color-accent);
+.sortButton:active {
+  transform: scale(0.96);
+}
+
+.sortIcon {
+  display: inline-flex;
+  color: var(--color-accent);
+  transition: transform var(--transition-base);
+}
+
+.sortIconAsc {
+  transform: rotate(180deg);
+}
+
+@keyframes sortFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .seasonSelectorWrapper {
@@ -115,12 +129,7 @@
     width: 100%;
   }
 
-  .filterPills {
-    display: none;
-  }
-
-  .filterSelect {
-    display: block;
+  .sortButton {
     width: 100%;
   }
 }

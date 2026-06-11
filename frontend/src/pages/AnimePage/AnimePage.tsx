@@ -29,6 +29,7 @@ export function AnimePage() {
   const [selectedAnimeId, setSelectedAnimeId] = useState<number | null>(null);
   const [selectedAnimeForModal, setSelectedAnimeForModal] = useState<AnimeCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<LibraryStatus | "all">("all");
+  const [watchedSortDir, setWatchedSortDir] = useState<"desc" | "asc">("desc");
   const [selectedSeasonObj, setSelectedSeasonObj] = useState(getCurrentRealSeason());
   const debouncedSearch = useDebounce(searchQuery, 400);
 
@@ -118,7 +119,18 @@ export function AnimePage() {
     ? libraryEntries
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
-  const libraryAnimeCards: AnimeCard[] = filteredLibraryEntries.map((entry) => ({
+  const showWatchedSort = libraryFilter === "watched";
+
+  const sortedLibraryEntries = showWatchedSort
+    ? [...filteredLibraryEntries].sort((a, b) => {
+        const ta = a.watchedAt ? new Date(a.watchedAt).getTime() : 0;
+        const tb = b.watchedAt ? new Date(b.watchedAt).getTime() : 0;
+        const diff = ta - tb;
+        return watchedSortDir === "desc" ? -diff : diff;
+      })
+    : filteredLibraryEntries;
+
+  const libraryAnimeCards: AnimeCard[] = sortedLibraryEntries.map((entry) => ({
     id: entry.anilistId,
     title: entry.title,
     coverImage: entry.coverImage ?? "",
@@ -171,25 +183,8 @@ export function AnimePage() {
 
       {activeTab === "library" && (
         <div className={styles.filterWrapper}>
-          <div className={styles.filterPills}>
-            <button
-              className={`${styles.filterPill} ${libraryFilter === "all" ? styles.activeFilter : ""}`}
-              onClick={() => setLibraryFilter("all")}
-            >
-              Todos
-            </button>
-            {STATUS_OPTIONS.map(([status, label]) => (
-              <button
-                key={status}
-                className={`${styles.filterPill} ${libraryFilter === status ? styles.activeFilter : ""}`}
-                onClick={() => setLibraryFilter(status)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
           <select
-            className={`${styles.seasonSelect} ${styles.filterSelect}`}
+            className={styles.seasonSelect}
             value={libraryFilter}
             onChange={(e) => setLibraryFilter(e.target.value as LibraryStatus | "all")}
           >
@@ -200,6 +195,20 @@ export function AnimePage() {
               </option>
             ))}
           </select>
+          {showWatchedSort && (
+            <button
+              className={styles.sortButton}
+              onClick={() => setWatchedSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
+              title={watchedSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
+            >
+              <span>Data assistida</span>
+              <span className={`${styles.sortIcon} ${watchedSortDir === "asc" ? styles.sortIconAsc : ""}`}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 5v14M5 12l7 7 7-7" />
+                </svg>
+              </span>
+            </button>
+          )}
         </div>
       )}
 

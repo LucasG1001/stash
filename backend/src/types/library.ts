@@ -12,6 +12,7 @@ export interface LibraryEntry {
   nextAiringEpisode: AniListNextAiringEpisode | null;
   streamingLinks: AniListExternalLink[];
   syncedAt: string | null;
+  watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -58,6 +59,7 @@ export interface LibraryRow {
   next_airing_episode: AniListNextAiringEpisode | null;
   streaming_links: AniListExternalLink[];
   synced_at: string | null;
+  watched_at: string | null;
   created_at: string;
   updated_at: string;
 }

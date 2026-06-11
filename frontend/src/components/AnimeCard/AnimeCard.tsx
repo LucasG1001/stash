@@ -98,8 +98,8 @@ export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView }
 
         {isLibraryView
           ? libraryEntry && libraryEntry.score > 0 && (
-              <span className={styles.scoreBadge} style={{ color: getScoreColor(libraryEntry.score * 10) }}>
-                ★ {libraryEntry.score.toFixed(1)}
+              <span className={`${styles.scoreBadge} ${styles.libraryScoreBadge}`}>
+                ⭐ {libraryEntry.score.toFixed(1)}
               </span>
             )
           : anime.averageScore && (

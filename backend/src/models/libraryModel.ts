@@ -14,6 +14,7 @@ function toLibraryEntry(row: LibraryRow): LibraryEntry {
     nextAiringEpisode: row.next_airing_episode,
     streamingLinks: row.streaming_links ?? [],
     syncedAt: row.synced_at,
+    watchedAt: row.watched_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -47,8 +48,8 @@ export async function findStaleNonFinished(ttlHours: number): Promise<LibraryEnt
 export async function create(entry: CreateLibraryEntry): Promise<LibraryEntry> {
   const result = await pool.query<LibraryRow>(
     `INSERT INTO anime_library
-       (anilist_id, title, cover_image, status, score, total_episodes, anime_status, next_airing_episode, streaming_links, synced_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+       (anilist_id, title, cover_image, status, score, total_episodes, anime_status, next_airing_episode, streaming_links, synced_at, watched_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), CASE WHEN $4 = 'watched' THEN NOW() ELSE NULL END)
      RETURNING *`,
     [
       entry.anilistId,
@@ -79,8 +80,16 @@ export async function update(id: string, data: UpdateLibraryEntry): Promise<Libr
     values.push(data.coverImage);
   }
   if (data.status !== undefined) {
-    fields.push(`status = $${paramIndex++}`);
+    const statusParam = paramIndex++;
+    fields.push(`status = $${statusParam}`);
     values.push(data.status);
+    fields.push(
+      `watched_at = CASE
+         WHEN $${statusParam} = 'watched' AND status != 'watched' THEN NOW()
+         WHEN $${statusParam} != 'watched' THEN NULL
+         ELSE watched_at
+       END`
+    );
   }
   if (data.score !== undefined) {
     fields.push(`score = $${paramIndex++}`);

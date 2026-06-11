@@ -14,6 +14,7 @@ export interface LibraryEntry {
   nextAiringEpisode: AnimeNextAiringEpisode | null;
   streamingLinks: AnimeExternalLink[];
   syncedAt: string | null;
+  watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
