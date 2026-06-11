@@ -1,10 +1,11 @@
 import * as libraryModel from "../models/libraryModel.js";
 import { fetchAnimesByIds } from "./anilistService.js";
 
-const CACHE_TTL_HOURS = 12;
+const NON_FINISHED_TTL_HOURS = 12;
+const FINISHED_TTL_HOURS = 24 * 7;
 
 export async function refreshStaleEntries(): Promise<void> {
-  const stale = await libraryModel.findStaleNonFinished(CACHE_TTL_HOURS);
+  const stale = await libraryModel.findStale(NON_FINISHED_TTL_HOURS, FINISHED_TTL_HOURS);
   if (stale.length === 0) return;
 
   try {

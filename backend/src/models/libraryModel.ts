@@ -35,12 +35,13 @@ export async function findByAnilistId(anilistId: number): Promise<LibraryEntry |
   return result.rows[0] ? toLibraryEntry(result.rows[0]) : null;
 }
 
-export async function findStaleNonFinished(ttlHours: number): Promise<LibraryEntry[]> {
+export async function findStale(nonFinishedTtlHours: number, finishedTtlHours: number): Promise<LibraryEntry[]> {
   const result = await pool.query<LibraryRow>(
     `SELECT * FROM anime_library
-     WHERE anime_status != 'FINISHED'
-       AND (synced_at IS NULL OR synced_at < NOW() - ($1 || ' hours')::interval)`,
-    [ttlHours]
+     WHERE synced_at IS NULL
+        OR (anime_status != 'FINISHED' AND synced_at < NOW() - ($1 || ' hours')::interval)
+        OR (anime_status = 'FINISHED' AND synced_at < NOW() - ($2 || ' hours')::interval)`,
+    [nonFinishedTtlHours, finishedTtlHours]
   );
   return result.rows.map(toLibraryEntry);
 }

@@ -15,6 +15,7 @@ interface AnimeGridProps {
   getLibraryEntry: (anilistId: number) => LibraryEntry | undefined;
   emptyMessage?: string;
   isLibraryView?: boolean;
+  animationKey?: string;
 }
 
 export function AnimeGrid({
@@ -28,6 +29,7 @@ export function AnimeGrid({
   getLibraryEntry,
   emptyMessage = "Nenhum anime encontrado.",
   isLibraryView,
+  animationKey,
 }: AnimeGridProps) {
   if (loading && animes.length === 0) {
     return <LoadingSkeleton />;
@@ -58,8 +60,8 @@ export function AnimeGrid({
   }
 
   return (
-    <div className={styles.grid}>
-      {animes.map((anime) => (
+    <div className={styles.grid} key={animationKey}>
+      {animes.map((anime, index) => (
         <AnimeCard
           key={anime.id}
           anime={anime}
@@ -67,6 +69,7 @@ export function AnimeGrid({
           onClick={() => onCardClick(anime)}
           onAdd={() => onAddToLibrary(anime)}
           isLibraryView={isLibraryView}
+          index={index}
         />
       ))}
 

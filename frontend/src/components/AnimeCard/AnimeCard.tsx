@@ -8,6 +8,7 @@ interface AnimeCardProps {
   onClick: () => void;
   onAdd: (e: React.MouseEvent) => void;
   isLibraryView?: boolean;
+  index?: number;
 }
 
 function getStatusStyle(status: string): string {
@@ -44,13 +45,19 @@ function getLibraryStatusColor(status?: string): string {
   }
 }
 
-export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView }: AnimeCardProps) {
+export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView, index = 0 }: AnimeCardProps) {
   const episodeText = anime.nextAiringEpisode
     ? `${anime.nextAiringEpisode.episode - 1}/${anime.episodes ?? "?"}`
     : `${anime.episodes ?? "?"}`;
 
   return (
-    <div className={styles.card} onClick={onClick} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onClick()}>
+    <div
+      className={styles.card}
+      style={{ animationDelay: `${Math.min(index, 12) * 0.04}s` }}
+      onClick={onClick}
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onClick()}
+    >
       <div className={styles.imageWrapper}>
         <img className={styles.coverImage} src={anime.coverImage} alt={anime.title} loading="lazy" />
 

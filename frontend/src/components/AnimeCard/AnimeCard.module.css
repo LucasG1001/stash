@@ -7,6 +7,24 @@
   background: var(--color-bg-card);
   border: 1px solid var(--color-border-subtle);
   backdrop-filter: blur(10px);
+  animation: cardEnter 0.45s ease backwards;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
 }
 
 .card:hover {
@@ -98,6 +116,7 @@
   display: flex;
   align-items: center;
   gap: 3px;
+  z-index: 2;
 }
 
 .title {

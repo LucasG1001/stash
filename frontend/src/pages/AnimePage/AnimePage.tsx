@@ -148,6 +148,15 @@ export function AnimePage() {
   const displayLoading = activeTab === "library" ? libraryLoading : loading;
   const displayError = activeTab === "library" ? libraryError : error;
 
+  const gridKey =
+    activeTab === "library"
+      ? `library-${libraryFilter}-${watchedSortDir}`
+      : activeTab === "seasons"
+      ? `seasons-${selectedSeasonObj.season}-${selectedSeasonObj.year}`
+      : activeTab === "search"
+      ? `search-${debouncedSearch}`
+      : activeTab;
+
   return (
     <div className={styles.page}>
       <h1 className={styles.srOnly}>Anime</h1>
@@ -222,6 +231,7 @@ export function AnimePage() {
         onAddToLibrary={handleOpenLibraryModal}
         getLibraryEntry={(id) => findByAnilistId(id)}
         isLibraryView={activeTab === "library"}
+        animationKey={gridKey}
         emptyMessage={
           activeTab === "library"
             ? "Sua biblioteca está vazia. Adicione animes para começar!"
