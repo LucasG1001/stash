@@ -1,20 +1,20 @@
 import { useState, useCallback, useEffect } from "react";
-import type { LibraryEntry, CreateLibraryEntry, UpdateLibraryEntry } from "../types/library";
-import { fetchLibrary, addToLibrary, updateLibraryEntry, removeFromLibrary } from "../services/libraryService";
+import type { MovieLibraryEntry, CreateMovieLibraryEntry, UpdateMovieLibraryEntry } from "../types/movieLibrary";
+import { fetchLibrary, addToLibrary, updateLibraryEntry, removeFromLibrary } from "../services/movieLibraryService";
 
-interface UseLibraryReturn {
-  entries: LibraryEntry[];
+interface UseMovieLibraryReturn {
+  entries: MovieLibraryEntry[];
   loading: boolean;
   error: string | null;
   load: () => Promise<void>;
-  add: (entry: CreateLibraryEntry) => Promise<LibraryEntry | null>;
-  update: (id: string, data: UpdateLibraryEntry) => Promise<LibraryEntry | null>;
+  add: (entry: CreateMovieLibraryEntry) => Promise<MovieLibraryEntry | null>;
+  update: (id: string, data: UpdateMovieLibraryEntry) => Promise<MovieLibraryEntry | null>;
   remove: (id: string) => Promise<boolean>;
-  findByAnilistId: (anilistId: number) => LibraryEntry | undefined;
+  findByTmdbId: (tmdbId: number) => MovieLibraryEntry | undefined;
 }
 
-export function useLibrary(): UseLibraryReturn {
-  const [entries, setEntries] = useState<LibraryEntry[]>([]);
+export function useMovieLibrary(): UseMovieLibraryReturn {
+  const [entries, setEntries] = useState<MovieLibraryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,24 +40,24 @@ export function useLibrary(): UseLibraryReturn {
     return () => { cancelled = true; };
   }, []);
 
-  const add = useCallback(async (entry: CreateLibraryEntry): Promise<LibraryEntry | null> => {
+  const add = useCallback(async (entry: CreateMovieLibraryEntry): Promise<MovieLibraryEntry | null> => {
     try {
       const created = await addToLibrary(entry);
       setEntries((prev) => [created, ...prev]);
       return created;
     } catch {
-      setError("Erro ao adicionar anime à biblioteca.");
+      setError("Erro ao adicionar filme à biblioteca.");
       return null;
     }
   }, []);
 
-  const update = useCallback(async (id: string, data: UpdateLibraryEntry): Promise<LibraryEntry | null> => {
+  const update = useCallback(async (id: string, data: UpdateMovieLibraryEntry): Promise<MovieLibraryEntry | null> => {
     try {
       const updated = await updateLibraryEntry(id, data);
       setEntries((prev) => prev.map((e) => (e.id === id ? updated : e)));
       return updated;
     } catch {
-      setError("Erro ao atualizar anime.");
+      setError("Erro ao atualizar filme.");
       return null;
     }
   }, []);
@@ -68,14 +68,14 @@ export function useLibrary(): UseLibraryReturn {
       setEntries((prev) => prev.filter((e) => e.id !== id));
       return true;
     } catch {
-      setError("Erro ao remover anime da biblioteca.");
+      setError("Erro ao remover filme da biblioteca.");
       return false;
     }
   }, []);
 
-  const findByAnilistId = useCallback((anilistId: number): LibraryEntry | undefined => {
-    return entries.find((e) => e.anilistId === anilistId);
+  const findByTmdbId = useCallback((tmdbId: number): MovieLibraryEntry | undefined => {
+    return entries.find((e) => e.tmdbId === tmdbId);
   }, [entries]);
 
-  return { entries, loading, error, load, add, update, remove, findByAnilistId };
+  return { entries, loading, error, load, add, update, remove, findByTmdbId };
 }

@@ -29,4 +29,21 @@ export async function migrate(): Promise<void> {
     ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ,
     ADD COLUMN IF NOT EXISTS watched_at TIMESTAMPTZ;
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS movie_library (
+      id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      tmdb_id       INTEGER NOT NULL UNIQUE,
+      title         TEXT NOT NULL,
+      poster_image  TEXT,
+      status        TEXT NOT NULL DEFAULT 'plan_to_watch',
+      score         NUMERIC(3,1) DEFAULT 0,
+      release_date  TEXT,
+      runtime       INTEGER,
+      movie_status  TEXT NOT NULL DEFAULT 'RELEASED',
+      watched_at    TIMESTAMPTZ,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
 }

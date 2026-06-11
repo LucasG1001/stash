@@ -34,7 +34,6 @@ export function AnimeDrawer({ animeId, onClose, onAnimeLoad }: AnimeDrawerProps)
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
     fetchAnimeById(animeId)
       .then((data) => {
         if (!active) return;
