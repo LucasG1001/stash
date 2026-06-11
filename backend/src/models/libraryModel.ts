@@ -1,5 +1,5 @@
 import { pool } from "../database/connection.js";
-import type { LibraryEntry, LibraryRow, CreateLibraryEntry, UpdateLibraryEntry } from "../types/library.js";
+import type { LibraryEntry, LibraryRow, CreateLibraryEntry, UpdateLibraryEntry, SyncLibraryData } from "../types/library.js";
 
 function toLibraryEntry(row: LibraryRow): LibraryEntry {
   return {
@@ -9,9 +9,11 @@ function toLibraryEntry(row: LibraryRow): LibraryEntry {
     coverImage: row.cover_image,
     status: row.status,
     score: parseFloat(row.score),
-    watchedEpisodes: row.watched_episodes,
     totalEpisodes: row.total_episodes,
     animeStatus: row.anime_status,
+    nextAiringEpisode: row.next_airing_episode,
+    streamingLinks: row.streaming_links ?? [],
+    syncedAt: row.synced_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -32,10 +34,21 @@ export async function findByAnilistId(anilistId: number): Promise<LibraryEntry |
   return result.rows[0] ? toLibraryEntry(result.rows[0]) : null;
 }
 
+export async function findStaleNonFinished(ttlHours: number): Promise<LibraryEntry[]> {
+  const result = await pool.query<LibraryRow>(
+    `SELECT * FROM anime_library
+     WHERE anime_status != 'FINISHED'
+       AND (synced_at IS NULL OR synced_at < NOW() - ($1 || ' hours')::interval)`,
+    [ttlHours]
+  );
+  return result.rows.map(toLibraryEntry);
+}
+
 export async function create(entry: CreateLibraryEntry): Promise<LibraryEntry> {
   const result = await pool.query<LibraryRow>(
-    `INSERT INTO anime_library (anilist_id, title, cover_image, status, score, watched_episodes, total_episodes, anime_status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `INSERT INTO anime_library
+       (anilist_id, title, cover_image, status, score, total_episodes, anime_status, next_airing_episode, streaming_links, synced_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
      RETURNING *`,
     [
       entry.anilistId,
@@ -43,9 +56,10 @@ export async function create(entry: CreateLibraryEntry): Promise<LibraryEntry> {
       entry.coverImage ?? null,
       entry.status ?? "plan_to_watch",
       entry.score ?? 0,
-      entry.watchedEpisodes ?? 0,
       entry.totalEpisodes ?? null,
       entry.animeStatus ?? "FINISHED",
+      JSON.stringify(entry.nextAiringEpisode ?? null),
+      JSON.stringify(entry.streamingLinks ?? []),
     ]
   );
   return toLibraryEntry(result.rows[0]);
@@ -72,10 +86,6 @@ export async function update(id: string, data: UpdateLibraryEntry): Promise<Libr
     fields.push(`score = $${paramIndex++}`);
     values.push(data.score);
   }
-  if (data.watchedEpisodes !== undefined) {
-    fields.push(`watched_episodes = $${paramIndex++}`);
-    values.push(data.watchedEpisodes);
-  }
   if (data.totalEpisodes !== undefined) {
     fields.push(`total_episodes = $${paramIndex++}`);
     values.push(data.totalEpisodes);
@@ -95,6 +105,25 @@ export async function update(id: string, data: UpdateLibraryEntry): Promise<Libr
     values
   );
   return result.rows[0] ? toLibraryEntry(result.rows[0]) : null;
+}
+
+export async function updateSyncData(anilistId: number, data: SyncLibraryData): Promise<void> {
+  await pool.query(
+    `UPDATE anime_library
+     SET total_episodes = $2,
+         anime_status = $3,
+         next_airing_episode = $4,
+         streaming_links = $5,
+         synced_at = NOW()
+     WHERE anilist_id = $1`,
+    [
+      anilistId,
+      data.totalEpisodes,
+      data.animeStatus,
+      JSON.stringify(data.nextAiringEpisode ?? null),
+      JSON.stringify(data.streamingLinks ?? []),
+    ]
+  );
 }
 
 export async function remove(id: string): Promise<boolean> {

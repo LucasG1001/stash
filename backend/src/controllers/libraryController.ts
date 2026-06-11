@@ -1,8 +1,10 @@
 import type { Request, Response } from "express";
 import * as libraryModel from "../models/libraryModel.js";
+import { refreshStaleEntries } from "../services/librarySyncService.js";
 
 export async function getAll(_req: Request, res: Response): Promise<void> {
   try {
+    await refreshStaleEntries();
     const entries = await libraryModel.findAll();
     res.json(entries);
   } catch {
@@ -12,7 +14,7 @@ export async function getAll(_req: Request, res: Response): Promise<void> {
 
 export async function create(req: Request, res: Response): Promise<void> {
   try {
-    const { anilistId, title, coverImage, status, score, watchedEpisodes, totalEpisodes, animeStatus } = req.body;
+    const { anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, nextAiringEpisode, streamingLinks } = req.body;
 
     if (!anilistId || !title) {
       res.status(400).json({ error: "anilistId e title são obrigatórios." });
@@ -25,7 +27,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const entry = await libraryModel.create({ anilistId, title, coverImage, status, score, watchedEpisodes, totalEpisodes, animeStatus });
+    const entry = await libraryModel.create({ anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, nextAiringEpisode, streamingLinks });
     res.status(201).json(entry);
   } catch {
     res.status(500).json({ error: "Erro ao adicionar anime à biblioteca." });
@@ -35,9 +37,9 @@ export async function create(req: Request, res: Response): Promise<void> {
 export async function update(req: Request, res: Response): Promise<void> {
   try {
     const id = String(req.params.id);
-    const { title, coverImage, status, score, watchedEpisodes, totalEpisodes, animeStatus } = req.body;
+    const { title, coverImage, status, score, totalEpisodes, animeStatus } = req.body;
 
-    const entry = await libraryModel.update(id, { title, coverImage, status, score, watchedEpisodes, totalEpisodes, animeStatus });
+    const entry = await libraryModel.update(id, { title, coverImage, status, score, totalEpisodes, animeStatus });
     if (!entry) {
       res.status(404).json({ error: "Anime não encontrado na biblioteca." });
       return;

@@ -135,6 +135,32 @@ export async function searchAnimes(searchQuery: string, page = 1, perPage = 20):
   };
 }
 
+export async function fetchAnimesByIds(ids: number[]): Promise<AnimeCard[]> {
+  if (ids.length === 0) return [];
+
+  const query = `
+    query ($ids: [Int], $page: Int, $perPage: Int) {
+      Page(page: $page, perPage: $perPage) {
+        pageInfo { hasNextPage }
+        media(id_in: $ids, type: ANIME) {
+          ${MEDIA_FIELDS}
+        }
+      }
+    }
+  `;
+
+  const chunkSize = 50;
+  const results: AnimeCard[] = [];
+
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize);
+    const data = await queryAniList<AniListResponse>(query, { ids: chunk, page: 1, perPage: chunkSize });
+    results.push(...data.data.Page.media.map(toAnimeCard));
+  }
+
+  return results;
+}
+
 export async function fetchAnimeById(id: number): Promise<AnimeDetail> {
   const query = `
     query ($id: Int) {

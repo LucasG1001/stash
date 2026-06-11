@@ -1,3 +1,5 @@
+import type { AnimeNextAiringEpisode, AnimeExternalLink } from "./anime";
+
 export type LibraryStatus = "plan_to_watch" | "watching" | "watched" | "dropped";
 
 export interface LibraryEntry {
@@ -7,9 +9,11 @@ export interface LibraryEntry {
   coverImage: string | null;
   status: LibraryStatus;
   score: number;
-  watchedEpisodes: number;
   totalEpisodes: number | null;
   animeStatus?: string;
+  nextAiringEpisode: AnimeNextAiringEpisode | null;
+  streamingLinks: AnimeExternalLink[];
+  syncedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,9 +24,10 @@ export interface CreateLibraryEntry {
   coverImage?: string | null;
   status?: LibraryStatus;
   score?: number;
-  watchedEpisodes?: number;
   totalEpisodes?: number | null;
   animeStatus?: string;
+  nextAiringEpisode?: AnimeNextAiringEpisode | null;
+  streamingLinks?: AnimeExternalLink[];
 }
 
 export interface UpdateLibraryEntry {
@@ -30,7 +35,6 @@ export interface UpdateLibraryEntry {
   coverImage?: string | null;
   status?: LibraryStatus;
   score?: number;
-  watchedEpisodes?: number;
   totalEpisodes?: number | null;
   animeStatus?: string;
 }

@@ -8,14 +8,13 @@ interface LibraryModalProps {
   anime: AnimeCard;
   libraryEntry: LibraryEntry | undefined;
   onClose: () => void;
-  onSave: (anime: AnimeCard, data: { status: LibraryStatus; score: number; watchedEpisodes: number }) => void;
+  onSave: (anime: AnimeCard, data: { status: LibraryStatus; score: number }) => void;
   onRemove: (id: string) => void;
 }
 
 export function LibraryModal({ anime, libraryEntry, onClose, onSave, onRemove }: LibraryModalProps) {
   const [status, setStatus] = useState<LibraryStatus>(libraryEntry?.status ?? "plan_to_watch");
   const [score, setScore] = useState<number>(libraryEntry?.score ?? 0);
-  const [watchedEpisodes, setWatchedEpisodes] = useState<number>(libraryEntry?.watchedEpisodes ?? 0);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === "Escape") onClose();
@@ -31,7 +30,7 @@ export function LibraryModal({ anime, libraryEntry, onClose, onSave, onRemove }:
   }, [handleKeyDown]);
 
   const handleSave = () => {
-    onSave(anime, { status, score, watchedEpisodes });
+    onSave(anime, { status, score });
   };
 
   return (
@@ -69,20 +68,6 @@ export function LibraryModal({ anime, libraryEntry, onClose, onSave, onRemove }:
               value={score}
               onChange={(e) => setScore(Math.min(10, Math.max(0, parseFloat(e.target.value) || 0)))}
             />
-          </div>
-
-          <div className={styles.controlRow}>
-            <span className={styles.controlLabel}>Progresso</span>
-            <div className={styles.progressWrapper}>
-              <input
-                className={styles.controlInput}
-                type="number"
-                min={0}
-                value={watchedEpisodes}
-                onChange={(e) => setWatchedEpisodes(Math.max(0, parseInt(e.target.value) || 0))}
-              />
-              <span>/ {anime.episodes ?? "?"}</span>
-            </div>
           </div>
 
           <div className={styles.actionButtons}>

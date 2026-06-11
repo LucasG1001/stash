@@ -45,12 +45,9 @@ function getLibraryStatusColor(status?: string): string {
 }
 
 export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView }: AnimeCardProps) {
-  let episodeText = "";
-  if (anime.nextAiringEpisode) {
-    episodeText = `${anime.nextAiringEpisode.episode - 1}/${anime.episodes ?? "?"}`;
-  } else {
-    episodeText = `${anime.episodes ?? "?"}`;
-  }
+  const episodeText = anime.nextAiringEpisode
+    ? `${anime.nextAiringEpisode.episode - 1}/${anime.episodes ?? "?"}`
+    : `${anime.episodes ?? "?"}`;
 
   return (
     <div className={styles.card} onClick={onClick} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onClick()}>
@@ -59,26 +56,24 @@ export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView }
 
         <div className={styles.overlay}>
           <div className={styles.title}>{anime.title}</div>
-          {!isLibraryView && (
-            <div className={styles.meta}>
-              <span className={styles.episodes}>📺 {episodeText} ep</span>
-              {anime.streamingLinks.length > 0 && (
-                <div className={styles.streamingIcons}>
-                  {anime.streamingLinks.slice(0, 3).map((link) =>
-                    link.icon ? (
-                      <img
-                        key={link.site}
-                        className={styles.streamingIcon}
-                        src={link.icon}
-                        alt={link.site}
-                        title={link.site}
-                      />
-                    ) : null
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          <div className={styles.meta}>
+            <span className={styles.episodes}>📺 {episodeText} ep</span>
+            {anime.streamingLinks.length > 0 && (
+              <div className={styles.streamingIcons}>
+                {anime.streamingLinks.slice(0, 3).map((link) =>
+                  link.icon ? (
+                    <img
+                      key={link.site}
+                      className={styles.streamingIcon}
+                      src={link.icon}
+                      alt={link.site}
+                      title={link.site}
+                    />
+                  ) : null
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className={styles.topBadges}>
@@ -96,32 +91,22 @@ export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView }
               "+"
             )}
           </button>
-          {!isLibraryView && (
-            <span className={`${styles.statusBadge} ${getStatusStyle(anime.status)}`}>
-              {getStatusLabel(anime.status)}
-            </span>
-          )}
-          {isLibraryView && libraryEntry && (
-            <>
-              {libraryEntry.status === "watched" && libraryEntry.updatedAt && (
-                <span className={`${styles.statusBadge} ${styles.libraryDateBadge}`}>
-                  {new Date(libraryEntry.updatedAt).toLocaleDateString("pt-BR")}
-                </span>
-              )}
-              {libraryEntry.score > 0 && (
-                <span className={`${styles.statusBadge} ${styles.libraryScoreBadge}`}>
-                  ⭐ {libraryEntry.score}
-                </span>
-              )}
-            </>
-          )}
+          <span className={`${styles.statusBadge} ${getStatusStyle(anime.status)}`}>
+            {getStatusLabel(anime.status)}
+          </span>
         </div>
 
-        {!isLibraryView && anime.averageScore && (
-          <span className={styles.scoreBadge} style={{ color: getScoreColor(anime.averageScore) }}>
-            ★ {(anime.averageScore / 10).toFixed(1)}
-          </span>
-        )}
+        {isLibraryView
+          ? libraryEntry && libraryEntry.score > 0 && (
+              <span className={styles.scoreBadge} style={{ color: getScoreColor(libraryEntry.score * 10) }}>
+                ★ {libraryEntry.score.toFixed(1)}
+              </span>
+            )
+          : anime.averageScore && (
+              <span className={styles.scoreBadge} style={{ color: getScoreColor(anime.averageScore) }}>
+                ★ {(anime.averageScore / 10).toFixed(1)}
+              </span>
+            )}
       </div>
     </div>
   );

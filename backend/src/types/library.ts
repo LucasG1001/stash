@@ -1,3 +1,5 @@
+import type { AniListNextAiringEpisode, AniListExternalLink } from "./anime.js";
+
 export interface LibraryEntry {
   id: string;
   anilistId: number;
@@ -5,9 +7,11 @@ export interface LibraryEntry {
   coverImage: string | null;
   status: LibraryStatus;
   score: number;
-  watchedEpisodes: number;
   totalEpisodes: number | null;
   animeStatus: string;
+  nextAiringEpisode: AniListNextAiringEpisode | null;
+  streamingLinks: AniListExternalLink[];
+  syncedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,9 +24,10 @@ export interface CreateLibraryEntry {
   coverImage?: string | null;
   status?: LibraryStatus;
   score?: number;
-  watchedEpisodes?: number;
   totalEpisodes?: number | null;
   animeStatus?: string;
+  nextAiringEpisode?: AniListNextAiringEpisode | null;
+  streamingLinks?: AniListExternalLink[];
 }
 
 export interface UpdateLibraryEntry {
@@ -30,9 +35,15 @@ export interface UpdateLibraryEntry {
   coverImage?: string | null;
   status?: LibraryStatus;
   score?: number;
-  watchedEpisodes?: number;
   totalEpisodes?: number | null;
   animeStatus?: string;
+}
+
+export interface SyncLibraryData {
+  totalEpisodes: number | null;
+  animeStatus: string;
+  nextAiringEpisode: AniListNextAiringEpisode | null;
+  streamingLinks: AniListExternalLink[];
 }
 
 export interface LibraryRow {
@@ -42,9 +53,11 @@ export interface LibraryRow {
   cover_image: string | null;
   status: LibraryStatus;
   score: string;
-  watched_episodes: number;
   total_episodes: number | null;
   anime_status: string;
+  next_airing_episode: AniListNextAiringEpisode | null;
+  streaming_links: AniListExternalLink[];
+  synced_at: string | null;
   created_at: string;
   updated_at: string;
 }

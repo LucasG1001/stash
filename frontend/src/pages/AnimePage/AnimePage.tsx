@@ -69,7 +69,7 @@ export function AnimePage() {
     setSelectedAnimeForModal(anime);
   }, []);
 
-  const handleModalSave = useCallback((anime: AnimeCard, data: { status: LibraryStatus; score: number; watchedEpisodes: number }) => {
+  const handleModalSave = useCallback((anime: AnimeCard, data: { status: LibraryStatus; score: number }) => {
     const existing = findByAnilistId(anime.id);
     if (existing) {
       updateEntry(existing.id, { ...data, animeStatus: anime.status });
@@ -80,6 +80,8 @@ export function AnimePage() {
         coverImage: anime.coverImage,
         totalEpisodes: anime.episodes ?? undefined,
         animeStatus: anime.status,
+        nextAiringEpisode: anime.nextAiringEpisode,
+        streamingLinks: anime.streamingLinks,
         ...data,
       });
     }
@@ -126,8 +128,8 @@ export function AnimePage() {
     season: null,
     seasonYear: null,
     genres: [],
-    nextAiringEpisode: null,
-    streamingLinks: [],
+    nextAiringEpisode: entry.nextAiringEpisode,
+    streamingLinks: entry.streamingLinks,
   }));
 
   const displayAnimes = activeTab === "library" ? libraryAnimeCards : animes;

@@ -18,7 +18,14 @@ export async function migrate(): Promise<void> {
   `);
 
   await pool.query(`
-    ALTER TABLE anime_library 
+    ALTER TABLE anime_library
     ADD COLUMN IF NOT EXISTS anime_status TEXT NOT NULL DEFAULT 'FINISHED';
+  `);
+
+  await pool.query(`
+    ALTER TABLE anime_library
+    ADD COLUMN IF NOT EXISTS next_airing_episode JSONB,
+    ADD COLUMN IF NOT EXISTS streaming_links JSONB NOT NULL DEFAULT '[]'::jsonb,
+    ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ;
   `);
 }
