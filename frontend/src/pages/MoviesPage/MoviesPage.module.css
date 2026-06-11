@@ -22,6 +22,12 @@
   margin-bottom: var(--spacing-xl);
 }
 
+.selectorWrapper {
+  margin-bottom: var(--spacing-xl);
+  display: flex;
+  align-items: center;
+}
+
 .filterWrapper {
   margin-bottom: var(--spacing-xl);
   display: flex;
@@ -114,6 +120,7 @@
 
   .tabWrapper,
   .searchWrapper,
+  .selectorWrapper,
   .filterWrapper {
     margin-bottom: var(--spacing-base);
   }

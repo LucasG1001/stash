@@ -7,7 +7,7 @@ interface UseMoviesReturn {
   loading: boolean;
   error: string | null;
   hasNextPage: boolean;
-  loadPopular: () => Promise<void>;
+  loadPopular: (month: number, year: number) => Promise<void>;
   loadNowPlaying: () => Promise<void>;
   search: (query: string) => Promise<void>;
   loadMore: () => Promise<void>;
@@ -66,8 +66,8 @@ export function useMovies(): UseMoviesReturn {
     }
   }, [applyEntry]);
 
-  const loadPopular = useCallback(() => {
-    return load("popular", (p) => fetchPopular(p));
+  const loadPopular = useCallback((month: number, year: number) => {
+    return load(`popular:${month}:${year}`, (p) => fetchPopular(month, year, p));
   }, [load]);
 
   const loadNowPlaying = useCallback(() => {

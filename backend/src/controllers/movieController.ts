@@ -3,8 +3,15 @@ import { fetchPopularMovies, fetchNowPlayingMovies, searchMovies, fetchMovieById
 
 export async function getPopular(req: Request, res: Response): Promise<void> {
   try {
+    const now = new Date();
+    const reqMonth = req.query.month ? parseInt(String(req.query.month)) : NaN;
+    const reqYear = req.query.year ? parseInt(String(req.query.year)) : NaN;
+
+    const month = !isNaN(reqMonth) && reqMonth >= 1 && reqMonth <= 12 ? reqMonth : now.getMonth() + 1;
+    const year = !isNaN(reqYear) ? reqYear : now.getFullYear();
+
     const page = parseInt(String(req.query.page || "1")) || 1;
-    const result = await fetchPopularMovies(page);
+    const result = await fetchPopularMovies(month, year, page);
     res.json(result);
   } catch {
     res.status(500).json({ error: "Erro ao buscar filmes populares." });

@@ -10,6 +10,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import type { MovieCard, MovieDetail } from "../../types/movie";
 import type { MovieLibraryStatus } from "../../types/movieLibrary";
 import { MOVIE_LIBRARY_STATUS_LABELS } from "../../types/movieLibrary";
+import { MONTH_PT, getCurrentMonth, getLast12Months } from "../../utils/month";
 import styles from "./MoviesPage.module.css";
 
 const TABS = [
@@ -28,6 +29,7 @@ export function MoviesPage() {
   const [selectedMovieForModal, setSelectedMovieForModal] = useState<MovieCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<MovieLibraryStatus | "all">("all");
   const [watchedSortDir, setWatchedSortDir] = useState<"desc" | "asc">("desc");
+  const [selectedMonthObj, setSelectedMonthObj] = useState(getCurrentMonth());
   const debouncedSearch = useDebounce(searchQuery, 400);
 
   const { movies, loading, error, hasNextPage, loadPopular, loadNowPlaying, search, loadMore } = useMovies();
@@ -43,10 +45,10 @@ export function MoviesPage() {
 
   useEffect(() => {
     switch (activeTab) {
-      case "popular": loadPopular(); break;
+      case "popular": loadPopular(selectedMonthObj.month, selectedMonthObj.year); break;
       case "now_playing": loadNowPlaying(); break;
     }
-  }, [activeTab, loadPopular, loadNowPlaying]);
+  }, [activeTab, selectedMonthObj, loadPopular, loadNowPlaying]);
 
   useEffect(() => {
     if (activeTab === "search" && debouncedSearch.length >= 2) {
@@ -146,6 +148,8 @@ export function MoviesPage() {
       ? `library-${libraryFilter}-${watchedSortDir}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
+      : activeTab === "popular"
+      ? `popular-${selectedMonthObj.month}-${selectedMonthObj.year}`
       : activeTab;
 
   return (
@@ -155,6 +159,25 @@ export function MoviesPage() {
       <div className={styles.tabWrapper}>
         <TabNav tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
+
+      {activeTab === "popular" && (
+        <div className={styles.selectorWrapper}>
+          <select
+            className={styles.filterSelect}
+            value={`${selectedMonthObj.month}-${selectedMonthObj.year}`}
+            onChange={(e) => {
+              const [m, y] = e.target.value.split("-");
+              setSelectedMonthObj({ month: parseInt(m), year: parseInt(y) });
+            }}
+          >
+            {getLast12Months().map((m) => (
+              <option key={`${m.month}-${m.year}`} value={`${m.month}-${m.year}`}>
+                {MONTH_PT[m.month - 1]} {m.year}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {activeTab === "search" && (
         <div className={styles.searchWrapper}>
