@@ -8,6 +8,10 @@ import { animeRoutes } from "./routes/animeRoutes.js";
 import { libraryRoutes } from "./routes/libraryRoutes.js";
 import { movieRoutes } from "./routes/movieRoutes.js";
 import { movieLibraryRoutes } from "./routes/movieLibraryRoutes.js";
+import { seriesRoutes } from "./routes/seriesRoutes.js";
+import { seriesLibraryRoutes } from "./routes/seriesLibraryRoutes.js";
+import { gameRoutes } from "./routes/gameRoutes.js";
+import { gameLibraryRoutes } from "./routes/gameLibraryRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3333;
@@ -19,6 +23,10 @@ app.use("/api/anime", animeRoutes);
 app.use("/api/library", libraryRoutes);
 app.use("/api/movie", movieRoutes);
 app.use("/api/movie-library", movieLibraryRoutes);
+app.use("/api/series", seriesRoutes);
+app.use("/api/series-library", seriesLibraryRoutes);
+app.use("/api/game", gameRoutes);
+app.use("/api/game-library", gameLibraryRoutes);
 
 async function start(): Promise<void> {
   await migrate();

@@ -46,4 +46,39 @@ export async function migrate(): Promise<void> {
       updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS series_library (
+      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      tmdb_id         INTEGER NOT NULL UNIQUE,
+      title           TEXT NOT NULL,
+      poster_image    TEXT,
+      status          TEXT NOT NULL DEFAULT 'plan_to_watch',
+      score           NUMERIC(3,1) DEFAULT 0,
+      first_air_date  TEXT,
+      seasons         INTEGER,
+      episodes        INTEGER,
+      series_status   TEXT NOT NULL DEFAULT 'RELEASED',
+      watched_at      TIMESTAMPTZ,
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS game_library (
+      id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      rawg_id           INTEGER NOT NULL UNIQUE,
+      title             TEXT NOT NULL,
+      background_image  TEXT,
+      status            TEXT NOT NULL DEFAULT 'plan_to_play',
+      score             NUMERIC(3,1) DEFAULT 0,
+      released          TEXT,
+      metacritic        INTEGER,
+      game_status       TEXT NOT NULL DEFAULT 'RELEASED',
+      finished_at       TIMESTAMPTZ,
+      created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
 }

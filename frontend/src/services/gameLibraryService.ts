@@ -1,0 +1,21 @@
+import { api } from "./api";
+import type { GameLibraryEntry, CreateGameLibraryEntry, UpdateGameLibraryEntry } from "../types/gameLibrary";
+
+export async function fetchLibrary(): Promise<GameLibraryEntry[]> {
+  const response = await api.get<GameLibraryEntry[]>("/api/game-library");
+  return response.data;
+}
+
+export async function addToLibrary(entry: CreateGameLibraryEntry): Promise<GameLibraryEntry> {
+  const response = await api.post<GameLibraryEntry>("/api/game-library", entry);
+  return response.data;
+}
+
+export async function updateLibraryEntry(id: string, data: UpdateGameLibraryEntry): Promise<GameLibraryEntry> {
+  const response = await api.put<GameLibraryEntry>(`/api/game-library/${id}`, data);
+  return response.data;
+}
+
+export async function removeFromLibrary(id: string): Promise<void> {
+  await api.delete(`/api/game-library/${id}`);
+}

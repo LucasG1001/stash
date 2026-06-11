@@ -11,9 +11,9 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { path: "/anime", label: "Anime", icon: "🎬" },
   { path: "/filmes", label: "Filmes", icon: "🎥" },
-  { path: "/series", label: "Séries", icon: "📺", badge: "Em breve" },
+  { path: "/series", label: "Séries", icon: "📺" },
   { path: "/livros", label: "Livros", icon: "📚", badge: "Em breve" },
-  { path: "/jogos", label: "Jogos", icon: "🎮", badge: "Em breve" },
+  { path: "/jogos", label: "Jogos", icon: "🎮" },
 ];
 
 interface SidebarProps {
