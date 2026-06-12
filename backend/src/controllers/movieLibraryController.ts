@@ -1,64 +1,20 @@
-import type { Request, Response } from "express";
-import * as movieLibraryModel from "../models/movieLibraryModel.js";
+import { createLibraryController } from "../lib/createLibraryController.js";
+import { movieLibraryModel } from "../models/movieLibraryModel.js";
+import { movieCreateSchema, movieUpdateSchema } from "../schemas/library.js";
 
-export async function getAll(_req: Request, res: Response): Promise<void> {
-  try {
-    const entries = await movieLibraryModel.findAll();
-    res.json(entries);
-  } catch {
-    res.status(500).json({ error: "Erro ao buscar biblioteca." });
-  }
-}
-
-export async function create(req: Request, res: Response): Promise<void> {
-  try {
-    const { tmdbId, title, posterImage, status, score, releaseDate, runtime, movieStatus } = req.body;
-
-    if (!tmdbId || !title) {
-      res.status(400).json({ error: "tmdbId e title são obrigatórios." });
-      return;
-    }
-
-    const existing = await movieLibraryModel.findByTmdbId(tmdbId);
-    if (existing) {
-      res.status(409).json({ error: "Filme já está na biblioteca.", entry: existing });
-      return;
-    }
-
-    const entry = await movieLibraryModel.create({ tmdbId, title, posterImage, status, score, releaseDate, runtime, movieStatus });
-    res.status(201).json(entry);
-  } catch {
-    res.status(500).json({ error: "Erro ao adicionar filme à biblioteca." });
-  }
-}
-
-export async function update(req: Request, res: Response): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const { title, posterImage, status, score, releaseDate, runtime, movieStatus } = req.body;
-
-    const entry = await movieLibraryModel.update(id, { title, posterImage, status, score, releaseDate, runtime, movieStatus });
-    if (!entry) {
-      res.status(404).json({ error: "Filme não encontrado na biblioteca." });
-      return;
-    }
-
-    res.json(entry);
-  } catch {
-    res.status(500).json({ error: "Erro ao atualizar filme na biblioteca." });
-  }
-}
-
-export async function remove(req: Request, res: Response): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const deleted = await movieLibraryModel.remove(id);
-    if (!deleted) {
-      res.status(404).json({ error: "Filme não encontrado na biblioteca." });
-      return;
-    }
-    res.status(204).send();
-  } catch {
-    res.status(500).json({ error: "Erro ao remover filme da biblioteca." });
-  }
-}
+export const { getAll, create, update, remove } = createLibraryController({
+  model: movieLibraryModel,
+  externalIdField: "tmdbId",
+  createSchema: movieCreateSchema,
+  updateSchema: movieUpdateSchema,
+  messages: {
+    required: "tmdbId e title são obrigatórios.",
+    invalid: "Dados inválidos.",
+    duplicate: "Filme já está na biblioteca.",
+    notFound: "Filme não encontrado na biblioteca.",
+    errorGetAll: "Erro ao buscar biblioteca.",
+    errorCreate: "Erro ao adicionar filme à biblioteca.",
+    errorUpdate: "Erro ao atualizar filme na biblioteca.",
+    errorRemove: "Erro ao remover filme da biblioteca.",
+  },
+});

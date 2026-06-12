@@ -1,6 +1,8 @@
 import type { Request, Response } from "express";
 import * as libraryModel from "../models/libraryModel.js";
 import { refreshStaleEntries } from "../services/librarySyncService.js";
+import { animeCreateSchema, animeUpdateSchema } from "../schemas/library.js";
+import type { CreateLibraryEntry } from "../types/library.js";
 
 export async function getAll(_req: Request, res: Response): Promise<void> {
   try {
@@ -14,12 +16,12 @@ export async function getAll(_req: Request, res: Response): Promise<void> {
 
 export async function create(req: Request, res: Response): Promise<void> {
   try {
-    const { anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, nextAiringEpisode, streamingLinks } = req.body;
-
-    if (!anilistId || !title) {
-      res.status(400).json({ error: "anilistId e title são obrigatórios." });
+    const parsed = animeCreateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Dados inválidos.", issues: parsed.error.flatten() });
       return;
     }
+    const { anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, nextAiringEpisode, streamingLinks } = parsed.data;
 
     const existing = await libraryModel.findByAnilistId(anilistId);
     if (existing) {
@@ -27,7 +29,9 @@ export async function create(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const entry = await libraryModel.create({ anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, nextAiringEpisode, streamingLinks });
+    const entry = await libraryModel.create(
+      { anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, nextAiringEpisode, streamingLinks } as unknown as CreateLibraryEntry
+    );
     res.status(201).json(entry);
   } catch {
     res.status(500).json({ error: "Erro ao adicionar anime à biblioteca." });
@@ -37,7 +41,12 @@ export async function create(req: Request, res: Response): Promise<void> {
 export async function update(req: Request, res: Response): Promise<void> {
   try {
     const id = String(req.params.id);
-    const { title, coverImage, status, score, totalEpisodes, animeStatus } = req.body;
+    const parsed = animeUpdateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Dados inválidos.", issues: parsed.error.flatten() });
+      return;
+    }
+    const { title, coverImage, status, score, totalEpisodes, animeStatus } = parsed.data;
 
     const entry = await libraryModel.update(id, { title, coverImage, status, score, totalEpisodes, animeStatus });
     if (!entry) {

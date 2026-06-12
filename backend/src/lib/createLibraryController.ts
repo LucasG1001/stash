@@ -1,0 +1,109 @@
+import type { Request, Response } from "express";
+import type { ZodType } from "zod";
+import type { LibraryModel } from "./createLibraryModel.js";
+
+export interface LibraryControllerMessages {
+  required: string;
+  invalid: string;
+  duplicate: string;
+  notFound: string;
+  errorGetAll: string;
+  errorCreate: string;
+  errorUpdate: string;
+  errorRemove: string;
+}
+
+export interface LibraryControllerConfig<TEntry, TCreate, TUpdate> {
+  model: LibraryModel<TEntry, TCreate, TUpdate>;
+  externalIdField: string;
+  messages: LibraryControllerMessages;
+  createSchema?: ZodType;
+  updateSchema?: ZodType;
+}
+
+export interface LibraryController {
+  getAll(req: Request, res: Response): Promise<void>;
+  create(req: Request, res: Response): Promise<void>;
+  update(req: Request, res: Response): Promise<void>;
+  remove(req: Request, res: Response): Promise<void>;
+}
+
+export function createLibraryController<TEntry, TCreate, TUpdate>(
+  config: LibraryControllerConfig<TEntry, TCreate, TUpdate>
+): LibraryController {
+  const { model, externalIdField, messages, createSchema, updateSchema } = config;
+
+  const getAll = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      res.json(await model.findAll());
+    } catch {
+      res.status(500).json({ error: messages.errorGetAll });
+    }
+  };
+
+  const create = async (req: Request, res: Response): Promise<void> => {
+    try {
+      let body = req.body as Record<string, unknown>;
+      if (createSchema) {
+        const parsed = createSchema.safeParse(req.body);
+        if (!parsed.success) {
+          res.status(400).json({ error: messages.invalid, issues: parsed.error.flatten() });
+          return;
+        }
+        body = parsed.data as Record<string, unknown>;
+      }
+      if (!body[externalIdField] || !body.title) {
+        res.status(400).json({ error: messages.required });
+        return;
+      }
+      const existing = await model.findByExternalId(body[externalIdField] as number | string);
+      if (existing) {
+        res.status(409).json({ error: messages.duplicate, entry: existing });
+        return;
+      }
+      const entry = await model.create(body as TCreate);
+      res.status(201).json(entry);
+    } catch {
+      res.status(500).json({ error: messages.errorCreate });
+    }
+  };
+
+  const update = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = String(req.params.id);
+      let body = req.body as Record<string, unknown>;
+      if (updateSchema) {
+        const parsed = updateSchema.safeParse(req.body);
+        if (!parsed.success) {
+          res.status(400).json({ error: messages.invalid, issues: parsed.error.flatten() });
+          return;
+        }
+        body = parsed.data as Record<string, unknown>;
+      }
+      const entry = await model.update(id, body as TUpdate);
+      if (!entry) {
+        res.status(404).json({ error: messages.notFound });
+        return;
+      }
+      res.json(entry);
+    } catch {
+      res.status(500).json({ error: messages.errorUpdate });
+    }
+  };
+
+  const remove = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = String(req.params.id);
+      const deleted = await model.remove(id);
+      if (!deleted) {
+        res.status(404).json({ error: messages.notFound });
+        return;
+      }
+      res.status(204).send();
+    } catch {
+      res.status(500).json({ error: messages.errorRemove });
+    }
+  };
+
+  return { getAll, create, update, remove };
+}

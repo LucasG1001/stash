@@ -1,4 +1,4 @@
-import axios from "axios";
+import { cachedRequest } from "../lib/httpClient.js";
 import type {
   GoogleBooksVolume,
   GoogleBooksListResponse,
@@ -10,6 +10,7 @@ import type {
 
 const GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1";
 const PAGE_SIZE = 20;
+const CACHE_TTL_MS = 60 * 60 * 1000;
 
 function proxify(url: string | null): string | null {
   return url ? `/api/book/media?url=${encodeURIComponent(url)}` : null;
@@ -72,10 +73,10 @@ function toPageInfo(data: GoogleBooksListResponse, page: number, count: number):
 
 async function queryGoogleBooks<T>(path: string, params: Record<string, unknown> = {}): Promise<T> {
   const key = process.env.GOOGLE_BOOKS_API_KEY;
-  const response = await axios.get<T>(`${GOOGLE_BOOKS_URL}${path}`, {
-    params: { country: "BR", ...(key ? { key } : {}), ...params },
-  });
-  return response.data;
+  return cachedRequest<T>(
+    { url: `${GOOGLE_BOOKS_URL}${path}`, params: { country: "BR", ...(key ? { key } : {}), ...params } },
+    CACHE_TTL_MS
+  );
 }
 
 export async function fetchBooksByGenre(subject: string, page = 1): Promise<BookListResult> {

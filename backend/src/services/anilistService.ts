@@ -1,7 +1,8 @@
-import axios from "axios";
+import { cachedRequest } from "../lib/httpClient.js";
 import type { AniListAnime, AniListResponse, AniListSingleResponse, AnimeCard, AnimeDetail, AniListExternalLink } from "../types/anime.js";
 
 const ANILIST_URL = "https://graphql.anilist.co";
+const CACHE_TTL_MS = 60 * 60 * 1000;
 
 const MEDIA_FIELDS = `
   id
@@ -73,8 +74,7 @@ function getNextSeason(): { season: string; year: number } {
 }
 
 async function queryAniList<T>(query: string, variables: Record<string, unknown>): Promise<T> {
-  const response = await axios.post<T>(ANILIST_URL, { query, variables });
-  return response.data;
+  return cachedRequest<T>({ method: "post", url: ANILIST_URL, data: { query, variables } }, CACHE_TTL_MS);
 }
 
 export async function fetchSeasonAnimes(season: string, year: number, page = 1, perPage = 20): Promise<{ animes: AnimeCard[]; pageInfo: AniListResponse["data"]["Page"]["pageInfo"] }> {

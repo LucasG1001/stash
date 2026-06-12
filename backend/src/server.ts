@@ -14,6 +14,7 @@ import { gameRoutes } from "./routes/gameRoutes.js";
 import { gameLibraryRoutes } from "./routes/gameLibraryRoutes.js";
 import { bookRoutes } from "./routes/bookRoutes.js";
 import { bookLibraryRoutes } from "./routes/bookLibraryRoutes.js";
+import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 const PORT = process.env.PORT || 3333;
@@ -31,6 +32,9 @@ app.use("/api/game", gameRoutes);
 app.use("/api/game-library", gameLibraryRoutes);
 app.use("/api/book", bookRoutes);
 app.use("/api/book-library", bookLibraryRoutes);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 async function start(): Promise<void> {
   await migrate();

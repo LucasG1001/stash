@@ -1,4 +1,4 @@
-import axios from "axios";
+import { cachedRequest } from "../lib/httpClient.js";
 import type {
   RawgGameListItem,
   RawgGameDetail,
@@ -15,6 +15,7 @@ import type {
 
 const RAWG_URL = "https://api.rawg.io/api";
 const PAGE_SIZE = 20;
+const CACHE_TTL_MS = 60 * 60 * 1000;
 
 function proxify(url: string | null): string | null {
   return url ? `/api/game/media?url=${encodeURIComponent(url)}` : null;
@@ -47,10 +48,10 @@ function toPageInfo(data: RawgListResponse, page: number): GamePageInfo {
 }
 
 async function queryRawg<T>(path: string, params: Record<string, unknown> = {}): Promise<T> {
-  const response = await axios.get<T>(`${RAWG_URL}${path}`, {
-    params: { key: process.env.RAWG_API_KEY, ...params },
-  });
-  return response.data;
+  return cachedRequest<T>(
+    { url: `${RAWG_URL}${path}`, params: { key: process.env.RAWG_API_KEY, ...params } },
+    CACHE_TTL_MS
+  );
 }
 
 export async function fetchPopularGames(year: number, month: number | undefined, page = 1): Promise<GameListResult> {

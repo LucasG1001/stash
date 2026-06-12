@@ -1,4 +1,4 @@
-import axios from "axios";
+import { cachedRequest } from "../lib/httpClient.js";
 import type {
   TmdbMovieListItem,
   TmdbMovieDetail,
@@ -11,6 +11,7 @@ import type {
 } from "../types/movie.js";
 
 const TMDB_URL = "https://api.themoviedb.org/3";
+const CACHE_TTL_MS = 60 * 60 * 1000;
 const IMAGE_BASE = "https://image.tmdb.org/t/p";
 const POSTER_SIZE = "w500";
 const BACKDROP_SIZE = "w1280";
@@ -71,10 +72,10 @@ function toPageInfo(data: TmdbListResponse): MoviePageInfo {
 }
 
 async function queryTmdb<T>(path: string, params: Record<string, unknown>): Promise<T> {
-  const response = await axios.get<T>(`${TMDB_URL}${path}`, {
-    params: { api_key: process.env.TMDB_API_KEY, language: "pt-BR", ...params },
-  });
-  return response.data;
+  return cachedRequest<T>(
+    { url: `${TMDB_URL}${path}`, params: { api_key: process.env.TMDB_API_KEY, language: "pt-BR", ...params } },
+    CACHE_TTL_MS
+  );
 }
 
 export async function fetchPopularMovies(year: number, month: number | undefined, page = 1): Promise<MovieListResult> {
