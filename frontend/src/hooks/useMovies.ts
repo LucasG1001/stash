@@ -50,6 +50,7 @@ export function useMovies(): UseMoviesReturn {
 
     setLoading(true);
     setError(null);
+    setMovies([]);
     try {
       const result = await fetchFn(1);
       const entry: CacheEntry = {

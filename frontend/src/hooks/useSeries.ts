@@ -49,6 +49,7 @@ export function useSeries(): UseSeriesReturn {
 
     setLoading(true);
     setError(null);
+    setSeries([]);
     try {
       const result = await fetchFn(1);
       const entry: CacheEntry = {

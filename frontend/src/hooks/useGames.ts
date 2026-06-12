@@ -50,6 +50,7 @@ export function useGames(): UseGamesReturn {
 
     setLoading(true);
     setError(null);
+    setGames([]);
     try {
       const result = await fetchFn(1);
       const entry: CacheEntry = {

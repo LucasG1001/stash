@@ -50,6 +50,7 @@ export function useAnime(): UseAnimeReturn {
 
     setLoading(true);
     setError(null);
+    setAnimes([]);
     try {
       const result = await fetchFn(1);
       const entry: CacheEntry = {
