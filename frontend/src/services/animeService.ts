@@ -2,7 +2,7 @@ import { api } from "./api";
 import type { AnimeListResponse, AnimeDetail } from "../types/anime";
 
 export async function fetchSeason(season?: string, year?: number, page = 1): Promise<AnimeListResponse> {
-  const params: Record<string, any> = { page };
+  const params: Record<string, string | number> = { page };
   if (season) params.season = season;
   if (year) params.year = year;
   const response = await api.get<AnimeListResponse>("/api/anime/season", { params });

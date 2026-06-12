@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Sidebar } from "./components/Sidebar/Sidebar";
+import { LibraryProvider } from "./context/LibraryContext";
 import { AnimePage } from "./pages/AnimePage/AnimePage";
 import { MoviesPage } from "./pages/MoviesPage/MoviesPage";
 import { SeriesPage } from "./pages/SeriesPage/SeriesPage";
@@ -25,21 +26,23 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className={styles.layout}>
-        <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
-        <main
-          className={`${styles.content} ${collapsed ? styles.contentCollapsed : ""}`}
-        >
-          <Routes>
+      <LibraryProvider>
+        <div className={styles.layout}>
+          <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
+          <main
+            className={`${styles.content} ${collapsed ? styles.contentCollapsed : ""}`}
+          >
+            <Routes>
             <Route path="/" element={<Navigate to="/anime" replace />} />
             <Route path="/anime" element={<AnimePage />} />
             <Route path="/filmes" element={<MoviesPage />} />
             <Route path="/series" element={<SeriesPage />} />
             <Route path="/livros" element={<BooksPage />} />
             <Route path="/jogos" element={<GamesPage />} />
-          </Routes>
-        </main>
-      </div>
+            </Routes>
+          </main>
+        </div>
+      </LibraryProvider>
     </BrowserRouter>
   );
 }
