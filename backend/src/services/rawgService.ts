@@ -16,6 +16,10 @@ import type {
 const RAWG_URL = "https://api.rawg.io/api";
 const PAGE_SIZE = 20;
 
+function proxify(url: string | null): string | null {
+  return url ? `/api/game/media?url=${encodeURIComponent(url)}` : null;
+}
+
 function deriveStatus(released: string | null, tba: boolean): string {
   if (tba || !released) return "UPCOMING";
   const today = new Date().toISOString().slice(0, 10);
@@ -26,7 +30,7 @@ function toGameCard(game: RawgGameListItem): GameCard {
   return {
     id: game.id,
     title: game.name,
-    backgroundImage: game.background_image,
+    backgroundImage: proxify(game.background_image),
     released: game.released || null,
     rating: game.rating,
     metacritic: game.metacritic,
@@ -101,8 +105,9 @@ export async function fetchGameById(id: number): Promise<GameDetail> {
     .filter((s) => s.url);
 
   const movie = movies.results[0];
-  const trailer = movie
-    ? { url: movie.data.max || movie.data[480] || "", preview: movie.preview }
+  const rawTrailerUrl = movie ? movie.data.max || movie.data[480] || "" : "";
+  const trailer = rawTrailerUrl
+    ? { url: proxify(rawTrailerUrl) ?? "", preview: proxify(movie.preview) }
     : null;
 
   return {
@@ -116,7 +121,7 @@ export async function fetchGameById(id: number): Promise<GameDetail> {
     esrb: detail.esrb_rating?.name ?? null,
     stores,
     trailer: trailer && trailer.url ? trailer : null,
-    screenshots: screenshots.results.map((s) => s.image),
+    screenshots: screenshots.results.map((s) => proxify(s.image)).filter((s): s is string => !!s),
     ratingsCount: detail.ratings_count,
   };
 }
