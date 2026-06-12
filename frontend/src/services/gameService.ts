@@ -1,10 +1,10 @@
 import { api } from "./api";
 import type { GameListResponse, GameDetail } from "../types/game";
 
-export async function fetchPopular(month?: number, year?: number, page = 1): Promise<GameListResponse> {
+export async function fetchPopular(year?: number, month?: number, page = 1): Promise<GameListResponse> {
   const params: Record<string, number> = { page };
-  if (month) params.month = month;
   if (year) params.year = year;
+  if (month) params.month = month;
   const response = await api.get<GameListResponse>("/api/game/popular", { params });
   return response.data;
 }

@@ -77,13 +77,14 @@ async function queryTmdb<T>(path: string, params: Record<string, unknown>): Prom
   return response.data;
 }
 
-export async function fetchPopularMovies(month: number, year: number, page = 1): Promise<MovieListResult> {
-  const mm = String(month).padStart(2, "0");
-  const lastDay = new Date(year, month, 0).getDate();
+export async function fetchPopularMovies(year: number, month: number | undefined, page = 1): Promise<MovieListResult> {
+  const mm = month ? String(month).padStart(2, "0") : "";
+  const gte = month ? `${year}-${mm}-01` : `${year}-01-01`;
+  const lte = month ? `${year}-${mm}-${new Date(year, month, 0).getDate()}` : `${year}-12-31`;
   const data = await queryTmdb<TmdbListResponse>("/discover/movie", {
     sort_by: "vote_count.desc",
-    "primary_release_date.gte": `${year}-${mm}-01`,
-    "primary_release_date.lte": `${year}-${mm}-${lastDay}`,
+    "primary_release_date.gte": gte,
+    "primary_release_date.lte": lte,
     page,
   });
   return { movies: data.results.map(toMovieCard), pageInfo: toPageInfo(data) };

@@ -53,11 +53,12 @@ async function queryRawg<T>(path: string, params: Record<string, unknown> = {}):
   return response.data;
 }
 
-export async function fetchPopularGames(month: number, year: number, page = 1): Promise<GameListResult> {
-  const mm = String(month).padStart(2, "0");
-  const lastDay = new Date(year, month, 0).getDate();
+export async function fetchPopularGames(year: number, month: number | undefined, page = 1): Promise<GameListResult> {
+  const mm = month ? String(month).padStart(2, "0") : "";
+  const start = month ? `${year}-${mm}-01` : `${year}-01-01`;
+  const end = month ? `${year}-${mm}-${new Date(year, month, 0).getDate()}` : `${year}-12-31`;
   const data = await queryRawg<RawgListResponse>("/games", {
-    dates: `${year}-${mm}-01,${year}-${mm}-${lastDay}`,
+    dates: `${start},${end}`,
     ordering: "-added",
     page,
     page_size: PAGE_SIZE,

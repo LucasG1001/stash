@@ -10,7 +10,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import type { GameCard, GameDetail } from "../../types/game";
 import type { GameLibraryStatus } from "../../types/gameLibrary";
 import { GAME_LIBRARY_STATUS_LABELS } from "../../types/gameLibrary";
-import { MONTH_PT, getCurrentMonth, getLast12Months } from "../../utils/month";
+import { MONTH_PT } from "../../utils/month";
+import { getCurrentYear, getRecentYears } from "../../utils/year";
 import styles from "./GamesPage.module.css";
 
 const TABS = [
@@ -29,7 +30,8 @@ export function GamesPage() {
   const [selectedGameForModal, setSelectedGameForModal] = useState<GameCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<GameLibraryStatus | "all">("all");
   const [finishedSortDir, setFinishedSortDir] = useState<"desc" | "asc">("desc");
-  const [selectedMonthObj, setSelectedMonthObj] = useState(getCurrentMonth());
+  const [selectedYear, setSelectedYear] = useState(getCurrentYear());
+  const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
 
   const { games, loading, error, hasNextPage, loadPopular, loadUpcoming, search, loadMore } = useGames();
@@ -45,10 +47,10 @@ export function GamesPage() {
 
   useEffect(() => {
     switch (activeTab) {
-      case "popular": loadPopular(selectedMonthObj.month, selectedMonthObj.year); break;
+      case "popular": loadPopular(selectedYear, selectedMonth); break;
       case "upcoming": loadUpcoming(); break;
     }
-  }, [activeTab, selectedMonthObj, loadPopular, loadUpcoming]);
+  }, [activeTab, selectedYear, selectedMonth, loadPopular, loadUpcoming]);
 
   useEffect(() => {
     if (activeTab === "search" && debouncedSearch.length >= 2) {
@@ -149,7 +151,7 @@ export function GamesPage() {
       : activeTab === "search"
       ? `search-${debouncedSearch}`
       : activeTab === "popular"
-      ? `popular-${selectedMonthObj.month}-${selectedMonthObj.year}`
+      ? `popular-${selectedYear}-${selectedMonth}`
       : activeTab;
 
   return (
@@ -164,15 +166,24 @@ export function GamesPage() {
         <div className={styles.selectorWrapper}>
           <select
             className={styles.filterSelect}
-            value={`${selectedMonthObj.month}-${selectedMonthObj.year}`}
-            onChange={(e) => {
-              const [m, y] = e.target.value.split("-");
-              setSelectedMonthObj({ month: parseInt(m), year: parseInt(y) });
-            }}
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
           >
-            {getLast12Months().map((m) => (
-              <option key={`${m.month}-${m.year}`} value={`${m.month}-${m.year}`}>
-                {MONTH_PT[m.month - 1]} {m.year}
+            {getRecentYears().map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+          <select
+            className={styles.filterSelect}
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+          >
+            <option value={0}>Ano inteiro</option>
+            {MONTH_PT.map((name, i) => (
+              <option key={i + 1} value={i + 1}>
+                {name}
               </option>
             ))}
           </select>

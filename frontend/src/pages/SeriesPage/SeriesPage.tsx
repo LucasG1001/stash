@@ -10,7 +10,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import type { SeriesCard, SeriesDetail } from "../../types/series";
 import type { SeriesLibraryStatus } from "../../types/seriesLibrary";
 import { SERIES_LIBRARY_STATUS_LABELS } from "../../types/seriesLibrary";
-import { MONTH_PT, getCurrentMonth, getLast12Months } from "../../utils/month";
+import { MONTH_PT } from "../../utils/month";
+import { getCurrentYear, getRecentYears } from "../../utils/year";
 import styles from "./SeriesPage.module.css";
 
 const TABS = [
@@ -28,7 +29,8 @@ export function SeriesPage() {
   const [selectedSeriesForModal, setSelectedSeriesForModal] = useState<SeriesCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<SeriesLibraryStatus | "all">("all");
   const [watchedSortDir, setWatchedSortDir] = useState<"desc" | "asc">("desc");
-  const [selectedMonthObj, setSelectedMonthObj] = useState(getCurrentMonth());
+  const [selectedYear, setSelectedYear] = useState(getCurrentYear());
+  const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
 
   const { series, loading, error, hasNextPage, loadPopular, search, loadMore } = useSeries();
@@ -44,9 +46,9 @@ export function SeriesPage() {
 
   useEffect(() => {
     if (activeTab === "popular") {
-      loadPopular(selectedMonthObj.month, selectedMonthObj.year);
+      loadPopular(selectedYear, selectedMonth);
     }
-  }, [activeTab, selectedMonthObj, loadPopular]);
+  }, [activeTab, selectedYear, selectedMonth, loadPopular]);
 
   useEffect(() => {
     if (activeTab === "search" && debouncedSearch.length >= 2) {
@@ -148,7 +150,7 @@ export function SeriesPage() {
       ? `library-${libraryFilter}-${watchedSortDir}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
-      : `popular-${selectedMonthObj.month}-${selectedMonthObj.year}`;
+      : `popular-${selectedYear}-${selectedMonth}`;
 
   return (
     <div className={styles.page}>
@@ -162,15 +164,24 @@ export function SeriesPage() {
         <div className={styles.selectorWrapper}>
           <select
             className={styles.filterSelect}
-            value={`${selectedMonthObj.month}-${selectedMonthObj.year}`}
-            onChange={(e) => {
-              const [m, y] = e.target.value.split("-");
-              setSelectedMonthObj({ month: parseInt(m), year: parseInt(y) });
-            }}
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
           >
-            {getLast12Months().map((m) => (
-              <option key={`${m.month}-${m.year}`} value={`${m.month}-${m.year}`}>
-                {MONTH_PT[m.month - 1]} {m.year}
+            {getRecentYears().map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+          <select
+            className={styles.filterSelect}
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+          >
+            <option value={0}>Ano inteiro</option>
+            {MONTH_PT.map((name, i) => (
+              <option key={i + 1} value={i + 1}>
+                {name}
               </option>
             ))}
           </select>

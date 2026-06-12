@@ -7,7 +7,7 @@ interface UseSeriesReturn {
   loading: boolean;
   error: string | null;
   hasNextPage: boolean;
-  loadPopular: (month: number, year: number) => Promise<void>;
+  loadPopular: (year: number, month: number) => Promise<void>;
   search: (query: string) => Promise<void>;
   loadMore: () => Promise<void>;
 }
@@ -66,8 +66,8 @@ export function useSeries(): UseSeriesReturn {
     }
   }, [applyEntry]);
 
-  const loadPopular = useCallback((month: number, year: number) => {
-    return load(`popular:${month}:${year}`, (p) => fetchPopular(month, year, p));
+  const loadPopular = useCallback((year: number, month: number) => {
+    return load(`popular:${year}:${month}`, (p) => fetchPopular(year, month || undefined, p));
   }, [load]);
 
   const search = useCallback((query: string) => {

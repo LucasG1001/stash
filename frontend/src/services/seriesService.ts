@@ -1,10 +1,10 @@
 import { api } from "./api";
 import type { SeriesListResponse, SeriesDetail } from "../types/series";
 
-export async function fetchPopular(month?: number, year?: number, page = 1): Promise<SeriesListResponse> {
+export async function fetchPopular(year?: number, month?: number, page = 1): Promise<SeriesListResponse> {
   const params: Record<string, number> = { page };
-  if (month) params.month = month;
   if (year) params.year = year;
+  if (month) params.month = month;
   const response = await api.get<SeriesListResponse>("/api/series/popular", { params });
   return response.data;
 }
