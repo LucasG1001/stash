@@ -12,7 +12,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: "/anime", label: "Anime", icon: "🎬" },
   { path: "/filmes", label: "Filmes", icon: "🎥" },
   { path: "/series", label: "Séries", icon: "📺" },
-  { path: "/livros", label: "Livros", icon: "📚", badge: "Em breve" },
+  { path: "/livros", label: "Livros", icon: "📚" },
   { path: "/jogos", label: "Jogos", icon: "🎮" },
 ];
 

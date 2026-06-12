@@ -81,4 +81,21 @@ export async function migrate(): Promise<void> {
       updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS books_library (
+      id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      google_books_id  TEXT NOT NULL UNIQUE,
+      title            TEXT NOT NULL,
+      cover_image      TEXT,
+      authors          TEXT,
+      status           TEXT NOT NULL DEFAULT 'plan_to_read',
+      score            NUMERIC(3,1) DEFAULT 0,
+      published_date   TEXT,
+      page_count       INTEGER,
+      read_at          TIMESTAMPTZ,
+      created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
 }
