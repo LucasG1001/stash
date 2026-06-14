@@ -71,8 +71,8 @@ export function GameDrawer({ gameId, onClose, onGameLoad }: GameDrawerProps) {
           <div className={styles.loading}>Carregando...</div>
         ) : game ? (
           <>
-            {game.backgroundImage ? (
-              <img className={styles.banner} src={game.backgroundImage} alt="" />
+            {game.screenshots[0] || game.backgroundImage ? (
+              <img className={styles.banner} src={game.screenshots[0] ?? game.backgroundImage ?? undefined} alt="" />
             ) : (
               <div className={styles.bannerPlaceholder} />
             )}
@@ -87,12 +87,12 @@ export function GameDrawer({ gameId, onClose, onGameLoad }: GameDrawerProps) {
             <div className={styles.content}>
               {game.trailer && (
                 <div className={styles.trailerWrapper}>
-                  <video
+                  <iframe
                     className={styles.trailer}
-                    src={game.trailer.url}
-                    poster={game.trailer.preview ?? undefined}
-                    controls
-                    preload="none"
+                    src={`https://www.youtube.com/embed/${game.trailer.youtubeId}`}
+                    title="Trailer"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
                   />
                 </div>
               )}
@@ -117,11 +117,11 @@ export function GameDrawer({ gameId, onClose, onGameLoad }: GameDrawerProps) {
                   <span className={styles.infoValue}>{formatReleased(game.released)}</span>
                 </div>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Metacritic</span>
+                  <span className={styles.infoLabel}>Crítica</span>
                   <span className={styles.infoValue}>{game.metacritic ?? "N/A"}</span>
                 </div>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Nota RAWG</span>
+                  <span className={styles.infoLabel}>Nota IGDB</span>
                   <span className={styles.infoValue}>
                     {game.rating
                       ? `★ ${game.rating.toFixed(1)}${game.ratingsCount ? ` (${game.ratingsCount.toLocaleString("pt-BR")})` : ""}`

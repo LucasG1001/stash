@@ -11,7 +11,7 @@ describe("library schemas", () => {
   });
 
   it("rejects an invalid status", () => {
-    expect(gameCreateSchema.safeParse({ rawgId: 1, title: "X", status: "nope" }).success).toBe(false);
+    expect(gameCreateSchema.safeParse({ igdbId: 1, title: "X", status: "nope" }).success).toBe(false);
   });
 
   it("requires a non-empty title", () => {

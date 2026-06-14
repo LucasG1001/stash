@@ -12,7 +12,7 @@ interface GameGridProps {
   onLoadMore: () => void;
   onCardClick: (game: GameCardType) => void;
   onAddToLibrary: (game: GameCardType) => void;
-  getLibraryEntry: (rawgId: number) => GameLibraryEntry | undefined;
+  getLibraryEntry: (igdbId: number) => GameLibraryEntry | undefined;
   emptyMessage?: string;
   isLibraryView?: boolean;
   animationKey?: string;

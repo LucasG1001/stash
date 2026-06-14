@@ -1,5 +1,6 @@
 import type { GameCard as GameCardType } from "../../types/game";
 import type { GameLibraryEntry } from "../../types/gameLibrary";
+import { StoreGlyph } from "./StoreIcons";
 import styles from "./GameCard.module.css";
 
 interface GameCardProps {
@@ -28,8 +29,8 @@ function getStatusLabel(status: string): string {
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 4) return "var(--color-score-high)";
-  if (score >= 2.5) return "var(--color-score-mid)";
+  if (score >= 7.5) return "var(--color-score-high)";
+  if (score >= 5) return "var(--color-score-mid)";
   return "var(--color-score-low)";
 }
 
@@ -65,6 +66,13 @@ export function GameCard({ game, libraryEntry, onClick, onAdd, isLibraryView, in
           <div className={styles.title}>{game.title}</div>
           <div className={styles.meta}>
             <span className={styles.year}>📅 {year}</span>
+            {game.storeSlugs.length > 0 && (
+              <div className={styles.storeIcons}>
+                {game.storeSlugs.slice(0, 3).map((slug) => (
+                  <StoreGlyph key={slug} slug={slug} className={styles.storeIcon} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

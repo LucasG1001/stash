@@ -6,7 +6,7 @@ export function useGameLibrary() {
   const store = useLibraryStore<GameLibraryEntry, CreateGameLibraryEntry, UpdateGameLibraryEntry>(
     "game",
     gameLibraryService,
-    (entry) => entry.rawgId
+    (entry) => entry.igdbId
   );
-  return { ...store, findByRawgId: store.findByExternalId };
+  return { ...store, findByIgdbId: store.findByExternalId };
 }

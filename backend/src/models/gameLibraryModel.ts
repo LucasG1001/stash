@@ -3,7 +3,7 @@ import type { GameLibraryEntry, CreateGameLibraryEntry, UpdateGameLibraryEntry }
 
 export const gameLibraryModel = createLibraryModel<GameLibraryEntry, CreateGameLibraryEntry, UpdateGameLibraryEntry>({
   table: "game_library",
-  externalId: { column: "rawg_id", field: "rawgId" },
+  externalId: { column: "igdb_id", field: "igdbId" },
   fields: [
     { column: "title", field: "title" },
     { column: "background_image", field: "backgroundImage", default: null },

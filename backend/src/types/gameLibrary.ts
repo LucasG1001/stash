@@ -2,7 +2,7 @@ export type GameLibraryStatus = "plan_to_play" | "playing" | "beaten" | "dropped
 
 export interface GameLibraryEntry {
   id: string;
-  rawgId: number;
+  igdbId: number;
   title: string;
   backgroundImage: string | null;
   status: GameLibraryStatus;
@@ -16,7 +16,7 @@ export interface GameLibraryEntry {
 }
 
 export interface CreateGameLibraryEntry {
-  rawgId: number;
+  igdbId: number;
   title: string;
   backgroundImage?: string | null;
   status?: GameLibraryStatus;
@@ -38,7 +38,7 @@ export interface UpdateGameLibraryEntry {
 
 export interface GameLibraryRow {
   id: string;
-  rawg_id: number;
+  igdb_id: number;
   title: string;
   background_image: string | null;
   status: GameLibraryStatus;

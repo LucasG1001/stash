@@ -42,7 +42,7 @@ export function GamesPage() {
     add: addEntry,
     update: updateEntry,
     remove: removeEntry,
-    findByRawgId,
+    findByIgdbId,
   } = useGameLibrary();
 
   useEffect(() => {
@@ -72,12 +72,12 @@ export function GamesPage() {
   }, []);
 
   const handleModalSave = useCallback((game: GameCard, data: { status: GameLibraryStatus; score: number }) => {
-    const existing = findByRawgId(game.id);
+    const existing = findByIgdbId(game.id);
     if (existing) {
       updateEntry(existing.id, { ...data, gameStatus: game.gameStatus });
     } else {
       addEntry({
-        rawgId: game.id,
+        igdbId: game.id,
         title: game.title,
         backgroundImage: game.backgroundImage,
         released: game.released,
@@ -87,7 +87,7 @@ export function GamesPage() {
       });
     }
     setSelectedGameForModal(null);
-  }, [findByRawgId, updateEntry, addEntry]);
+  }, [findByIgdbId, updateEntry, addEntry]);
 
   const handleModalRemove = useCallback((id: string) => {
     removeEntry(id);
@@ -95,7 +95,7 @@ export function GamesPage() {
   }, [removeEntry]);
 
   const handleGameLoad = useCallback((gameDetail: GameDetail) => {
-    const entry = findByRawgId(gameDetail.id);
+    const entry = findByIgdbId(gameDetail.id);
     if (entry) {
       const needsUpdate =
         entry.gameStatus !== gameDetail.gameStatus ||
@@ -114,7 +114,7 @@ export function GamesPage() {
         });
       }
     }
-  }, [findByRawgId, updateEntry]);
+  }, [findByIgdbId, updateEntry]);
 
   const filteredLibraryEntries = libraryFilter === "all"
     ? libraryEntries
@@ -132,13 +132,14 @@ export function GamesPage() {
     : filteredLibraryEntries;
 
   const libraryGameCards: GameCard[] = sortedLibraryEntries.map((entry) => ({
-    id: entry.rawgId,
+    id: entry.igdbId,
     title: entry.title,
     backgroundImage: entry.backgroundImage,
     released: entry.released,
     rating: null,
     metacritic: entry.metacritic,
     gameStatus: entry.gameStatus || "RELEASED",
+    storeSlugs: [],
   }));
 
   const displayGames = activeTab === "library" ? libraryGameCards : games;
@@ -240,7 +241,7 @@ export function GamesPage() {
         onLoadMore={loadMore}
         onCardClick={handleCardClick}
         onAddToLibrary={handleOpenLibraryModal}
-        getLibraryEntry={(id) => findByRawgId(id)}
+        getLibraryEntry={(id) => findByIgdbId(id)}
         isLibraryView={activeTab === "library"}
         animationKey={gridKey}
         emptyMessage={
@@ -263,7 +264,7 @@ export function GamesPage() {
       {selectedGameForModal !== null && (
         <GameLibraryModal
           game={selectedGameForModal}
-          libraryEntry={findByRawgId(selectedGameForModal.id)}
+          libraryEntry={findByIgdbId(selectedGameForModal.id)}
           onClose={() => setSelectedGameForModal(null)}
           onSave={handleModalSave}
           onRemove={handleModalRemove}

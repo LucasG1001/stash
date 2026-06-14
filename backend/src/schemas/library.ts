@@ -30,7 +30,7 @@ export const seriesCreateSchema = z.object({
 export const seriesUpdateSchema = seriesCreateSchema.partial();
 
 export const gameCreateSchema = z.object({
-  rawgId: z.number(),
+  igdbId: z.number(),
   title: z.string().min(1),
   backgroundImage: nullableString,
   status: z.enum(["plan_to_play", "playing", "beaten", "dropped"]).optional(),

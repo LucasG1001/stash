@@ -66,9 +66,21 @@ export async function migrate(): Promise<void> {
   `);
 
   await pool.query(`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'game_library' AND column_name = 'rawg_id'
+      ) THEN
+        DROP TABLE game_library;
+      END IF;
+    END $$;
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS game_library (
       id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      rawg_id           INTEGER NOT NULL UNIQUE,
+      igdb_id           INTEGER NOT NULL UNIQUE,
       title             TEXT NOT NULL,
       background_image  TEXT,
       status            TEXT NOT NULL DEFAULT 'plan_to_play',

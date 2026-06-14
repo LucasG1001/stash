@@ -4,11 +4,11 @@ import { gameCreateSchema, gameUpdateSchema } from "../schemas/library.js";
 
 export const { getAll, create, update, remove } = createLibraryController({
   model: gameLibraryModel,
-  externalIdField: "rawgId",
+  externalIdField: "igdbId",
   createSchema: gameCreateSchema,
   updateSchema: gameUpdateSchema,
   messages: {
-    required: "rawgId e title são obrigatórios.",
+    required: "igdbId e title são obrigatórios.",
     invalid: "Dados inválidos.",
     duplicate: "Jogo já está na biblioteca.",
     notFound: "Jogo não encontrado na biblioteca.",

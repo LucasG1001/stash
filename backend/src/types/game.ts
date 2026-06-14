@@ -1,79 +1,57 @@
-export interface RawgGenre {
+export interface IgdbImageRef {
+  id?: number;
+  image_id: string;
+}
+
+export interface IgdbNamed {
   id: number;
   name: string;
 }
 
-export interface RawgPlatformWrapper {
-  platform: { id: number; name: string };
-}
-
-export interface RawgShortScreenshot {
+export interface IgdbVideo {
   id: number;
-  image: string;
+  name?: string;
+  video_id: string;
 }
 
-export interface RawgGameListItem {
+export interface IgdbWebsite {
+  id: number;
+  type: number;
+  url?: string;
+}
+
+export interface IgdbExternalGame {
+  id: number;
+  external_game_source: number;
+  uid: string;
+}
+
+export interface IgdbInvolvedCompany {
+  id: number;
+  company: { id: number; name: string };
+  developer: boolean;
+  publisher: boolean;
+}
+
+export interface IgdbGameListItem {
   id: number;
   name: string;
-  released: string | null;
-  background_image: string | null;
-  rating: number | null;
-  ratings_count: number | null;
-  metacritic: number | null;
-  tba: boolean;
-  genres: RawgGenre[];
-  platforms: RawgPlatformWrapper[] | null;
-  short_screenshots?: RawgShortScreenshot[];
+  cover?: IgdbImageRef | null;
+  first_release_date?: number | null;
+  total_rating?: number | null;
+  aggregated_rating?: number | null;
+  websites?: IgdbWebsite[];
 }
 
-export interface RawgStoreWrapper {
-  url: string;
-  store: { id: number; name: string };
-}
-
-export interface RawgGameDetail extends RawgGameListItem {
-  description_raw: string | null;
-  website: string | null;
-  developers: { name: string }[];
-  publishers: { name: string }[];
-  stores: RawgStoreWrapper[] | null;
-  esrb_rating: { name: string } | null;
-}
-
-export interface RawgListResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: RawgGameListItem[];
-}
-
-export interface RawgMovie {
-  id: number;
-  preview: string | null;
-  data: { 480?: string; max?: string };
-}
-
-export interface RawgMoviesResponse {
-  results: RawgMovie[];
-}
-
-export interface RawgScreenshot {
-  id: number;
-  image: string;
-}
-
-export interface RawgScreenshotsResponse {
-  results: RawgScreenshot[];
-}
-
-export interface RawgStoreLink {
-  id: number;
-  store_id: number;
-  url: string;
-}
-
-export interface RawgStoresResponse {
-  results: RawgStoreLink[];
+export interface IgdbGameDetail extends IgdbGameListItem {
+  summary?: string | null;
+  screenshots?: IgdbImageRef[];
+  videos?: IgdbVideo[];
+  genres?: IgdbNamed[];
+  platforms?: IgdbNamed[];
+  involved_companies?: IgdbInvolvedCompany[];
+  external_games?: IgdbExternalGame[];
+  total_rating_count?: number | null;
 }
 
 export interface GamePageInfo {
@@ -85,11 +63,11 @@ export interface GamePageInfo {
 export interface GameStore {
   name: string;
   url: string;
+  slug: string;
 }
 
 export interface GameTrailer {
-  url: string;
-  preview: string | null;
+  youtubeId: string;
 }
 
 export interface GameCard {
@@ -100,9 +78,11 @@ export interface GameCard {
   rating: number | null;
   metacritic: number | null;
   gameStatus: string;
+  storeSlugs: string[];
 }
 
 export interface GameDetail extends GameCard {
+  summary: string | null;
   description: string | null;
   website: string | null;
   developers: string[];
@@ -114,6 +94,7 @@ export interface GameDetail extends GameCard {
   trailer: GameTrailer | null;
   screenshots: string[];
   ratingsCount: number | null;
+  steamAppId: string | null;
 }
 
 export interface GameListResult {

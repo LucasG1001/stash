@@ -12,10 +12,6 @@ const GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1";
 const PAGE_SIZE = 20;
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
-function proxify(url: string | null): string | null {
-  return url ? `/api/book/media?url=${encodeURIComponent(url)}` : null;
-}
-
 function coverFrom(volume: GoogleBooksVolume): string | null {
   const links = volume.volumeInfo.imageLinks;
   if (!links) return null;
@@ -25,7 +21,7 @@ function coverFrom(volume: GoogleBooksVolume): string | null {
   if (url.includes("/books/content?")) {
     url = url.replace(/([?&])zoom=\d+/, "$1zoom=2");
   }
-  return proxify(url);
+  return url;
 }
 
 function isbnFrom(volume: GoogleBooksVolume): string | null {

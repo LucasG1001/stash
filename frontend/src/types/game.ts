@@ -1,11 +1,11 @@
 export interface GameStore {
   name: string;
   url: string;
+  slug: string;
 }
 
 export interface GameTrailer {
-  url: string;
-  preview: string | null;
+  youtubeId: string;
 }
 
 export interface GameCard {
@@ -16,9 +16,11 @@ export interface GameCard {
   rating: number | null;
   metacritic: number | null;
   gameStatus: string;
+  storeSlugs: string[];
 }
 
 export interface GameDetail extends GameCard {
+  summary: string | null;
   description: string | null;
   website: string | null;
   developers: string[];
@@ -30,6 +32,7 @@ export interface GameDetail extends GameCard {
   trailer: GameTrailer | null;
   screenshots: string[];
   ratingsCount: number | null;
+  steamAppId: string | null;
 }
 
 export interface PageInfo {
