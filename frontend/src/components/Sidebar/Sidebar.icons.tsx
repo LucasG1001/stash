@@ -1,0 +1,83 @@
+interface IconProps {
+  className?: string;
+}
+
+function Icon({ className, children }: IconProps & { children: React.ReactNode }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
+
+export function AnimeIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <rect x="2" y="2" width="20" height="20" rx="2.5" />
+      <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 7h5M17 17h5" />
+    </Icon>
+  );
+}
+
+export function MovieIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M2 7h20v13a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7Z" />
+      <path d="m4 7 2.5-4M9 7l2.5-4M14 7l2.5-4M19 7l2.5-4" />
+    </Icon>
+  );
+}
+
+export function SeriesIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <rect x="2" y="6" width="20" height="13" rx="2" />
+      <path d="m8 3 4 3 4-3M9 22h6" />
+    </Icon>
+  );
+}
+
+export function BookIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M12 6.5C10.5 5 8 4.5 4 5v13c4-.5 6.5 0 8 1.5" />
+      <path d="M12 6.5C13.5 5 16 4.5 20 5v13c-4-.5-6.5 0-8 1.5" />
+      <path d="M12 6.5v13" />
+    </Icon>
+  );
+}
+
+export function GameIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M6 11h4M8 9v4M15 11h.01M18 13h.01" />
+      <path d="M17.5 6a4.5 4.5 0 0 1 4.43 3.7l1.04 5.78a2.5 2.5 0 0 1-4.4 2.07L17 15H7l-1.57 2.55a2.5 2.5 0 0 1-4.4-2.07l1.04-5.78A4.5 4.5 0 0 1 6.5 6h11Z" />
+    </Icon>
+  );
+}
+
+export function LogoIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="m12 3 9 4.5-9 4.5-9-4.5L12 3Z" />
+      <path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5" />
+    </Icon>
+  );
+}
+
+export function ChevronIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="m15 18-6-6 6-6" />
+    </Icon>
+  );
+}
