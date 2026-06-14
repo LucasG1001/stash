@@ -158,7 +158,14 @@
 .storeIcon {
   width: 16px;
   height: 16px;
-  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  background-color: var(--color-text-secondary);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .addButton {
