@@ -25,9 +25,21 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       PORT: 3333
+      # APIs externas (filmes/séries via TMDB, livros via Google Books, jogos via IGDB).
+      TMDB_API_KEY: ${TMDB_API_KEY}
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY}
+      IGDB_CLIENT_ID: ${IGDB_CLIENT_ID}
+      IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET}
+      # Notificações no Discord via Notify API (alcançada pela rede deste projeto,
+      # onde a notify-api também está plugada).
+      NOTIFY_API_URL: http://notify-api:3334
+      NOTIFY_API_KEY: ${NOTIFY_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - default
+      - media-net
 
   web:
     build:
@@ -45,3 +57,9 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  # Rede deste projeto. A notify-api também se pluga nela para receber as chamadas.
+  # Crie uma vez na VPS:  docker network create media-net
+  media-net:
+    external: true
