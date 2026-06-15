@@ -4,6 +4,7 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import { migrate } from "./database/migrate.js";
+import { refreshStaleEntries } from "./services/librarySyncService.js";
 import { animeRoutes } from "./routes/animeRoutes.js";
 import { libraryRoutes } from "./routes/libraryRoutes.js";
 import { movieRoutes } from "./routes/movieRoutes.js";
@@ -18,6 +19,7 @@ import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 const PORT = process.env.PORT || 3333;
+const SYNC_INTERVAL_MS = 30 * 60 * 1000;
 
 app.use(cors());
 app.use(express.json());
@@ -41,6 +43,9 @@ async function start(): Promise<void> {
   app.listen(PORT, () => {
     process.stdout.write(`Backend rodando em http://localhost:${PORT}\n`);
   });
+  setInterval(() => {
+    refreshStaleEntries().catch((error) => console.error("Falha no job de sincronização:", error));
+  }, SYNC_INTERVAL_MS);
 }
 
 start();
