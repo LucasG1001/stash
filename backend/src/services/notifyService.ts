@@ -37,23 +37,6 @@ function youtubeUrl(key: string): string {
   return `https://www.youtube.com/watch?v=${key}`;
 }
 
-/** Converte a descrição HTML (AniList) em texto puro e remove tags. */
-function stripHtml(html: string | null | undefined): string | undefined {
-  if (!html) return undefined;
-  const text = html
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/[ \t]+\n/g, "\n")
-    .trim();
-  return text || undefined;
-}
-
-function truncate(text: string | undefined, max = 350): string | undefined {
-  if (!text) return undefined;
-  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
-}
-
 /** "2026-12-18" -> "18/12/2026" */
 function formatDate(date: string | null | undefined): string | undefined {
   if (!date) return undefined;
@@ -106,7 +89,6 @@ function animeUrl(anilistId: number): string {
 
 interface AnimePresentation {
   image?: string;
-  description?: string;
   fields: NotifyField[];
   buttons: NotifyButton[];
 }
@@ -116,12 +98,10 @@ async function animePresentation(entry: LibraryEntry): Promise<AnimePresentation
   const fields: NotifyField[] = [];
   const buttons: NotifyButton[] = [];
   let image = entry.coverImage ?? undefined;
-  let description: string | undefined;
 
   try {
     const d = await fetchAnimeById(entry.anilistId);
     image = d.bannerImage ?? d.coverImage ?? image;
-    description = truncate(stripHtml(d.description));
     fields.push(
       { name: "Status", value: translateAnimeStatus(d.status), inline: true },
       ...(d.episodes ? [{ name: "Episódios", value: String(d.episodes), inline: true }] : []),
@@ -143,15 +123,15 @@ async function animePresentation(entry: LibraryEntry): Promise<AnimePresentation
     }
   }
 
-  return { image, description, fields, buttons };
+  return { image, fields, buttons };
 }
 
 export async function notifyAnimeAdded(entry: LibraryEntry): Promise<void> {
   const url = animeUrl(entry.anilistId);
-  const { image, description, fields, buttons } = await animePresentation(entry);
+  const { image, fields, buttons } = await animePresentation(entry);
   await send("anime-adicionado", {
     title: `📥 ${entry.title}`,
-    description: description ?? "Adicionado à sua biblioteca.",
+    description: "Adicionado à sua biblioteca.",
     image,
     url,
     fields,
@@ -165,10 +145,10 @@ export async function notifyNewEpisode(
   totalEpisodes: number | null = entry.totalEpisodes
 ): Promise<void> {
   const url = animeUrl(entry.anilistId);
-  const { image, buttons } = await animePresentation(entry);
+  const { image, fields, buttons } = await animePresentation(entry);
   await send("anime-novo-episodio", {
     title: `🆕 ${entry.title}`,
-    description: `Episódio ${episode} disponível!`,
+    description: `Episódio ${episode} lançado`,
     image,
     url,
     fields: [
@@ -177,6 +157,7 @@ export async function notifyNewEpisode(
         value: totalEpisodes ? `${episode} / ${totalEpisodes}` : String(episode),
         inline: true,
       },
+      ...fields,
     ],
     buttons: [...buttons, { text: "🔗 AniList", url }],
   });
@@ -184,13 +165,16 @@ export async function notifyNewEpisode(
 
 export async function notifyAnimeFinished(entry: LibraryEntry, totalEpisodes: number | null): Promise<void> {
   const url = animeUrl(entry.anilistId);
-  const { image, buttons } = await animePresentation(entry);
+  const { image, fields, buttons } = await animePresentation(entry);
   await send("anime-finalizado", {
     title: `✅ ${entry.title}`,
-    description: "Terminou de lançar! 🎉",
+    description: "Anime finalizado",
     image,
     url,
-    fields: [{ name: "Total de episódios", value: totalEpisodes ? String(totalEpisodes) : "?", inline: true }],
+    fields: [
+      { name: "Total de episódios", value: totalEpisodes ? String(totalEpisodes) : "?", inline: true },
+      ...fields,
+    ],
     buttons: [...buttons, { text: "🔗 AniList", url }],
   });
 }
@@ -200,14 +184,12 @@ export async function notifyAnimeFinished(entry: LibraryEntry, totalEpisodes: nu
 export async function notifyMovieAdded(entry: MovieLibraryEntry): Promise<void> {
   const url = `https://www.themoviedb.org/movie/${entry.tmdbId}`;
   let image = entry.posterImage ?? undefined;
-  let description: string | undefined;
   const fields: NotifyField[] = [];
   const buttons: NotifyButton[] = [];
 
   try {
     const d = await fetchMovieById(entry.tmdbId);
     image = d.backdropImage ?? d.posterImage ?? image;
-    description = truncate(d.overview ?? undefined);
     fields.push(
       ...compact([
         { name: "Lançamento", value: formatDate(d.releaseDate) ?? "", inline: true },
@@ -232,7 +214,7 @@ export async function notifyMovieAdded(entry: MovieLibraryEntry): Promise<void> 
 
   await send("filme-adicionado", {
     title: `🎬 ${entry.title}`,
-    description: description ?? "Adicionado à sua biblioteca.",
+    description: "Adicionado à sua biblioteca.",
     image,
     url,
     fields,
@@ -245,14 +227,12 @@ export async function notifyMovieAdded(entry: MovieLibraryEntry): Promise<void> 
 export async function notifySeriesAdded(entry: SeriesLibraryEntry): Promise<void> {
   const url = `https://www.themoviedb.org/tv/${entry.tmdbId}`;
   let image = entry.posterImage ?? undefined;
-  let description: string | undefined;
   const fields: NotifyField[] = [];
   const buttons: NotifyButton[] = [];
 
   try {
     const d = await fetchSeriesById(entry.tmdbId);
     image = d.backdropImage ?? d.posterImage ?? image;
-    description = truncate(d.overview ?? undefined);
     fields.push(
       ...compact([
         d.seasons ? { name: "Temporadas", value: String(d.seasons), inline: true } : null,
@@ -279,7 +259,7 @@ export async function notifySeriesAdded(entry: SeriesLibraryEntry): Promise<void
 
   await send("serie-adicionada", {
     title: `📺 ${entry.title}`,
-    description: description ?? "Adicionada à sua biblioteca.",
+    description: "Adicionada à sua biblioteca.",
     image,
     url,
     fields,
@@ -291,7 +271,6 @@ export async function notifySeriesAdded(entry: SeriesLibraryEntry): Promise<void
 
 export async function notifyGameAdded(entry: GameLibraryEntry): Promise<void> {
   let image = entry.backgroundImage ?? undefined;
-  let description: string | undefined;
   let url: string | undefined;
   const fields: NotifyField[] = [];
   const buttons: NotifyButton[] = [];
@@ -299,7 +278,6 @@ export async function notifyGameAdded(entry: GameLibraryEntry): Promise<void> {
   try {
     const d = await fetchGameById(entry.igdbId);
     image = d.backgroundImage ?? d.screenshots?.[0] ?? image;
-    description = truncate(d.summary ?? d.description ?? undefined);
     url = d.website ?? d.stores?.[0]?.url ?? undefined;
     fields.push(
       ...compact([
@@ -325,7 +303,7 @@ export async function notifyGameAdded(entry: GameLibraryEntry): Promise<void> {
 
   await send("jogo-adicionado", {
     title: `🎮 ${entry.title}`,
-    description: description ?? "Adicionado à sua biblioteca.",
+    description: "Adicionado à sua biblioteca.",
     image,
     url,
     fields,
