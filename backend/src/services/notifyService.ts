@@ -1,7 +1,7 @@
 import { httpRequest } from "../lib/httpClient.js";
 import type { LibraryEntry } from "../types/library.js";
 
-const NOTIFY_API_URL = process.env.NOTIFY_API_URL;
+const NOTIFY_API_URL = process.env.NOTIFY_API_URL?.replace(/\/$/, "");
 const NOTIFY_API_KEY = process.env.NOTIFY_API_KEY;
 
 const COLOR_ADDED = 5763719;
@@ -74,7 +74,11 @@ export async function notifyAnimeAdded(entry: LibraryEntry): Promise<void> {
   });
 }
 
-export async function notifyNewEpisode(entry: LibraryEntry, episode: number): Promise<void> {
+export async function notifyNewEpisode(
+  entry: LibraryEntry,
+  episode: number,
+  totalEpisodes: number | null = entry.totalEpisodes
+): Promise<void> {
   await send("anime-novo-episodio", {
     title: `🆕 ${entry.title}`,
     url: animeUrl(entry.anilistId),
@@ -84,7 +88,7 @@ export async function notifyNewEpisode(entry: LibraryEntry, episode: number): Pr
     fields: [
       {
         name: "Episódio",
-        value: entry.totalEpisodes ? `${episode} / ${entry.totalEpisodes}` : String(episode),
+        value: totalEpisodes ? `${episode} / ${totalEpisodes}` : String(episode),
         inline: true,
       },
     ],

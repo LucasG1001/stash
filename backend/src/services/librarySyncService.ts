@@ -18,20 +18,32 @@ export function lastAiredEpisode(
   return 0;
 }
 
-function detectAndNotify(old: LibraryEntry, anime: AnimeCard): void {
+export function detectAndNotify(old: LibraryEntry, anime: AnimeCard): void {
   const oldLast = lastAiredEpisode(old.animeStatus, old.nextAiringEpisode, old.totalEpisodes);
   const newLast = lastAiredEpisode(anime.status, anime.nextAiringEpisode, anime.episodes);
+  const finishing = old.animeStatus !== "FINISHED" && anime.status === "FINISHED";
 
-  if (newLast > oldLast) {
-    void notifyNewEpisode(old, newLast);
+  if (finishing) {
+    void notifyAnimeFinished(old, anime.episodes);
+    return;
   }
 
-  if (old.animeStatus !== "FINISHED" && anime.status === "FINISHED") {
-    void notifyAnimeFinished(old, anime.episodes);
+  if (newLast > oldLast) {
+    void notifyNewEpisode(old, newLast, anime.episodes);
   }
 }
 
-export async function refreshStaleEntries(): Promise<void> {
+let inFlight: Promise<void> | null = null;
+
+export function refreshStaleEntries(): Promise<void> {
+  if (inFlight) return inFlight;
+  inFlight = doRefresh().finally(() => {
+    inFlight = null;
+  });
+  return inFlight;
+}
+
+async function doRefresh(): Promise<void> {
   const stale = await libraryModel.findStale(NON_FINISHED_TTL_HOURS, FINISHED_TTL_HOURS);
   if (stale.length === 0) return;
 
