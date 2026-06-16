@@ -30,7 +30,7 @@ services:
       GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY}
       IGDB_CLIENT_ID: ${IGDB_CLIENT_ID}
       IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET}
-      # Notificações no Discord via Notify API (alcançada pela rede deste projeto,
+      # Notificações no Telegram via Notify API (alcançada pela rede deste projeto,
       # onde a notify-api também está plugada).
       NOTIFY_API_URL: http://notify-api:3334
       NOTIFY_API_KEY: ${NOTIFY_API_KEY}

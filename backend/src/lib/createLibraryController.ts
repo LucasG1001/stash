@@ -19,6 +19,8 @@ export interface LibraryControllerConfig<TEntry, TCreate, TUpdate> {
   messages: LibraryControllerMessages;
   createSchema?: ZodType;
   updateSchema?: ZodType;
+  /** Disparado após adicionar uma entrada (fire-and-forget, ex.: notificação). */
+  onCreated?: (entry: TEntry) => void;
 }
 
 export interface LibraryController {
@@ -31,7 +33,7 @@ export interface LibraryController {
 export function createLibraryController<TEntry, TCreate, TUpdate>(
   config: LibraryControllerConfig<TEntry, TCreate, TUpdate>
 ): LibraryController {
-  const { model, externalIdField, messages, createSchema, updateSchema } = config;
+  const { model, externalIdField, messages, createSchema, updateSchema, onCreated } = config;
 
   const getAll = async (_req: Request, res: Response): Promise<void> => {
     try {
@@ -62,6 +64,7 @@ export function createLibraryController<TEntry, TCreate, TUpdate>(
         return;
       }
       const entry = await model.create(body as TCreate);
+      if (onCreated) onCreated(entry);
       res.status(201).json(entry);
     } catch {
       res.status(500).json({ error: messages.errorCreate });
