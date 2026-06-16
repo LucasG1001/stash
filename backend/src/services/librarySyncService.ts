@@ -5,7 +5,7 @@ import type { AniListNextAiringEpisode } from "../types/anime.js";
 import type { LibraryEntry } from "../types/library.js";
 import type { AnimeCard } from "../types/anime.js";
 
-const NON_FINISHED_TTL_HOURS = 12;
+const NON_FINISHED_TTL_HOURS = 1;
 const FINISHED_TTL_HOURS = 24 * 7;
 
 export function lastAiredEpisode(
