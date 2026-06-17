@@ -1,14 +1,12 @@
 import { createLibraryController } from "../lib/createLibraryController.js";
 import { gameLibraryModel } from "../models/gameLibraryModel.js";
 import { gameCreateSchema, gameUpdateSchema } from "../schemas/library.js";
-import { notifyGameAdded } from "../services/notifyService.js";
 
 export const { getAll, create, update, remove } = createLibraryController({
   model: gameLibraryModel,
   externalIdField: "igdbId",
   createSchema: gameCreateSchema,
   updateSchema: gameUpdateSchema,
-  onCreated: (entry) => void notifyGameAdded(entry),
   messages: {
     required: "igdbId e title são obrigatórios.",
     invalid: "Dados inválidos.",
