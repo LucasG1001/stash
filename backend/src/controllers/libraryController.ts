@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import * as libraryModel from "../models/libraryModel.js";
 import { refreshStaleEntries } from "../services/librarySyncService.js";
-import { notifyAnimeAdded } from "../services/notifyService.js";
 import { animeCreateSchema, animeUpdateSchema } from "../schemas/library.js";
 import type { CreateLibraryEntry } from "../types/library.js";
 
@@ -33,7 +32,6 @@ export async function create(req: Request, res: Response): Promise<void> {
     const entry = await libraryModel.create(
       { anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, seasonYear, nextAiringEpisode, streamingLinks } as unknown as CreateLibraryEntry
     );
-    void notifyAnimeAdded(entry);
     res.status(201).json(entry);
   } catch {
     res.status(500).json({ error: "Erro ao adicionar anime à biblioteca." });
