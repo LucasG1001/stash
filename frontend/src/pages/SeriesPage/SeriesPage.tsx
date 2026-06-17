@@ -28,7 +28,7 @@ export function SeriesPage() {
   const [selectedSeriesId, setSelectedSeriesId] = useState<number | null>(null);
   const [selectedSeriesForModal, setSelectedSeriesForModal] = useState<SeriesCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<SeriesLibraryStatus | "all">("all");
-  const [watchedSortDir, setWatchedSortDir] = useState<"desc" | "asc">("desc");
+  const [releaseSortDir, setReleaseSortDir] = useState<"desc" | "asc">("desc");
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -119,16 +119,12 @@ export function SeriesPage() {
     ? libraryEntries
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
-  const showWatchedSort = libraryFilter === "watched";
-
-  const sortedLibraryEntries = showWatchedSort
-    ? [...filteredLibraryEntries].sort((a, b) => {
-        const ta = a.watchedAt ? new Date(a.watchedAt).getTime() : 0;
-        const tb = b.watchedAt ? new Date(b.watchedAt).getTime() : 0;
-        const diff = ta - tb;
-        return watchedSortDir === "desc" ? -diff : diff;
-      })
-    : filteredLibraryEntries;
+  const sortedLibraryEntries = [...filteredLibraryEntries].sort((a, b) => {
+    const ta = a.firstAirDate ? new Date(a.firstAirDate).getTime() : 0;
+    const tb = b.firstAirDate ? new Date(b.firstAirDate).getTime() : 0;
+    const diff = ta - tb;
+    return releaseSortDir === "desc" ? -diff : diff;
+  });
 
   const librarySeriesCards: SeriesCard[] = sortedLibraryEntries.map((entry) => ({
     id: entry.tmdbId,
@@ -147,7 +143,7 @@ export function SeriesPage() {
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${watchedSortDir}`
+      ? `library-${libraryFilter}-${releaseSortDir}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
       : `popular-${selectedYear}-${selectedMonth}`;
@@ -213,20 +209,18 @@ export function SeriesPage() {
               </option>
             ))}
           </select>
-          {showWatchedSort && (
-            <button
-              className={styles.sortButton}
-              onClick={() => setWatchedSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
-              title={watchedSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
-            >
-              <span>Data assistida</span>
-              <span className={`${styles.sortIcon} ${watchedSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
-              </span>
-            </button>
-          )}
+          <button
+            className={styles.sortButton}
+            onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
+            title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
+          >
+            <span>Data de lançamento</span>
+            <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12l7 7 7-7" />
+              </svg>
+            </span>
+          </button>
         </div>
       )}
 

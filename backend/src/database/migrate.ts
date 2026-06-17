@@ -27,7 +27,8 @@ export async function migrate(): Promise<void> {
     ADD COLUMN IF NOT EXISTS next_airing_episode JSONB,
     ADD COLUMN IF NOT EXISTS streaming_links JSONB NOT NULL DEFAULT '[]'::jsonb,
     ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ,
-    ADD COLUMN IF NOT EXISTS watched_at TIMESTAMPTZ;
+    ADD COLUMN IF NOT EXISTS watched_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS season_year INTEGER;
   `);
 
   await pool.query(`

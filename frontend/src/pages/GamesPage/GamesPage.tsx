@@ -29,7 +29,7 @@ export function GamesPage() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [selectedGameForModal, setSelectedGameForModal] = useState<GameCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<GameLibraryStatus | "all">("all");
-  const [finishedSortDir, setFinishedSortDir] = useState<"desc" | "asc">("desc");
+  const [releaseSortDir, setReleaseSortDir] = useState<"desc" | "asc">("desc");
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -120,16 +120,12 @@ export function GamesPage() {
     ? libraryEntries
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
-  const showFinishedSort = libraryFilter === "beaten";
-
-  const sortedLibraryEntries = showFinishedSort
-    ? [...filteredLibraryEntries].sort((a, b) => {
-        const ta = a.finishedAt ? new Date(a.finishedAt).getTime() : 0;
-        const tb = b.finishedAt ? new Date(b.finishedAt).getTime() : 0;
-        const diff = ta - tb;
-        return finishedSortDir === "desc" ? -diff : diff;
-      })
-    : filteredLibraryEntries;
+  const sortedLibraryEntries = [...filteredLibraryEntries].sort((a, b) => {
+    const ta = a.released ? new Date(a.released).getTime() : 0;
+    const tb = b.released ? new Date(b.released).getTime() : 0;
+    const diff = ta - tb;
+    return releaseSortDir === "desc" ? -diff : diff;
+  });
 
   const libraryGameCards: GameCard[] = sortedLibraryEntries.map((entry) => ({
     id: entry.igdbId,
@@ -148,7 +144,7 @@ export function GamesPage() {
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${finishedSortDir}`
+      ? `library-${libraryFilter}-${releaseSortDir}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
       : activeTab === "popular"
@@ -216,20 +212,18 @@ export function GamesPage() {
               </option>
             ))}
           </select>
-          {showFinishedSort && (
-            <button
-              className={styles.sortButton}
-              onClick={() => setFinishedSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
-              title={finishedSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
-            >
-              <span>Data de conclusão</span>
-              <span className={`${styles.sortIcon} ${finishedSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
-              </span>
-            </button>
-          )}
+          <button
+            className={styles.sortButton}
+            onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
+            title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
+          >
+            <span>Data de lançamento</span>
+            <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12l7 7 7-7" />
+              </svg>
+            </span>
+          </button>
         </div>
       )}
 

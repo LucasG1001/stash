@@ -11,6 +11,7 @@ function toLibraryEntry(row: LibraryRow): LibraryEntry {
     score: parseFloat(row.score),
     totalEpisodes: row.total_episodes,
     animeStatus: row.anime_status,
+    seasonYear: row.season_year,
     nextAiringEpisode: row.next_airing_episode,
     streamingLinks: row.streaming_links ?? [],
     syncedAt: row.synced_at,
@@ -49,8 +50,8 @@ export async function findStale(nonFinishedTtlHours: number, finishedTtlHours: n
 export async function create(entry: CreateLibraryEntry): Promise<LibraryEntry> {
   const result = await pool.query<LibraryRow>(
     `INSERT INTO anime_library
-       (anilist_id, title, cover_image, status, score, total_episodes, anime_status, next_airing_episode, streaming_links, synced_at, watched_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), CASE WHEN $4 = 'watched' THEN NOW() ELSE NULL END)
+       (anilist_id, title, cover_image, status, score, total_episodes, anime_status, season_year, next_airing_episode, streaming_links, synced_at, watched_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), CASE WHEN $4 = 'watched' THEN NOW() ELSE NULL END)
      RETURNING *`,
     [
       entry.anilistId,
@@ -60,6 +61,7 @@ export async function create(entry: CreateLibraryEntry): Promise<LibraryEntry> {
       entry.score ?? 0,
       entry.totalEpisodes ?? null,
       entry.animeStatus ?? "FINISHED",
+      entry.seasonYear ?? null,
       JSON.stringify(entry.nextAiringEpisode ?? null),
       JSON.stringify(entry.streamingLinks ?? []),
     ]

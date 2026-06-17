@@ -11,6 +11,7 @@ export interface LibraryEntry {
   score: number;
   totalEpisodes: number | null;
   animeStatus?: string;
+  seasonYear: number | null;
   nextAiringEpisode: AnimeNextAiringEpisode | null;
   streamingLinks: AnimeExternalLink[];
   syncedAt: string | null;
@@ -27,6 +28,7 @@ export interface CreateLibraryEntry {
   score?: number;
   totalEpisodes?: number | null;
   animeStatus?: string;
+  seasonYear?: number | null;
   nextAiringEpisode?: AnimeNextAiringEpisode | null;
   streamingLinks?: AnimeExternalLink[];
 }

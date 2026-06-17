@@ -22,7 +22,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       res.status(400).json({ error: "Dados inválidos.", issues: parsed.error.flatten() });
       return;
     }
-    const { anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, nextAiringEpisode, streamingLinks } = parsed.data;
+    const { anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, seasonYear, nextAiringEpisode, streamingLinks } = parsed.data;
 
     const existing = await libraryModel.findByAnilistId(anilistId);
     if (existing) {
@@ -31,7 +31,7 @@ export async function create(req: Request, res: Response): Promise<void> {
     }
 
     const entry = await libraryModel.create(
-      { anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, nextAiringEpisode, streamingLinks } as unknown as CreateLibraryEntry
+      { anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, seasonYear, nextAiringEpisode, streamingLinks } as unknown as CreateLibraryEntry
     );
     void notifyAnimeAdded(entry);
     res.status(201).json(entry);

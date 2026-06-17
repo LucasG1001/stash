@@ -30,7 +30,7 @@ export function AnimePage() {
   const [selectedAnimeId, setSelectedAnimeId] = useState<number | null>(null);
   const [selectedAnimeForModal, setSelectedAnimeForModal] = useState<AnimeCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<LibraryStatus | "all">("all");
-  const [watchedSortDir, setWatchedSortDir] = useState<"desc" | "asc">("desc");
+  const [releaseSortDir, setReleaseSortDir] = useState<"desc" | "asc">("desc");
   const [selectedSeasonObj, setSelectedSeasonObj] = useState(getCurrentRealSeason());
   const [selectedPopularYear, setSelectedPopularYear] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -83,6 +83,7 @@ export function AnimePage() {
         coverImage: anime.coverImage,
         totalEpisodes: anime.episodes ?? undefined,
         animeStatus: anime.status,
+        seasonYear: anime.seasonYear,
         nextAiringEpisode: anime.nextAiringEpisode,
         streamingLinks: anime.streamingLinks,
         ...data,
@@ -121,16 +122,10 @@ export function AnimePage() {
     ? libraryEntries
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
-  const showWatchedSort = libraryFilter === "watched";
-
-  const sortedLibraryEntries = showWatchedSort
-    ? [...filteredLibraryEntries].sort((a, b) => {
-        const ta = a.watchedAt ? new Date(a.watchedAt).getTime() : 0;
-        const tb = b.watchedAt ? new Date(b.watchedAt).getTime() : 0;
-        const diff = ta - tb;
-        return watchedSortDir === "desc" ? -diff : diff;
-      })
-    : filteredLibraryEntries;
+  const sortedLibraryEntries = [...filteredLibraryEntries].sort((a, b) => {
+    const diff = (a.seasonYear ?? 0) - (b.seasonYear ?? 0);
+    return releaseSortDir === "desc" ? -diff : diff;
+  });
 
   const libraryAnimeCards: AnimeCard[] = sortedLibraryEntries.map((entry) => ({
     id: entry.anilistId,
@@ -140,7 +135,7 @@ export function AnimePage() {
     episodes: entry.totalEpisodes,
     averageScore: null,
     season: null,
-    seasonYear: null,
+    seasonYear: entry.seasonYear,
     genres: [],
     nextAiringEpisode: entry.nextAiringEpisode,
     streamingLinks: entry.streamingLinks,
@@ -152,7 +147,7 @@ export function AnimePage() {
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${watchedSortDir}`
+      ? `library-${libraryFilter}-${releaseSortDir}`
       : activeTab === "seasons"
       ? `seasons-${selectedSeasonObj.season}-${selectedSeasonObj.year}`
       : activeTab === "search"
@@ -225,20 +220,18 @@ export function AnimePage() {
               </option>
             ))}
           </select>
-          {showWatchedSort && (
-            <button
-              className={styles.sortButton}
-              onClick={() => setWatchedSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
-              title={watchedSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
-            >
-              <span>Data assistida</span>
-              <span className={`${styles.sortIcon} ${watchedSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
-              </span>
-            </button>
-          )}
+          <button
+            className={styles.sortButton}
+            onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
+            title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
+          >
+            <span>Data de lançamento</span>
+            <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12l7 7 7-7" />
+              </svg>
+            </span>
+          </button>
         </div>
       )}
 

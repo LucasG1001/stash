@@ -61,6 +61,7 @@ export const animeCreateSchema = z.object({
   score,
   totalEpisodes: nullableNumber,
   animeStatus: z.string().optional(),
+  seasonYear: nullableNumber,
   nextAiringEpisode: z.unknown().nullish(),
   streamingLinks: z.array(z.unknown()).optional(),
 });
