@@ -143,6 +143,15 @@
   gap: 4px;
 }
 
+.year {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
 .streamingIcons {
   display: flex;
   gap: 4px;

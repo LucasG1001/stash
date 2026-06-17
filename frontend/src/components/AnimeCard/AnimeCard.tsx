@@ -81,6 +81,9 @@ export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView, 
               </div>
             )}
           </div>
+          {anime.seasonYear && (
+            <div className={styles.year}>📅 {anime.seasonYear}</div>
+          )}
         </div>
 
         <div className={styles.topBadges}>
