@@ -56,7 +56,7 @@ export function SeriesCard({ series, libraryEntry, onClick, onAdd, isLibraryView
     >
       <div className={styles.imageWrapper}>
         {series.posterImage ? (
-          <img className={styles.coverImage} src={series.posterImage} alt={series.title} loading="lazy" />
+          <img className={styles.coverImage} src={series.posterImage} alt={series.title} loading="lazy" decoding="async" />
         ) : (
           <div className={styles.coverPlaceholder}>📺</div>
         )}

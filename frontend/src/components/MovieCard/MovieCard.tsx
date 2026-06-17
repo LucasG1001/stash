@@ -55,7 +55,7 @@ export function MovieCard({ movie, libraryEntry, onClick, onAdd, isLibraryView, 
     >
       <div className={styles.imageWrapper}>
         {movie.posterImage ? (
-          <img className={styles.coverImage} src={movie.posterImage} alt={movie.title} loading="lazy" />
+          <img className={styles.coverImage} src={movie.posterImage} alt={movie.title} loading="lazy" decoding="async" />
         ) : (
           <div className={styles.coverPlaceholder}>🎬</div>
         )}

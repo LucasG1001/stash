@@ -57,7 +57,7 @@ export function GameCard({ game, libraryEntry, onClick, onAdd, isLibraryView, in
     >
       <div className={styles.imageWrapper}>
         {game.backgroundImage ? (
-          <img className={styles.coverImage} src={game.backgroundImage} alt={game.title} loading="lazy" />
+          <img className={styles.coverImage} src={game.backgroundImage} alt={game.title} loading="lazy" decoding="async" />
         ) : (
           <div className={styles.coverPlaceholder}>🎮</div>
         )}

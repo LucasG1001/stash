@@ -59,7 +59,7 @@ export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView, 
       onKeyDown={(e) => e.key === "Enter" && onClick()}
     >
       <div className={styles.imageWrapper}>
-        <img className={styles.coverImage} src={anime.coverImage} alt={anime.title} loading="lazy" />
+        <img className={styles.coverImage} src={anime.coverImage} alt={anime.title} loading="lazy" decoding="async" />
 
         <div className={styles.overlay}>
           <div className={styles.title}>{anime.title}</div>

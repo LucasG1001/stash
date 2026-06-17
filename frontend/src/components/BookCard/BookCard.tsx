@@ -44,7 +44,7 @@ export function BookCard({ book, libraryEntry, onClick, onAdd, isLibraryView, in
     >
       <div className={styles.imageWrapper}>
         {book.coverImage ? (
-          <img className={styles.coverImage} src={book.coverImage} alt={book.title} loading="lazy" />
+          <img className={styles.coverImage} src={book.coverImage} alt={book.title} loading="lazy" decoding="async" />
         ) : (
           <div className={styles.coverPlaceholder}>📚</div>
         )}
