@@ -143,11 +143,17 @@
   gap: 4px;
 }
 
+.bottomRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--spacing-xs);
+}
+
 .year {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: var(--spacing-xs);
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
 }

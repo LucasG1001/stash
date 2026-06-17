@@ -65,24 +65,30 @@ export function AnimeCard({ anime, libraryEntry, onClick, onAdd, isLibraryView, 
           <div className={styles.title}>{anime.title}</div>
           <div className={styles.meta}>
             <span className={styles.episodes}>📺 {episodeText} ep</span>
-            {anime.streamingLinks.length > 0 && (
-              <div className={styles.streamingIcons}>
-                {anime.streamingLinks.slice(0, 3).map((link) =>
-                  link.icon ? (
-                    <img
-                      key={link.site}
-                      className={styles.streamingIcon}
-                      src={link.icon}
-                      alt={link.site}
-                      title={link.site}
-                    />
-                  ) : null
-                )}
-              </div>
-            )}
           </div>
-          {anime.seasonYear && (
-            <div className={styles.year}>📅 {anime.seasonYear}</div>
+          {(anime.seasonYear || anime.streamingLinks.length > 0) && (
+            <div className={styles.bottomRow}>
+              {anime.seasonYear ? (
+                <span className={styles.year}>📅 {anime.seasonYear}</span>
+              ) : (
+                <span />
+              )}
+              {anime.streamingLinks.length > 0 && (
+                <div className={styles.streamingIcons}>
+                  {anime.streamingLinks.slice(0, 3).map((link) =>
+                    link.icon ? (
+                      <img
+                        key={link.site}
+                        className={styles.streamingIcon}
+                        src={link.icon}
+                        alt={link.site}
+                        title={link.site}
+                      />
+                    ) : null
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
