@@ -12,6 +12,7 @@ import type { SeriesLibraryStatus } from "../../types/seriesLibrary";
 import { SERIES_LIBRARY_STATUS_LABELS } from "../../types/seriesLibrary";
 import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
+import { nextScoreSortDir, compareByScore, type ScoreSortDir } from "../../utils/librarySort";
 import styles from "./SeriesPage.module.css";
 
 const TABS = [
@@ -29,6 +30,7 @@ export function SeriesPage() {
   const [selectedSeriesForModal, setSelectedSeriesForModal] = useState<SeriesCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<SeriesLibraryStatus | "all">("all");
   const [releaseSortDir, setReleaseSortDir] = useState<"desc" | "asc">("desc");
+  const [scoreSortDir, setScoreSortDir] = useState<ScoreSortDir>("off");
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -119,12 +121,14 @@ export function SeriesPage() {
     ? libraryEntries
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
-  const sortedLibraryEntries = [...filteredLibraryEntries].sort((a, b) => {
-    const ta = a.firstAirDate ? new Date(a.firstAirDate).getTime() : 0;
-    const tb = b.firstAirDate ? new Date(b.firstAirDate).getTime() : 0;
-    const diff = ta - tb;
-    return releaseSortDir === "desc" ? -diff : diff;
-  });
+  const sortedLibraryEntries = scoreSortDir !== "off"
+    ? [...filteredLibraryEntries].sort((a, b) => compareByScore(a, b, scoreSortDir))
+    : [...filteredLibraryEntries].sort((a, b) => {
+        const ta = a.firstAirDate ? new Date(a.firstAirDate).getTime() : 0;
+        const tb = b.firstAirDate ? new Date(b.firstAirDate).getTime() : 0;
+        const diff = ta - tb;
+        return releaseSortDir === "desc" ? -diff : diff;
+      });
 
   const librarySeriesCards: SeriesCard[] = sortedLibraryEntries.map((entry) => ({
     id: entry.tmdbId,
@@ -143,7 +147,7 @@ export function SeriesPage() {
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${releaseSortDir}`
+      ? `library-${libraryFilter}-${releaseSortDir}-${scoreSortDir}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
       : `popular-${selectedYear}-${selectedMonth}`;
@@ -220,6 +224,26 @@ export function SeriesPage() {
                 <path d="M12 5v14M5 12l7 7 7-7" />
               </svg>
             </span>
+          </button>
+          <button
+            className={`${styles.sortButton} ${scoreSortDir !== "off" ? styles.sortButtonActive : ""}`}
+            onClick={() => setScoreSortDir(nextScoreSortDir(scoreSortDir))}
+            title={
+              scoreSortDir === "off"
+                ? "Ordenar por nota"
+                : scoreSortDir === "desc"
+                ? "Maior nota primeiro"
+                : "Menor nota primeiro"
+            }
+          >
+            <span>Nota</span>
+            {scoreSortDir !== "off" && (
+              <span className={`${styles.sortIcon} ${scoreSortDir === "asc" ? styles.sortIconAsc : ""}`}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 5v14M5 12l7 7 7-7" />
+                </svg>
+              </span>
+            )}
           </button>
         </div>
       )}

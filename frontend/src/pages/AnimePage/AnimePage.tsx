@@ -13,6 +13,7 @@ import type { LibraryStatus } from "../../types/library";
 import { LIBRARY_STATUS_LABELS } from "../../types/library";
 import { SEASON_PT, getCurrentRealSeason, getSurroundingSeasons } from "../../utils/season";
 import { getRecentYears } from "../../utils/year";
+import { nextScoreSortDir, compareByScore, type ScoreSortDir } from "../../utils/librarySort";
 import styles from "./AnimePage.module.css";
 
 const TABS = [
@@ -31,6 +32,7 @@ export function AnimePage() {
   const [selectedAnimeForModal, setSelectedAnimeForModal] = useState<AnimeCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<LibraryStatus | "all">("all");
   const [releaseSortDir, setReleaseSortDir] = useState<"desc" | "asc">("desc");
+  const [scoreSortDir, setScoreSortDir] = useState<ScoreSortDir>("off");
   const [selectedSeasonObj, setSelectedSeasonObj] = useState(getCurrentRealSeason());
   const [selectedPopularYear, setSelectedPopularYear] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -122,10 +124,12 @@ export function AnimePage() {
     ? libraryEntries
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
-  const sortedLibraryEntries = [...filteredLibraryEntries].sort((a, b) => {
-    const diff = (a.seasonYear ?? 0) - (b.seasonYear ?? 0);
-    return releaseSortDir === "desc" ? -diff : diff;
-  });
+  const sortedLibraryEntries = scoreSortDir !== "off"
+    ? [...filteredLibraryEntries].sort((a, b) => compareByScore(a, b, scoreSortDir))
+    : [...filteredLibraryEntries].sort((a, b) => {
+        const diff = (a.seasonYear ?? 0) - (b.seasonYear ?? 0);
+        return releaseSortDir === "desc" ? -diff : diff;
+      });
 
   const libraryAnimeCards: AnimeCard[] = sortedLibraryEntries.map((entry) => ({
     id: entry.anilistId,
@@ -147,7 +151,7 @@ export function AnimePage() {
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${releaseSortDir}`
+      ? `library-${libraryFilter}-${releaseSortDir}-${scoreSortDir}`
       : activeTab === "seasons"
       ? `seasons-${selectedSeasonObj.season}-${selectedSeasonObj.year}`
       : activeTab === "search"
@@ -231,6 +235,26 @@ export function AnimePage() {
                 <path d="M12 5v14M5 12l7 7 7-7" />
               </svg>
             </span>
+          </button>
+          <button
+            className={`${styles.sortButton} ${scoreSortDir !== "off" ? styles.sortButtonActive : ""}`}
+            onClick={() => setScoreSortDir(nextScoreSortDir(scoreSortDir))}
+            title={
+              scoreSortDir === "off"
+                ? "Ordenar por nota"
+                : scoreSortDir === "desc"
+                ? "Maior nota primeiro"
+                : "Menor nota primeiro"
+            }
+          >
+            <span>Nota</span>
+            {scoreSortDir !== "off" && (
+              <span className={`${styles.sortIcon} ${scoreSortDir === "asc" ? styles.sortIconAsc : ""}`}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 5v14M5 12l7 7 7-7" />
+                </svg>
+              </span>
+            )}
           </button>
         </div>
       )}

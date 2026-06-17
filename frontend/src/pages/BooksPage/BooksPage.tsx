@@ -11,6 +11,7 @@ import type { BookCard, BookDetail } from "../../types/book";
 import type { BookLibraryStatus } from "../../types/bookLibrary";
 import { BOOK_LIBRARY_STATUS_LABELS } from "../../types/bookLibrary";
 import { BOOK_GENRES } from "../../utils/bookGenres";
+import { nextScoreSortDir, compareByScore, type ScoreSortDir } from "../../utils/librarySort";
 import styles from "./BooksPage.module.css";
 
 const TABS = [
@@ -28,6 +29,7 @@ export function BooksPage() {
   const [selectedBookForModal, setSelectedBookForModal] = useState<BookCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<BookLibraryStatus | "all">("all");
   const [readSortDir, setReadSortDir] = useState<"desc" | "asc">("desc");
+  const [scoreSortDir, setScoreSortDir] = useState<ScoreSortDir>("off");
   const [selectedGenre, setSelectedGenre] = useState(BOOK_GENRES[0].value);
   const debouncedSearch = useDebounce(searchQuery, 400);
 
@@ -118,7 +120,9 @@ export function BooksPage() {
 
   const showReadSort = libraryFilter === "read";
 
-  const sortedLibraryEntries = showReadSort
+  const sortedLibraryEntries = scoreSortDir !== "off"
+    ? [...filteredLibraryEntries].sort((a, b) => compareByScore(a, b, scoreSortDir))
+    : showReadSort
     ? [...filteredLibraryEntries].sort((a, b) => {
         const ta = a.readAt ? new Date(a.readAt).getTime() : 0;
         const tb = b.readAt ? new Date(b.readAt).getTime() : 0;
@@ -143,7 +147,7 @@ export function BooksPage() {
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${readSortDir}`
+      ? `library-${libraryFilter}-${readSortDir}-${scoreSortDir}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
       : `discover-${selectedGenre}`;
@@ -211,6 +215,26 @@ export function BooksPage() {
               </span>
             </button>
           )}
+          <button
+            className={`${styles.sortButton} ${scoreSortDir !== "off" ? styles.sortButtonActive : ""}`}
+            onClick={() => setScoreSortDir(nextScoreSortDir(scoreSortDir))}
+            title={
+              scoreSortDir === "off"
+                ? "Ordenar por nota"
+                : scoreSortDir === "desc"
+                ? "Maior nota primeiro"
+                : "Menor nota primeiro"
+            }
+          >
+            <span>Nota</span>
+            {scoreSortDir !== "off" && (
+              <span className={`${styles.sortIcon} ${scoreSortDir === "asc" ? styles.sortIconAsc : ""}`}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 5v14M5 12l7 7 7-7" />
+                </svg>
+              </span>
+            )}
+          </button>
         </div>
       )}
 

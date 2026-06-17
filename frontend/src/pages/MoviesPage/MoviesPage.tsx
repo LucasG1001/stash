@@ -12,6 +12,7 @@ import type { MovieLibraryStatus } from "../../types/movieLibrary";
 import { MOVIE_LIBRARY_STATUS_LABELS } from "../../types/movieLibrary";
 import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
+import { nextScoreSortDir, compareByScore, type ScoreSortDir } from "../../utils/librarySort";
 import styles from "./MoviesPage.module.css";
 
 const TABS = [
@@ -30,6 +31,7 @@ export function MoviesPage() {
   const [selectedMovieForModal, setSelectedMovieForModal] = useState<MovieCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<MovieLibraryStatus | "all">("all");
   const [releaseSortDir, setReleaseSortDir] = useState<"desc" | "asc">("desc");
+  const [scoreSortDir, setScoreSortDir] = useState<ScoreSortDir>("off");
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -119,12 +121,14 @@ export function MoviesPage() {
     ? libraryEntries
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
-  const sortedLibraryEntries = [...filteredLibraryEntries].sort((a, b) => {
-    const ta = a.releaseDate ? new Date(a.releaseDate).getTime() : 0;
-    const tb = b.releaseDate ? new Date(b.releaseDate).getTime() : 0;
-    const diff = ta - tb;
-    return releaseSortDir === "desc" ? -diff : diff;
-  });
+  const sortedLibraryEntries = scoreSortDir !== "off"
+    ? [...filteredLibraryEntries].sort((a, b) => compareByScore(a, b, scoreSortDir))
+    : [...filteredLibraryEntries].sort((a, b) => {
+        const ta = a.releaseDate ? new Date(a.releaseDate).getTime() : 0;
+        const tb = b.releaseDate ? new Date(b.releaseDate).getTime() : 0;
+        const diff = ta - tb;
+        return releaseSortDir === "desc" ? -diff : diff;
+      });
 
   const libraryMovieCards: MovieCard[] = sortedLibraryEntries.map((entry) => ({
     id: entry.tmdbId,
@@ -143,7 +147,7 @@ export function MoviesPage() {
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${releaseSortDir}`
+      ? `library-${libraryFilter}-${releaseSortDir}-${scoreSortDir}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
       : activeTab === "popular"
@@ -222,6 +226,26 @@ export function MoviesPage() {
                 <path d="M12 5v14M5 12l7 7 7-7" />
               </svg>
             </span>
+          </button>
+          <button
+            className={`${styles.sortButton} ${scoreSortDir !== "off" ? styles.sortButtonActive : ""}`}
+            onClick={() => setScoreSortDir(nextScoreSortDir(scoreSortDir))}
+            title={
+              scoreSortDir === "off"
+                ? "Ordenar por nota"
+                : scoreSortDir === "desc"
+                ? "Maior nota primeiro"
+                : "Menor nota primeiro"
+            }
+          >
+            <span>Nota</span>
+            {scoreSortDir !== "off" && (
+              <span className={`${styles.sortIcon} ${scoreSortDir === "asc" ? styles.sortIconAsc : ""}`}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 5v14M5 12l7 7 7-7" />
+                </svg>
+              </span>
+            )}
           </button>
         </div>
       )}
