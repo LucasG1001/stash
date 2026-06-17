@@ -97,19 +97,19 @@ export async function fetchSeasonAnimes(season: string, year: number, page = 1, 
   };
 }
 
-export async function fetchPopularAnimes(page = 1, perPage = 20): Promise<{ animes: AnimeCard[]; pageInfo: AniListResponse["data"]["Page"]["pageInfo"] }> {
+export async function fetchPopularAnimes(page = 1, year?: number, perPage = 20): Promise<{ animes: AnimeCard[]; pageInfo: AniListResponse["data"]["Page"]["pageInfo"] }> {
   const query = `
-    query ($page: Int, $perPage: Int) {
+    query ($page: Int, $perPage: Int, $seasonYear: Int) {
       Page(page: $page, perPage: $perPage) {
         pageInfo { total currentPage lastPage hasNextPage }
-        media(type: ANIME, sort: POPULARITY_DESC) {
+        media(seasonYear: $seasonYear, type: ANIME, sort: POPULARITY_DESC) {
           ${MEDIA_FIELDS}
         }
       }
     }
   `;
 
-  const data = await queryAniList<AniListResponse>(query, { page, perPage });
+  const data = await queryAniList<AniListResponse>(query, { page, perPage, seasonYear: year });
   return {
     animes: data.data.Page.media.map(toAnimeCard),
     pageInfo: data.data.Page.pageInfo,

@@ -9,8 +9,10 @@ export async function fetchSeason(season?: string, year?: number, page = 1): Pro
   return response.data;
 }
 
-export async function fetchPopular(page = 1): Promise<AnimeListResponse> {
-  const response = await api.get<AnimeListResponse>("/api/anime/popular", { params: { page } });
+export async function fetchPopular(year?: number, page = 1): Promise<AnimeListResponse> {
+  const params: Record<string, number> = { page };
+  if (year) params.year = year;
+  const response = await api.get<AnimeListResponse>("/api/anime/popular", { params });
   return response.data;
 }
 

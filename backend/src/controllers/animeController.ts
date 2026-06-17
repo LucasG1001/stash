@@ -28,8 +28,10 @@ export async function getSeason(req: Request, res: Response): Promise<void> {
 
 export async function getPopular(req: Request, res: Response): Promise<void> {
   try {
+    const reqYear = parseInt(String(req.query.year));
+    const year = !isNaN(reqYear) ? reqYear : undefined;
     const page = parseInt(String(req.query.page || "1")) || 1;
-    const result = await fetchPopularAnimes(page);
+    const result = await fetchPopularAnimes(page, year);
     res.json(result);
   } catch {
     res.status(500).json({ error: "Erro ao buscar animes populares." });

@@ -13,9 +13,9 @@ export function useAnime() {
       fetchSeason(season, year, p).then((r) => ({ items: r.animes, hasNextPage: r.pageInfo.hasNextPage }))
     ), [load]);
 
-  const loadPopular = useCallback(() =>
-    load("popular", (p) =>
-      fetchPopular(p).then((r) => ({ items: r.animes, hasNextPage: r.pageInfo.hasNextPage }))
+  const loadPopular = useCallback((year?: number) =>
+    load(`popular:${year ?? "all"}`, (p) =>
+      fetchPopular(year, p).then((r) => ({ items: r.animes, hasNextPage: r.pageInfo.hasNextPage }))
     ), [load]);
 
   const search = useCallback((query: string) =>

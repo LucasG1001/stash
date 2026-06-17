@@ -12,6 +12,7 @@ import type { AnimeDetail } from "../../types/anime";
 import type { LibraryStatus } from "../../types/library";
 import { LIBRARY_STATUS_LABELS } from "../../types/library";
 import { SEASON_PT, getCurrentRealSeason, getSurroundingSeasons } from "../../utils/season";
+import { getRecentYears } from "../../utils/year";
 import styles from "./AnimePage.module.css";
 
 const TABS = [
@@ -31,6 +32,7 @@ export function AnimePage() {
   const [libraryFilter, setLibraryFilter] = useState<LibraryStatus | "all">("all");
   const [watchedSortDir, setWatchedSortDir] = useState<"desc" | "asc">("desc");
   const [selectedSeasonObj, setSelectedSeasonObj] = useState(getCurrentRealSeason());
+  const [selectedPopularYear, setSelectedPopularYear] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
 
   const { animes, loading, error, hasNextPage, loadSeason, loadPopular, search, loadMore } = useAnime();
@@ -47,9 +49,9 @@ export function AnimePage() {
   useEffect(() => {
     switch (activeTab) {
       case "seasons": loadSeason(selectedSeasonObj.season, selectedSeasonObj.year); break;
-      case "popular": loadPopular(); break;
+      case "popular": loadPopular(selectedPopularYear || undefined); break;
     }
-  }, [activeTab, selectedSeasonObj, loadSeason, loadPopular]);
+  }, [activeTab, selectedSeasonObj, selectedPopularYear, loadSeason, loadPopular]);
 
   useEffect(() => {
     if (activeTab === "search" && debouncedSearch.length >= 2) {
@@ -155,6 +157,8 @@ export function AnimePage() {
       ? `seasons-${selectedSeasonObj.season}-${selectedSeasonObj.year}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
+      : activeTab === "popular"
+      ? `popular-${selectedPopularYear}`
       : activeTab;
 
   return (
@@ -178,6 +182,23 @@ export function AnimePage() {
             {getSurroundingSeasons(selectedSeasonObj.season, selectedSeasonObj.year).map(s => (
               <option key={`${s.season}-${s.year}`} value={`${s.season}-${s.year}`}>
                 {SEASON_PT[s.season]} {s.year}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {activeTab === "popular" && (
+        <div className={styles.seasonSelectorWrapper}>
+          <select
+            className={styles.seasonSelect}
+            value={selectedPopularYear}
+            onChange={(e) => setSelectedPopularYear(parseInt(e.target.value))}
+          >
+            <option value={0}>Todos os anos</option>
+            {getRecentYears().map((year) => (
+              <option key={year} value={year}>
+                {year}
               </option>
             ))}
           </select>
