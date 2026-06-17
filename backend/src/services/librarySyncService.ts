@@ -59,6 +59,7 @@ async function doRefresh(): Promise<void> {
         return libraryModel.updateSyncData(anime.id, {
           totalEpisodes: anime.episodes,
           animeStatus: anime.status,
+          seasonYear: anime.seasonYear,
           nextAiringEpisode: anime.nextAiringEpisode,
           streamingLinks: anime.streamingLinks,
         });

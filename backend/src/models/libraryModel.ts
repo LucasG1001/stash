@@ -40,6 +40,7 @@ export async function findStale(nonFinishedTtlHours: number, finishedTtlHours: n
   const result = await pool.query<LibraryRow>(
     `SELECT * FROM anime_library
      WHERE synced_at IS NULL
+        OR season_year IS NULL
         OR (anime_status != 'FINISHED' AND synced_at < NOW() - ($1 || ' hours')::interval)
         OR (anime_status = 'FINISHED' AND synced_at < NOW() - ($2 || ' hours')::interval)`,
     [nonFinishedTtlHours, finishedTtlHours]
@@ -126,6 +127,7 @@ export async function updateSyncData(anilistId: number, data: SyncLibraryData): 
          anime_status = $3,
          next_airing_episode = $4,
          streaming_links = $5,
+         season_year = $6,
          synced_at = NOW()
      WHERE anilist_id = $1`,
     [
@@ -134,6 +136,7 @@ export async function updateSyncData(anilistId: number, data: SyncLibraryData): 
       data.animeStatus,
       JSON.stringify(data.nextAiringEpisode ?? null),
       JSON.stringify(data.streamingLinks ?? []),
+      data.seasonYear ?? null,
     ]
   );
 }

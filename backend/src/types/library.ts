@@ -45,6 +45,7 @@ export interface UpdateLibraryEntry {
 export interface SyncLibraryData {
   totalEpisodes: number | null;
   animeStatus: string;
+  seasonYear: number | null;
   nextAiringEpisode: AniListNextAiringEpisode | null;
   streamingLinks: AniListExternalLink[];
 }
