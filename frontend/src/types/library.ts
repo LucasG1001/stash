@@ -11,6 +11,8 @@ export interface LibraryEntry {
   score: number;
   totalEpisodes: number | null;
   animeStatus?: string;
+  franchiseId: number | null;
+  format?: string | null;
   seasonYear: number | null;
   nextAiringEpisode: AnimeNextAiringEpisode | null;
   streamingLinks: AnimeExternalLink[];

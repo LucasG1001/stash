@@ -1,8 +1,11 @@
 import { cachedRequest } from "../lib/httpClient.js";
-import type { AniListAnime, AniListResponse, AniListSingleResponse, AnimeCard, AnimeDetail, AniListExternalLink } from "../types/anime.js";
+import type { AniListAnime, AniListResponse, AniListSingleResponse, AnimeCard, AnimeDetail, AniListExternalLink, AniListFranchiseNode, AniListFranchiseResponse } from "../types/anime.js";
 
 const ANILIST_URL = "https://graphql.anilist.co";
 const CACHE_TTL_MS = 60 * 60 * 1000;
+
+const FRANCHISE_RELATIONS = new Set(["SEQUEL", "PREQUEL", "PARENT", "SIDE_STORY"]);
+const FRANCHISE_NODE_CAP = 50;
 
 const MEDIA_FIELDS = `
   id
@@ -11,6 +14,7 @@ const MEDIA_FIELDS = `
   bannerImage
   description(asHtml: false)
   status
+  format
   episodes
   genres
   studios(isMain: true) { nodes { name } }
@@ -32,6 +36,7 @@ function toAnimeCard(anime: AniListAnime): AnimeCard {
     title: anime.title.english || anime.title.romaji,
     coverImage: anime.coverImage.extraLarge || anime.coverImage.large,
     status: anime.status,
+    format: anime.format,
     episodes: anime.episodes,
     averageScore: anime.averageScore,
     season: anime.season,
@@ -184,4 +189,75 @@ export async function fetchAnimeById(id: number): Promise<AnimeDetail> {
     ...toAnimeDetail(anime),
     ratingCount,
   };
+}
+
+function franchiseNodeToCard(node: AniListFranchiseNode): AnimeCard {
+  return {
+    id: node.id,
+    title: node.title.english || node.title.romaji,
+    coverImage: node.coverImage.extraLarge || node.coverImage.large,
+    status: node.status,
+    format: node.format,
+    episodes: node.episodes,
+    averageScore: null,
+    season: null,
+    seasonYear: node.seasonYear,
+    genres: [],
+    nextAiringEpisode: node.nextAiringEpisode,
+    streamingLinks: getStreamingLinks(node.externalLinks || []),
+  };
+}
+
+export async function discoverFranchise(seedId: number): Promise<AnimeCard[]> {
+  const query = `
+    query ($ids: [Int], $perPage: Int) {
+      Page(perPage: $perPage) {
+        media(id_in: $ids, type: ANIME) {
+          id
+          format
+          title { romaji english native }
+          coverImage { large extraLarge }
+          episodes
+          status
+          seasonYear
+          nextAiringEpisode { episode airingAt }
+          externalLinks { url site icon color type }
+          relations { edges { relationType node { id type format } } }
+        }
+      }
+    }
+  `;
+
+  const visited = new Map<number, AniListFranchiseNode>();
+  let frontier: number[] = [seedId];
+
+  while (frontier.length > 0 && visited.size < FRANCHISE_NODE_CAP) {
+    const next = new Set<number>();
+
+    for (let i = 0; i < frontier.length; i += 50) {
+      const batch = frontier.slice(i, i + 50);
+      const data = await queryAniList<AniListFranchiseResponse>(query, { ids: batch, perPage: batch.length });
+
+      for (const node of data.data.Page.media) {
+        if (!visited.has(node.id)) visited.set(node.id, node);
+      }
+
+      for (const node of data.data.Page.media) {
+        for (const edge of node.relations.edges) {
+          if (
+            FRANCHISE_RELATIONS.has(edge.relationType) &&
+            edge.node.type === "ANIME" &&
+            !visited.has(edge.node.id) &&
+            !frontier.includes(edge.node.id)
+          ) {
+            next.add(edge.node.id);
+          }
+        }
+      }
+    }
+
+    frontier = [...next].sort((a, b) => a - b);
+  }
+
+  return [...visited.values()].sort((a, b) => a.id - b.id).map(franchiseNodeToCard);
 }

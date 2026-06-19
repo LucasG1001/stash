@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
 import { AnimeGrid } from "../../components/AnimeGrid/AnimeGrid";
+import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { AnimeDrawer } from "../../components/AnimeDrawer/AnimeDrawer";
 import { LibraryModal } from "../../components/LibraryModal/LibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
@@ -13,7 +14,8 @@ import type { LibraryStatus } from "../../types/library";
 import { LIBRARY_STATUS_LABELS } from "../../types/library";
 import { SEASON_PT, getCurrentRealSeason, getSurroundingSeasons } from "../../utils/season";
 import { getRecentYears } from "../../utils/year";
-import { nextScoreSortDir, compareByScore, type ScoreSortDir } from "../../utils/librarySort";
+import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
+import { buildFranchiseGroups } from "../../utils/franchiseGroups";
 import styles from "./AnimePage.module.css";
 
 const TABS = [
@@ -124,30 +126,7 @@ export function AnimePage() {
     ? libraryEntries
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
-  const sortedLibraryEntries = scoreSortDir !== "off"
-    ? [...filteredLibraryEntries].sort((a, b) => compareByScore(a, b, scoreSortDir))
-    : [...filteredLibraryEntries].sort((a, b) => {
-        const diff = (a.seasonYear ?? 0) - (b.seasonYear ?? 0);
-        return releaseSortDir === "desc" ? -diff : diff;
-      });
-
-  const libraryAnimeCards: AnimeCard[] = sortedLibraryEntries.map((entry) => ({
-    id: entry.anilistId,
-    title: entry.title,
-    coverImage: entry.coverImage ?? "",
-    status: entry.animeStatus || "FINISHED",
-    episodes: entry.totalEpisodes,
-    averageScore: null,
-    season: null,
-    seasonYear: entry.seasonYear,
-    genres: [],
-    nextAiringEpisode: entry.nextAiringEpisode,
-    streamingLinks: entry.streamingLinks,
-  }));
-
-  const displayAnimes = activeTab === "library" ? libraryAnimeCards : animes;
-  const displayLoading = activeTab === "library" ? libraryLoading : loading;
-  const displayError = activeTab === "library" ? libraryError : error;
+  const franchiseGroups = buildFranchiseGroups(filteredLibraryEntries, scoreSortDir, releaseSortDir);
 
   const gridKey =
     activeTab === "library"
@@ -259,25 +238,36 @@ export function AnimePage() {
         </div>
       )}
 
-      <AnimeGrid
-        animes={displayAnimes}
-        loading={displayLoading}
-        error={displayError}
-        hasNextPage={activeTab !== "library" && hasNextPage}
-        onLoadMore={loadMore}
-        onCardClick={handleCardClick}
-        onAddToLibrary={handleOpenLibraryModal}
-        getLibraryEntry={(id) => findByAnilistId(id)}
-        isLibraryView={activeTab === "library"}
-        animationKey={gridKey}
-        emptyMessage={
-          activeTab === "library"
-            ? "Sua biblioteca está vazia. Adicione animes para começar!"
-            : activeTab === "search" && searchQuery.length < 2
-            ? "Digite pelo menos 2 caracteres para buscar."
-            : "Nenhum anime encontrado."
-        }
-      />
+      {activeTab === "library" ? (
+        <FranchiseGrid
+          groups={franchiseGroups}
+          loading={libraryLoading}
+          error={libraryError}
+          onCardClick={handleCardClick}
+          onAddToLibrary={handleOpenLibraryModal}
+          getLibraryEntry={(id) => findByAnilistId(id)}
+          animationKey={gridKey}
+          emptyMessage="Sua biblioteca está vazia."
+        />
+      ) : (
+        <AnimeGrid
+          animes={animes}
+          loading={loading}
+          error={error}
+          hasNextPage={hasNextPage}
+          onLoadMore={loadMore}
+          onCardClick={handleCardClick}
+          onAddToLibrary={handleOpenLibraryModal}
+          getLibraryEntry={(id) => findByAnilistId(id)}
+          isLibraryView={false}
+          animationKey={gridKey}
+          emptyMessage={
+            activeTab === "search" && searchQuery.length < 2
+              ? "Digite pelo menos 2 caracteres para buscar."
+              : "Nenhum anime encontrado."
+          }
+        />
+      )}
 
       {selectedAnimeId !== null && (
         <AnimeDrawer

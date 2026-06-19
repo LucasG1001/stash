@@ -6,8 +6,8 @@ export async function fetchLibrary(): Promise<LibraryEntry[]> {
   return response.data;
 }
 
-export async function addToLibrary(entry: CreateLibraryEntry): Promise<LibraryEntry> {
-  const response = await api.post<LibraryEntry>("/api/library", entry);
+export async function addToLibrary(entry: CreateLibraryEntry): Promise<LibraryEntry[]> {
+  const response = await api.post<LibraryEntry[]>("/api/library", entry);
   return response.data;
 }
 

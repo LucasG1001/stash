@@ -9,6 +9,8 @@ export interface LibraryEntry {
   score: number;
   totalEpisodes: number | null;
   animeStatus: string;
+  franchiseId: number | null;
+  format: string | null;
   seasonYear: number | null;
   nextAiringEpisode: AniListNextAiringEpisode | null;
   streamingLinks: AniListExternalLink[];
@@ -28,6 +30,7 @@ export interface CreateLibraryEntry {
   score?: number;
   totalEpisodes?: number | null;
   animeStatus?: string;
+  format?: string | null;
   seasonYear?: number | null;
   nextAiringEpisode?: AniListNextAiringEpisode | null;
   streamingLinks?: AniListExternalLink[];
@@ -59,6 +62,8 @@ export interface LibraryRow {
   score: string;
   total_episodes: number | null;
   anime_status: string;
+  franchise_id: number | null;
+  format: string | null;
   season_year: number | null;
   next_airing_episode: AniListNextAiringEpisode | null;
   streaming_links: AniListExternalLink[];

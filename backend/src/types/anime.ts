@@ -38,6 +38,7 @@ export interface AniListAnime {
   bannerImage: string | null;
   description: string | null;
   status: string;
+  format: string | null;
   episodes: number | null;
   genres: string[];
   studios: { nodes: AniListStudio[] };
@@ -81,6 +82,7 @@ export interface AnimeCard {
   title: string;
   coverImage: string;
   status: string;
+  format: string | null;
   episodes: number | null;
   averageScore: number | null;
   season: string | null;
@@ -97,4 +99,36 @@ export interface AnimeDetail extends AnimeCard {
   trailer: AniListTrailer | null;
   externalLinks: AniListExternalLink[];
   ratingCount?: number;
+}
+
+export interface AniListRelationNode {
+  id: number;
+  type: string;
+  format: string | null;
+}
+
+export interface AniListRelationEdge {
+  relationType: string;
+  node: AniListRelationNode;
+}
+
+export interface AniListFranchiseNode {
+  id: number;
+  format: string | null;
+  title: AniListTitle;
+  coverImage: AniListCoverImage;
+  episodes: number | null;
+  status: string;
+  seasonYear: number | null;
+  nextAiringEpisode: AniListNextAiringEpisode | null;
+  externalLinks: AniListExternalLink[];
+  relations: { edges: AniListRelationEdge[] };
+}
+
+export interface AniListFranchiseResponse {
+  data: {
+    Page: {
+      media: AniListFranchiseNode[];
+    };
+  };
 }

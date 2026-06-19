@@ -22,7 +22,7 @@ const inFlight = new Set<string>();
 
 export interface LibraryService<TEntry, TCreate, TUpdate> {
   fetchLibrary: () => Promise<TEntry[]>;
-  addToLibrary: (entry: TCreate) => Promise<TEntry>;
+  addToLibrary: (entry: TCreate) => Promise<TEntry | TEntry[]>;
   updateLibraryEntry: (id: string, data: TUpdate) => Promise<TEntry>;
   removeFromLibrary: (id: string) => Promise<void>;
 }
@@ -72,8 +72,13 @@ export function useLibraryStore<TEntry extends { id: string }, TCreate, TUpdate>
   const add = useCallback(async (entry: TCreate): Promise<TEntry | null> => {
     try {
       const created = await service.addToLibrary(entry);
-      setSlice(media, (p) => ({ ...p, entries: [created, ...(p.entries as TEntry[])] }));
-      return created;
+      const list = Array.isArray(created) ? created : [created];
+      setSlice(media, (p) => {
+        const ids = new Set(list.map((e) => e.id));
+        const kept = (p.entries as TEntry[]).filter((e) => !ids.has(e.id));
+        return { ...p, entries: [...list, ...kept] };
+      });
+      return list[0] ?? null;
     } catch {
       setSlice(media, (p) => ({ ...p, error: "Erro ao adicionar à biblioteca." }));
       return null;

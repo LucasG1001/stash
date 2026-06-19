@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import * as libraryModel from "../models/libraryModel.js";
+import { discoverFranchise } from "../services/anilistService.js";
 import { refreshStaleEntries } from "../services/librarySyncService.js";
 import { animeCreateSchema, animeUpdateSchema } from "../schemas/library.js";
 import type { CreateLibraryEntry } from "../types/library.js";
@@ -21,7 +22,7 @@ export async function create(req: Request, res: Response): Promise<void> {
       res.status(400).json({ error: "Dados inválidos.", issues: parsed.error.flatten() });
       return;
     }
-    const { anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, seasonYear, nextAiringEpisode, streamingLinks } = parsed.data;
+    const { anilistId, status, score } = parsed.data;
 
     const existing = await libraryModel.findByAnilistId(anilistId);
     if (existing) {
@@ -29,10 +30,32 @@ export async function create(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const entry = await libraryModel.create(
-      { anilistId, title, coverImage, status, score, totalEpisodes, animeStatus, seasonYear, nextAiringEpisode, streamingLinks } as unknown as CreateLibraryEntry
-    );
-    res.status(201).json(entry);
+    const members = await discoverFranchise(anilistId);
+
+    if (members.length === 0) {
+      const entry = await libraryModel.create(parsed.data as unknown as CreateLibraryEntry);
+      res.status(201).json([entry]);
+      return;
+    }
+
+    const franchiseId = Math.min(...members.map((m) => m.id));
+    const entries: CreateLibraryEntry[] = members.map((m) => ({
+      anilistId: m.id,
+      title: m.title,
+      coverImage: m.coverImage,
+      status: m.id === anilistId ? status ?? "plan_to_watch" : "plan_to_watch",
+      score: m.id === anilistId ? score ?? 0 : 0,
+      totalEpisodes: m.episodes,
+      animeStatus: m.status,
+      format: m.format,
+      seasonYear: m.seasonYear,
+      nextAiringEpisode: m.nextAiringEpisode,
+      streamingLinks: m.streamingLinks,
+    }));
+
+    const group = await libraryModel.bulkUpsert(entries, franchiseId);
+    group.sort((a, b) => (a.anilistId === anilistId ? -1 : b.anilistId === anilistId ? 1 : 0));
+    res.status(201).json(group);
   } catch {
     res.status(500).json({ error: "Erro ao adicionar anime à biblioteca." });
   }

@@ -32,6 +32,16 @@ export async function migrate(): Promise<void> {
   `);
 
   await pool.query(`
+    ALTER TABLE anime_library
+    ADD COLUMN IF NOT EXISTS franchise_id INTEGER,
+    ADD COLUMN IF NOT EXISTS format TEXT;
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_anime_library_franchise_id ON anime_library (franchise_id);
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS movie_library (
       id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       tmdb_id       INTEGER NOT NULL UNIQUE,

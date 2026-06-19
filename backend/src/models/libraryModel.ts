@@ -11,6 +11,8 @@ function toLibraryEntry(row: LibraryRow): LibraryEntry {
     score: parseFloat(row.score),
     totalEpisodes: row.total_episodes,
     animeStatus: row.anime_status,
+    franchiseId: row.franchise_id,
+    format: row.format,
     seasonYear: row.season_year,
     nextAiringEpisode: row.next_airing_episode,
     streamingLinks: row.streaming_links ?? [],
@@ -68,6 +70,48 @@ export async function create(entry: CreateLibraryEntry): Promise<LibraryEntry> {
     ]
   );
   return toLibraryEntry(result.rows[0]);
+}
+
+export async function bulkUpsert(entries: CreateLibraryEntry[], franchiseId: number): Promise<LibraryEntry[]> {
+  if (entries.length === 0) return [];
+
+  const values: unknown[] = [];
+  const rows: string[] = [];
+  let i = 1;
+
+  for (const entry of entries) {
+    const statusParam = `$${i + 3}`;
+    rows.push(
+      `($${i}, $${i + 1}, $${i + 2}, ${statusParam}, $${i + 4}, $${i + 5}, $${i + 6}, $${i + 7}, $${i + 8}, $${i + 9}, $${i + 10}, $${i + 11}, NOW(), CASE WHEN ${statusParam} = 'watched' THEN NOW() ELSE NULL END)`
+    );
+    values.push(
+      entry.anilistId,
+      entry.title,
+      entry.coverImage ?? null,
+      entry.status ?? "plan_to_watch",
+      entry.score ?? 0,
+      entry.totalEpisodes ?? null,
+      entry.animeStatus ?? "FINISHED",
+      entry.seasonYear ?? null,
+      JSON.stringify(entry.nextAiringEpisode ?? null),
+      JSON.stringify(entry.streamingLinks ?? []),
+      franchiseId,
+      entry.format ?? null
+    );
+    i += 12;
+  }
+
+  const result = await pool.query<LibraryRow>(
+    `INSERT INTO anime_library
+       (anilist_id, title, cover_image, status, score, total_episodes, anime_status, season_year, next_airing_episode, streaming_links, franchise_id, format, synced_at, watched_at)
+     VALUES ${rows.join(", ")}
+     ON CONFLICT (anilist_id) DO UPDATE SET
+       franchise_id = COALESCE(anime_library.franchise_id, EXCLUDED.franchise_id),
+       format = COALESCE(anime_library.format, EXCLUDED.format)
+     RETURNING *`,
+    values
+  );
+  return result.rows.map(toLibraryEntry);
 }
 
 export async function update(id: string, data: UpdateLibraryEntry): Promise<LibraryEntry | null> {
