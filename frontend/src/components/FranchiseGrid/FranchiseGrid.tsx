@@ -1,8 +1,10 @@
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import type { AnimeCard as AnimeCardType } from "../../types/anime";
 import type { LibraryEntry } from "../../types/library";
 import type { FranchiseGroup } from "../../utils/franchiseGroups";
 import { libraryEntryToCard } from "../../utils/libraryEntryToCard";
+import { useGridColumns } from "../../hooks/useGridColumns";
+import { arrangeRowAwareCells, type RowAwareItem } from "../../utils/rowAwareCells";
 import { AnimeCard } from "../AnimeCard/AnimeCard";
 import { FranchiseCard } from "../FranchiseCard/FranchiseCard";
 import { LoadingSkeleton } from "../LoadingSkeleton/LoadingSkeleton";
@@ -31,6 +33,7 @@ export function FranchiseGrid({
   animationKey,
 }: FranchiseGridProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [cols, setGridRef] = useGridColumns();
 
   const toggle = (key: string) => {
     setExpanded((prev) => {
@@ -69,56 +72,63 @@ export function FranchiseGrid({
     );
   }
 
-  return (
-    <div className={gridStyles.grid} key={animationKey}>
-      {groups.map((group, index) => {
-        if (group.count === 1) {
-          const card = libraryEntryToCard(group.representative);
-          return (
-            <AnimeCard
-              key={group.key}
-              anime={card}
-              libraryEntry={getLibraryEntry(card.id)}
-              onClick={() => onCardClick(card)}
-              onAdd={() => onAddToLibrary(card)}
-              isLibraryView
-              index={index}
-            />
-          );
-        }
+  const items: RowAwareItem[] = groups.map((group, index) => {
+    if (group.count === 1) {
+      const card = libraryEntryToCard(group.representative);
+      return {
+        card: (
+          <AnimeCard
+            key={group.key}
+            anime={card}
+            libraryEntry={getLibraryEntry(card.id)}
+            onClick={() => onCardClick(card)}
+            onAdd={() => onAddToLibrary(card)}
+            isLibraryView
+            index={index}
+          />
+        ),
+        expansion: null,
+      };
+    }
 
-        return (
-          <Fragment key={group.key}>
-            <FranchiseCard
-              group={group}
-              expanded={expanded.has(group.key)}
-              onToggle={() => toggle(group.key)}
-              onCardClick={onCardClick}
-              onAddToLibrary={onAddToLibrary}
-              libraryEntry={getLibraryEntry(group.representative.anilistId)}
-              index={index}
-            />
-            {expanded.has(group.key) && (
-              <div className={styles.expansion}>
-                {group.members.map((member, memberIndex) => {
-                  const card = libraryEntryToCard(member);
-                  return (
-                    <AnimeCard
-                      key={member.anilistId}
-                      anime={card}
-                      libraryEntry={getLibraryEntry(member.anilistId)}
-                      onClick={() => onCardClick(card)}
-                      onAdd={() => onAddToLibrary(card)}
-                      isLibraryView
-                      index={memberIndex}
-                    />
-                  );
-                })}
-              </div>
-            )}
-          </Fragment>
-        );
-      })}
+    const isExpanded = expanded.has(group.key);
+    return {
+      card: (
+        <FranchiseCard
+          key={group.key}
+          group={group}
+          expanded={isExpanded}
+          onToggle={() => toggle(group.key)}
+          onCardClick={onCardClick}
+          onAddToLibrary={onAddToLibrary}
+          libraryEntry={getLibraryEntry(group.representative.anilistId)}
+          index={index}
+        />
+      ),
+      expansion: isExpanded ? (
+        <div className={styles.expansion} key={`exp-${group.key}`}>
+          {group.members.map((member, memberIndex) => {
+            const card = libraryEntryToCard(member);
+            return (
+              <AnimeCard
+                key={member.anilistId}
+                anime={card}
+                libraryEntry={getLibraryEntry(member.anilistId)}
+                onClick={() => onCardClick(card)}
+                onAdd={() => onAddToLibrary(card)}
+                isLibraryView
+                index={memberIndex}
+              />
+            );
+          })}
+        </div>
+      ) : null,
+    };
+  });
+
+  return (
+    <div className={gridStyles.grid} key={animationKey} ref={setGridRef}>
+      {arrangeRowAwareCells(items, cols)}
     </div>
   );
 }

@@ -1,8 +1,10 @@
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import type { MovieCard as MovieCardType } from "../../types/movie";
 import type { MovieLibraryEntry } from "../../types/movieLibrary";
 import type { MovieGroup } from "../../utils/movieCollectionGroups";
 import { movieLibraryEntryToCard } from "../../utils/movieLibraryEntryToCard";
+import { useGridColumns } from "../../hooks/useGridColumns";
+import { arrangeRowAwareCells, type RowAwareItem } from "../../utils/rowAwareCells";
 import { MovieCard } from "../MovieCard/MovieCard";
 import { MovieFranchiseCard } from "../MovieFranchiseCard/MovieFranchiseCard";
 import { LoadingSkeleton } from "../LoadingSkeleton/LoadingSkeleton";
@@ -31,6 +33,7 @@ export function MovieFranchiseGrid({
   animationKey,
 }: MovieFranchiseGridProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [cols, setGridRef] = useGridColumns();
 
   const toggle = (key: string) => {
     setExpanded((prev) => {
@@ -69,56 +72,63 @@ export function MovieFranchiseGrid({
     );
   }
 
-  return (
-    <div className={gridStyles.grid} key={animationKey}>
-      {groups.map((group, index) => {
-        if (group.count === 1) {
-          const card = movieLibraryEntryToCard(group.representative);
-          return (
-            <MovieCard
-              key={group.key}
-              movie={card}
-              libraryEntry={getLibraryEntry(card.id)}
-              onClick={() => onCardClick(card)}
-              onAdd={() => onAddToLibrary(card)}
-              isLibraryView
-              index={index}
-            />
-          );
-        }
+  const items: RowAwareItem[] = groups.map((group, index) => {
+    if (group.count === 1) {
+      const card = movieLibraryEntryToCard(group.representative);
+      return {
+        card: (
+          <MovieCard
+            key={group.key}
+            movie={card}
+            libraryEntry={getLibraryEntry(card.id)}
+            onClick={() => onCardClick(card)}
+            onAdd={() => onAddToLibrary(card)}
+            isLibraryView
+            index={index}
+          />
+        ),
+        expansion: null,
+      };
+    }
 
-        return (
-          <Fragment key={group.key}>
-            <MovieFranchiseCard
-              group={group}
-              expanded={expanded.has(group.key)}
-              onToggle={() => toggle(group.key)}
-              onCardClick={onCardClick}
-              onAddToLibrary={onAddToLibrary}
-              libraryEntry={getLibraryEntry(group.representative.tmdbId)}
-              index={index}
-            />
-            {expanded.has(group.key) && (
-              <div className={styles.expansion}>
-                {group.members.map((member, memberIndex) => {
-                  const card = movieLibraryEntryToCard(member);
-                  return (
-                    <MovieCard
-                      key={member.tmdbId}
-                      movie={card}
-                      libraryEntry={getLibraryEntry(member.tmdbId)}
-                      onClick={() => onCardClick(card)}
-                      onAdd={() => onAddToLibrary(card)}
-                      isLibraryView
-                      index={memberIndex}
-                    />
-                  );
-                })}
-              </div>
-            )}
-          </Fragment>
-        );
-      })}
+    const isExpanded = expanded.has(group.key);
+    return {
+      card: (
+        <MovieFranchiseCard
+          key={group.key}
+          group={group}
+          expanded={isExpanded}
+          onToggle={() => toggle(group.key)}
+          onCardClick={onCardClick}
+          onAddToLibrary={onAddToLibrary}
+          libraryEntry={getLibraryEntry(group.representative.tmdbId)}
+          index={index}
+        />
+      ),
+      expansion: isExpanded ? (
+        <div className={styles.expansion} key={`exp-${group.key}`}>
+          {group.members.map((member, memberIndex) => {
+            const card = movieLibraryEntryToCard(member);
+            return (
+              <MovieCard
+                key={member.tmdbId}
+                movie={card}
+                libraryEntry={getLibraryEntry(member.tmdbId)}
+                onClick={() => onCardClick(card)}
+                onAdd={() => onAddToLibrary(card)}
+                isLibraryView
+                index={memberIndex}
+              />
+            );
+          })}
+        </div>
+      ) : null,
+    };
+  });
+
+  return (
+    <div className={gridStyles.grid} key={animationKey} ref={setGridRef}>
+      {arrangeRowAwareCells(items, cols)}
     </div>
   );
 }
