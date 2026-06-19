@@ -1,5 +1,32 @@
 import type { Request, Response } from "express";
+import axios from "axios";
 import { fetchPopularGames, fetchUpcomingGames, searchGames, fetchGameById } from "../services/igdbService.js";
+
+const IGDB_IMAGE_BASE = "https://images.igdb.com/igdb/image/upload";
+const IMAGE_SIZE_RE = /^t_[a-z0-9_]+$/;
+const IMAGE_FILE_RE = /^[a-z0-9]+\.(jpg|png|webp)$/i;
+
+export async function proxyImage(req: Request, res: Response): Promise<void> {
+  try {
+    const size = String(req.params.size);
+    const file = String(req.params.file);
+    if (!IMAGE_SIZE_RE.test(size) || !IMAGE_FILE_RE.test(file)) {
+      res.status(400).json({ error: "Imagem inválida." });
+      return;
+    }
+
+    const upstream = await axios.get<ArrayBuffer>(`${IGDB_IMAGE_BASE}/${size}/${file}`, {
+      responseType: "arraybuffer",
+      timeout: 10000,
+    });
+
+    res.setHeader("Content-Type", String(upstream.headers["content-type"] ?? "image/jpeg"));
+    res.setHeader("Cache-Control", "public, max-age=2592000, immutable");
+    res.send(Buffer.from(upstream.data));
+  } catch {
+    res.status(502).json({ error: "Erro ao carregar imagem." });
+  }
+}
 
 export async function getPopular(req: Request, res: Response): Promise<void> {
   try {

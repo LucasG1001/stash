@@ -115,6 +115,12 @@ export async function migrate(): Promise<void> {
   `);
 
   await pool.query(`
+    UPDATE game_library
+    SET background_image = REPLACE(background_image, 'https://images.igdb.com/igdb/image/upload', '/api/game/image')
+    WHERE background_image LIKE 'https://images.igdb.com/igdb/image/upload/%';
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS books_library (
       id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       google_books_id  TEXT NOT NULL UNIQUE,

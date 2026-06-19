@@ -13,7 +13,7 @@ import type {
 } from "../types/game.js";
 
 const IGDB_URL = "https://api.igdb.com/v4";
-const IMAGE_URL = "https://images.igdb.com/igdb/image/upload";
+const IMAGE_URL = "/api/game/image";
 const PAGE_SIZE = 20;
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
