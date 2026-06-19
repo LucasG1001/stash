@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
 import { MovieGrid } from "../../components/MovieGrid/MovieGrid";
+import { MovieFranchiseGrid } from "../../components/MovieFranchiseGrid/MovieFranchiseGrid";
 import { MovieDrawer } from "../../components/MovieDrawer/MovieDrawer";
 import { MovieLibraryModal } from "../../components/MovieLibraryModal/MovieLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
@@ -12,7 +13,8 @@ import type { MovieLibraryStatus } from "../../types/movieLibrary";
 import { MOVIE_LIBRARY_STATUS_LABELS } from "../../types/movieLibrary";
 import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
-import { nextScoreSortDir, compareByScore, type ScoreSortDir } from "../../utils/librarySort";
+import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
+import { buildMovieCollectionGroups } from "../../utils/movieCollectionGroups";
 import styles from "./MoviesPage.module.css";
 
 const TABS = [
@@ -121,29 +123,7 @@ export function MoviesPage() {
     ? libraryEntries
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
-  const sortedLibraryEntries = scoreSortDir !== "off"
-    ? [...filteredLibraryEntries].sort((a, b) => compareByScore(a, b, scoreSortDir))
-    : [...filteredLibraryEntries].sort((a, b) => {
-        const ta = a.releaseDate ? new Date(a.releaseDate).getTime() : 0;
-        const tb = b.releaseDate ? new Date(b.releaseDate).getTime() : 0;
-        const diff = ta - tb;
-        return releaseSortDir === "desc" ? -diff : diff;
-      });
-
-  const libraryMovieCards: MovieCard[] = sortedLibraryEntries.map((entry) => ({
-    id: entry.tmdbId,
-    title: entry.title,
-    posterImage: entry.posterImage ?? "",
-    backdropImage: null,
-    releaseDate: entry.releaseDate,
-    voteAverage: null,
-    overview: null,
-    movieStatus: entry.movieStatus || "RELEASED",
-  }));
-
-  const displayMovies = activeTab === "library" ? libraryMovieCards : movies;
-  const displayLoading = activeTab === "library" ? libraryLoading : loading;
-  const displayError = activeTab === "library" ? libraryError : error;
+  const collectionGroups = buildMovieCollectionGroups(filteredLibraryEntries, scoreSortDir, releaseSortDir);
 
   const gridKey =
     activeTab === "library"
@@ -250,25 +230,36 @@ export function MoviesPage() {
         </div>
       )}
 
-      <MovieGrid
-        movies={displayMovies}
-        loading={displayLoading}
-        error={displayError}
-        hasNextPage={activeTab !== "library" && hasNextPage}
-        onLoadMore={loadMore}
-        onCardClick={handleCardClick}
-        onAddToLibrary={handleOpenLibraryModal}
-        getLibraryEntry={(id) => findByTmdbId(id)}
-        isLibraryView={activeTab === "library"}
-        animationKey={gridKey}
-        emptyMessage={
-          activeTab === "library"
-            ? "Sua biblioteca está vazia. Adicione filmes para começar!"
-            : activeTab === "search" && searchQuery.length < 2
-            ? "Digite pelo menos 2 caracteres para buscar."
-            : "Nenhum filme encontrado."
-        }
-      />
+      {activeTab === "library" ? (
+        <MovieFranchiseGrid
+          groups={collectionGroups}
+          loading={libraryLoading}
+          error={libraryError}
+          onCardClick={handleCardClick}
+          onAddToLibrary={handleOpenLibraryModal}
+          getLibraryEntry={(id) => findByTmdbId(id)}
+          animationKey={gridKey}
+          emptyMessage="Sua biblioteca está vazia."
+        />
+      ) : (
+        <MovieGrid
+          movies={movies}
+          loading={loading}
+          error={error}
+          hasNextPage={hasNextPage}
+          onLoadMore={loadMore}
+          onCardClick={handleCardClick}
+          onAddToLibrary={handleOpenLibraryModal}
+          getLibraryEntry={(id) => findByTmdbId(id)}
+          isLibraryView={false}
+          animationKey={gridKey}
+          emptyMessage={
+            activeTab === "search" && searchQuery.length < 2
+              ? "Digite pelo menos 2 caracteres para buscar."
+              : "Nenhum filme encontrado."
+          }
+        />
+      )}
 
       {selectedMovieId !== null && (
         <MovieDrawer

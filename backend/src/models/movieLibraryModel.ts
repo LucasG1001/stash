@@ -1,5 +1,6 @@
+import { pool } from "../database/connection.js";
 import { createLibraryModel } from "../lib/createLibraryModel.js";
-import type { MovieLibraryEntry, CreateMovieLibraryEntry, UpdateMovieLibraryEntry } from "../types/movieLibrary.js";
+import type { MovieLibraryEntry, CreateMovieLibraryEntry, UpdateMovieLibraryEntry, MovieLibraryRow } from "../types/movieLibrary.js";
 
 export const movieLibraryModel = createLibraryModel<MovieLibraryEntry, CreateMovieLibraryEntry, UpdateMovieLibraryEntry>({
   table: "movie_library",
@@ -12,7 +13,64 @@ export const movieLibraryModel = createLibraryModel<MovieLibraryEntry, CreateMov
     { column: "release_date", field: "releaseDate", default: null },
     { column: "runtime", field: "runtime", default: null },
     { column: "movie_status", field: "movieStatus", default: "RELEASED" },
+    { column: "collection_id", field: "collectionId", default: null },
   ],
   statusField: "status",
   completion: { column: "watched_at", field: "watchedAt", whenStatus: "watched" },
 });
+
+function toEntry(row: MovieLibraryRow): MovieLibraryEntry {
+  return {
+    id: row.id,
+    tmdbId: row.tmdb_id,
+    title: row.title,
+    posterImage: row.poster_image,
+    status: row.status,
+    score: parseFloat(row.score),
+    releaseDate: row.release_date,
+    runtime: row.runtime,
+    movieStatus: row.movie_status,
+    collectionId: row.collection_id,
+    watchedAt: row.watched_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function bulkUpsertMovies(entries: CreateMovieLibraryEntry[], collectionId: number): Promise<MovieLibraryEntry[]> {
+  if (entries.length === 0) return [];
+
+  const values: unknown[] = [];
+  const rows: string[] = [];
+  let i = 1;
+
+  for (const entry of entries) {
+    const statusParam = `$${i + 3}`;
+    rows.push(
+      `($${i}, $${i + 1}, $${i + 2}, ${statusParam}, $${i + 4}, $${i + 5}, $${i + 6}, $${i + 7}, $${i + 8}, CASE WHEN ${statusParam} = 'watched' THEN NOW() ELSE NULL END)`
+    );
+    values.push(
+      entry.tmdbId,
+      entry.title,
+      entry.posterImage ?? null,
+      entry.status ?? "plan_to_watch",
+      entry.score ?? 0,
+      entry.releaseDate ?? null,
+      entry.runtime ?? null,
+      entry.movieStatus ?? "RELEASED",
+      collectionId
+    );
+    i += 9;
+  }
+
+  const result = await pool.query<MovieLibraryRow>(
+    `INSERT INTO movie_library
+       (tmdb_id, title, poster_image, status, score, release_date, runtime, movie_status, collection_id, watched_at)
+     VALUES ${rows.join(", ")}
+     ON CONFLICT (tmdb_id) DO UPDATE SET
+       collection_id = COALESCE(movie_library.collection_id, EXCLUDED.collection_id)
+     RETURNING *`,
+    values
+  );
+  return result.rows.map(toEntry);
+}

@@ -6,8 +6,8 @@ export async function fetchLibrary(): Promise<MovieLibraryEntry[]> {
   return response.data;
 }
 
-export async function addToLibrary(entry: CreateMovieLibraryEntry): Promise<MovieLibraryEntry> {
-  const response = await api.post<MovieLibraryEntry>("/api/movie-library", entry);
+export async function addToLibrary(entry: CreateMovieLibraryEntry): Promise<MovieLibraryEntry[]> {
+  const response = await api.post<MovieLibraryEntry[]>("/api/movie-library", entry);
   return response.data;
 }
 

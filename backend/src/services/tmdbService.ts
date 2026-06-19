@@ -2,6 +2,7 @@ import { cachedRequest } from "../lib/httpClient.js";
 import type {
   TmdbMovieListItem,
   TmdbMovieDetail,
+  TmdbCollectionResponse,
   TmdbListResponse,
   MovieCard,
   MovieDetail,
@@ -106,4 +107,17 @@ export async function fetchMovieById(id: number): Promise<MovieDetail> {
     append_to_response: "videos,watch/providers",
   });
   return toMovieDetail(data);
+}
+
+export async function discoverCollection(tmdbId: number): Promise<{ collectionId: number; members: MovieCard[] } | null> {
+  const detail = await queryTmdb<TmdbMovieDetail>(`/movie/${tmdbId}`, {});
+  const collection = detail.belongs_to_collection;
+  if (!collection) return null;
+
+  const data = await queryTmdb<TmdbCollectionResponse>(`/collection/${collection.id}`, {});
+  const members = data.parts
+    .map(toMovieCard)
+    .sort((a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""));
+
+  return { collectionId: collection.id, members };
 }

@@ -10,6 +10,7 @@ export interface MovieLibraryEntry {
   releaseDate: string | null;
   runtime: number | null;
   movieStatus: string;
+  collectionId: number | null;
   watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -24,6 +25,7 @@ export interface CreateMovieLibraryEntry {
   releaseDate?: string | null;
   runtime?: number | null;
   movieStatus?: string;
+  collectionId?: number | null;
 }
 
 export interface UpdateMovieLibraryEntry {
@@ -46,6 +48,7 @@ export interface MovieLibraryRow {
   release_date: string | null;
   runtime: number | null;
   movie_status: string;
+  collection_id: number | null;
   watched_at: string | null;
   created_at: string;
   updated_at: string;

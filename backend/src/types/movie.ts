@@ -31,10 +31,22 @@ export interface TmdbMovieDetail extends TmdbMovieListItem {
   runtime: number | null;
   genres: TmdbGenre[];
   tagline: string | null;
+  belongs_to_collection?: {
+    id: number;
+    name: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
+  } | null;
   videos?: { results: TmdbVideo[] };
   "watch/providers"?: {
     results: Record<string, { flatrate?: TmdbProvider[] }>;
   };
+}
+
+export interface TmdbCollectionResponse {
+  id: number;
+  name: string;
+  parts: TmdbMovieListItem[];
 }
 
 export interface TmdbListResponse {

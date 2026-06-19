@@ -10,6 +10,7 @@ export interface MovieLibraryEntry {
   releaseDate: string | null;
   runtime: number | null;
   movieStatus: string;
+  collectionId: number | null;
   watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
