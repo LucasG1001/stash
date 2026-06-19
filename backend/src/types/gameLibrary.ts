@@ -10,6 +10,7 @@ export interface GameLibraryEntry {
   released: string | null;
   metacritic: number | null;
   gameStatus: string;
+  collectionId: number | null;
   finishedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -24,6 +25,7 @@ export interface CreateGameLibraryEntry {
   released?: string | null;
   metacritic?: number | null;
   gameStatus?: string;
+  collectionId?: number | null;
 }
 
 export interface UpdateGameLibraryEntry {
@@ -46,6 +48,7 @@ export interface GameLibraryRow {
   released: string | null;
   metacritic: number | null;
   game_status: string;
+  collection_id: number | null;
   finished_at: string | null;
   created_at: string;
   updated_at: string;

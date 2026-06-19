@@ -10,6 +10,7 @@ export interface GameLibraryEntry {
   released: string | null;
   metacritic: number | null;
   gameStatus: string;
+  collectionId: number | null;
   finishedAt: string | null;
   createdAt: string;
   updatedAt: string;

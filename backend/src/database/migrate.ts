@@ -121,6 +121,15 @@ export async function migrate(): Promise<void> {
   `);
 
   await pool.query(`
+    ALTER TABLE game_library
+    ADD COLUMN IF NOT EXISTS collection_id INTEGER;
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_game_library_collection_id ON game_library (collection_id);
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS books_library (
       id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       google_books_id  TEXT NOT NULL UNIQUE,

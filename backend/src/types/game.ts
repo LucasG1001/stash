@@ -101,3 +101,18 @@ export interface GameListResult {
   games: GameCard[];
   pageInfo: GamePageInfo;
 }
+
+export interface IgdbCollectionRef {
+  id: number;
+  collections?: number[];
+}
+
+export interface IgdbCollectionGame extends IgdbGameListItem {
+  game_type?: number;
+}
+
+export interface IgdbCollection {
+  id: number;
+  name: string;
+  games?: IgdbCollectionGame[];
+}

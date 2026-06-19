@@ -5,6 +5,8 @@ import type {
   IgdbGameListItem,
   IgdbGameDetail,
   IgdbWebsite,
+  IgdbCollectionRef,
+  IgdbCollection,
   GameCard,
   GameDetail,
   GameListResult,
@@ -162,6 +164,26 @@ export async function searchGames(searchQuery: string, page = 1): Promise<GameLi
   const data = await igdbQuery<IgdbGameListItem[]>("games", body);
   const games = data.map(toGameCard);
   return { games, pageInfo: toPageInfo(games, page) };
+}
+
+export async function discoverGameCollection(gameId: number): Promise<{ collectionId: number; members: GameCard[] } | null> {
+  const ref = await igdbQuery<IgdbCollectionRef[]>("games", `fields collections; where id = ${gameId};`);
+  const collectionId = ref[0]?.collections?.[0];
+  if (!collectionId) return null;
+
+  const data = await igdbQuery<IgdbCollection[]>(
+    "collections",
+    `fields name, games.name, games.cover.image_id, games.first_release_date, games.total_rating, ` +
+      `games.aggregated_rating, games.websites.type, games.game_type; where id = ${collectionId};`
+  );
+
+  const members = (data[0]?.games ?? [])
+    .filter((g) => g.cover?.image_id && (g.game_type === 0 || g.id === gameId))
+    .map(toGameCard)
+    .sort((a, b) => (a.released ?? "").localeCompare(b.released ?? ""));
+
+  if (members.length === 0) return null;
+  return { collectionId, members };
 }
 
 export async function fetchGameById(id: number): Promise<GameDetail> {

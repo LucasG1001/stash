@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
 import { GameGrid } from "../../components/GameGrid/GameGrid";
+import { GameFranchiseGrid } from "../../components/GameFranchiseGrid/GameFranchiseGrid";
 import { GameDrawer } from "../../components/GameDrawer/GameDrawer";
 import { GameLibraryModal } from "../../components/GameLibraryModal/GameLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
@@ -12,7 +13,8 @@ import type { GameLibraryStatus } from "../../types/gameLibrary";
 import { GAME_LIBRARY_STATUS_LABELS } from "../../types/gameLibrary";
 import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
-import { nextScoreSortDir, compareByScore, type ScoreSortDir } from "../../utils/librarySort";
+import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
+import { buildGameCollectionGroups } from "../../utils/gameCollectionGroups";
 import styles from "./GamesPage.module.css";
 
 const TABS = [
@@ -122,29 +124,7 @@ export function GamesPage() {
     ? libraryEntries
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
-  const sortedLibraryEntries = scoreSortDir !== "off"
-    ? [...filteredLibraryEntries].sort((a, b) => compareByScore(a, b, scoreSortDir))
-    : [...filteredLibraryEntries].sort((a, b) => {
-        const ta = a.released ? new Date(a.released).getTime() : 0;
-        const tb = b.released ? new Date(b.released).getTime() : 0;
-        const diff = ta - tb;
-        return releaseSortDir === "desc" ? -diff : diff;
-      });
-
-  const libraryGameCards: GameCard[] = sortedLibraryEntries.map((entry) => ({
-    id: entry.igdbId,
-    title: entry.title,
-    backgroundImage: entry.backgroundImage,
-    released: entry.released,
-    rating: null,
-    metacritic: entry.metacritic,
-    gameStatus: entry.gameStatus || "RELEASED",
-    storeSlugs: [],
-  }));
-
-  const displayGames = activeTab === "library" ? libraryGameCards : games;
-  const displayLoading = activeTab === "library" ? libraryLoading : loading;
-  const displayError = activeTab === "library" ? libraryError : error;
+  const collectionGroups = buildGameCollectionGroups(filteredLibraryEntries, scoreSortDir, releaseSortDir);
 
   const gridKey =
     activeTab === "library"
@@ -251,25 +231,36 @@ export function GamesPage() {
         </div>
       )}
 
-      <GameGrid
-        games={displayGames}
-        loading={displayLoading}
-        error={displayError}
-        hasNextPage={activeTab !== "library" && hasNextPage}
-        onLoadMore={loadMore}
-        onCardClick={handleCardClick}
-        onAddToLibrary={handleOpenLibraryModal}
-        getLibraryEntry={(id) => findByIgdbId(id)}
-        isLibraryView={activeTab === "library"}
-        animationKey={gridKey}
-        emptyMessage={
-          activeTab === "library"
-            ? "Sua biblioteca está vazia. Adicione jogos para começar!"
-            : activeTab === "search" && searchQuery.length < 2
-            ? "Digite pelo menos 2 caracteres para buscar."
-            : "Nenhum jogo encontrado."
-        }
-      />
+      {activeTab === "library" ? (
+        <GameFranchiseGrid
+          groups={collectionGroups}
+          loading={libraryLoading}
+          error={libraryError}
+          onCardClick={handleCardClick}
+          onAddToLibrary={handleOpenLibraryModal}
+          getLibraryEntry={(id) => findByIgdbId(id)}
+          animationKey={gridKey}
+          emptyMessage="Sua biblioteca está vazia."
+        />
+      ) : (
+        <GameGrid
+          games={games}
+          loading={loading}
+          error={error}
+          hasNextPage={hasNextPage}
+          onLoadMore={loadMore}
+          onCardClick={handleCardClick}
+          onAddToLibrary={handleOpenLibraryModal}
+          getLibraryEntry={(id) => findByIgdbId(id)}
+          isLibraryView={false}
+          animationKey={gridKey}
+          emptyMessage={
+            activeTab === "search" && searchQuery.length < 2
+              ? "Digite pelo menos 2 caracteres para buscar."
+              : "Nenhum jogo encontrado."
+          }
+        />
+      )}
 
       {selectedGameId !== null && (
         <GameDrawer
