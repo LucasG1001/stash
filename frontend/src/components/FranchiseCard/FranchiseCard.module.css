@@ -4,8 +4,8 @@
 
 .franchiseBadge {
   position: absolute;
-  bottom: var(--spacing-sm);
-  right: var(--spacing-sm);
+  top: calc(var(--spacing-sm) + 32px);
+  left: var(--spacing-sm);
   z-index: 3;
   display: flex;
   align-items: center;
