@@ -123,7 +123,7 @@ export function AnimePage() {
   }, [findByAnilistId, updateEntry]);
 
   const filteredLibraryEntries = libraryFilter === "all"
-    ? libraryEntries
+    ? libraryEntries.filter(entry => entry.status !== "dropped")
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
   const franchiseGroups = buildFranchiseGroups(filteredLibraryEntries, scoreSortDir, releaseSortDir);

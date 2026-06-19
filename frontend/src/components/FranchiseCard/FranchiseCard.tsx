@@ -36,7 +36,7 @@ export function FranchiseCard({ group, expanded, onToggle, onCardClick, onAddToL
         }}
         title={expanded ? "Recolher franquia" : "Ver temporadas, OVAs e filmes"}
       >
-        <span className={styles.count}>📚 {group.count}</span>
+        <span className={styles.count}>📚 {group.completedCount}/{group.count}</span>
         <svg className={styles.chevron} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M6 9l6 6 6-6" />
         </svg>

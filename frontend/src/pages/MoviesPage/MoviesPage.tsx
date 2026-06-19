@@ -120,7 +120,7 @@ export function MoviesPage() {
   }, [findByTmdbId, updateEntry]);
 
   const filteredLibraryEntries = libraryFilter === "all"
-    ? libraryEntries
+    ? libraryEntries.filter(entry => entry.status !== "dropped")
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
   const collectionGroups = buildMovieCollectionGroups(filteredLibraryEntries, scoreSortDir, releaseSortDir);

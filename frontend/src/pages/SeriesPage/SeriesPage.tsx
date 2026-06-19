@@ -118,7 +118,7 @@ export function SeriesPage() {
   }, [findByTmdbId, updateEntry]);
 
   const filteredLibraryEntries = libraryFilter === "all"
-    ? libraryEntries
+    ? libraryEntries.filter(entry => entry.status !== "dropped")
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
   const sortedLibraryEntries = scoreSortDir !== "off"

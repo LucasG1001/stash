@@ -121,7 +121,7 @@ export function GamesPage() {
   }, [findByIgdbId, updateEntry]);
 
   const filteredLibraryEntries = libraryFilter === "all"
-    ? libraryEntries
+    ? libraryEntries.filter(entry => entry.status !== "dropped")
     : libraryEntries.filter(entry => entry.status === libraryFilter);
 
   const collectionGroups = buildGameCollectionGroups(filteredLibraryEntries, scoreSortDir, releaseSortDir);

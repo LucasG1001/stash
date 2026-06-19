@@ -6,6 +6,7 @@ export interface MovieGroup {
   representative: MovieLibraryEntry;
   members: MovieLibraryEntry[];
   count: number;
+  completedCount: number;
 }
 
 function releaseTime(entry: MovieLibraryEntry): number {
@@ -35,7 +36,8 @@ export function buildMovieCollectionGroups(
   const groups: MovieGroup[] = [];
   map.forEach((members, key) => {
     const ordered = [...members].sort(byChronology);
-    groups.push({ key, representative: ordered[0], members: ordered, count: ordered.length });
+    const completedCount = ordered.filter((m) => m.status === "watched").length;
+    groups.push({ key, representative: ordered[0], members: ordered, count: ordered.length, completedCount });
   });
 
   if (scoreSortDir !== "off") {

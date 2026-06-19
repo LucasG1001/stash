@@ -6,6 +6,7 @@ export interface GameGroup {
   representative: GameLibraryEntry;
   members: GameLibraryEntry[];
   count: number;
+  completedCount: number;
 }
 
 function releaseTime(entry: GameLibraryEntry): number {
@@ -35,7 +36,8 @@ export function buildGameCollectionGroups(
   const groups: GameGroup[] = [];
   map.forEach((members, key) => {
     const ordered = [...members].sort(byChronology);
-    groups.push({ key, representative: ordered[0], members: ordered, count: ordered.length });
+    const completedCount = ordered.filter((m) => m.status === "beaten").length;
+    groups.push({ key, representative: ordered[0], members: ordered, count: ordered.length, completedCount });
   });
 
   if (scoreSortDir !== "off") {

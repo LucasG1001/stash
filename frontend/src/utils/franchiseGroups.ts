@@ -6,6 +6,7 @@ export interface FranchiseGroup {
   representative: LibraryEntry;
   members: LibraryEntry[];
   count: number;
+  completedCount: number;
 }
 
 function byChronology(a: LibraryEntry, b: LibraryEntry): number {
@@ -36,7 +37,8 @@ export function buildFranchiseGroups(
   const groups: FranchiseGroup[] = [];
   map.forEach((members, key) => {
     const ordered = [...members].sort(byChronology);
-    groups.push({ key, representative: pickRepresentative(ordered), members: ordered, count: ordered.length });
+    const completedCount = ordered.filter((m) => m.status === "watched").length;
+    groups.push({ key, representative: pickRepresentative(ordered), members: ordered, count: ordered.length, completedCount });
   });
 
   if (scoreSortDir !== "off") {
