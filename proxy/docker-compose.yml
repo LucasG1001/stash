@@ -11,8 +11,12 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      # Publica apenas na interface da VPN (WireGuard) — não expõe na internet
+      # pública. O Docker fura o ufw, então restringir o bind aqui é o que garante
+      # o acesso só-VPN. (Se o wg0/10.66.66.1 estiver fora do ar, o container não
+      # sobe — fail-safe contra exposição acidental.)
+      - "10.66.66.1:80:80"
+      - "10.66.66.1:443:443"
     environment:
       # Token da API do Cloudflare (Zone:DNS:Edit + Zone:Zone:Read) usado pelo ACME DNS-01.
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
