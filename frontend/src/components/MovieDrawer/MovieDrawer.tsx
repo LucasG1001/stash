@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { MovieDetail } from "../../types/movie";
 import { fetchMovieById } from "../../services/movieService";
+import { TrailerEmbed } from "../TrailerEmbed/TrailerEmbed";
 import styles from "./MovieDrawer.module.css";
 
 interface MovieDrawerProps {
@@ -99,15 +100,7 @@ export function MovieDrawer({ movieId, onClose, onMovieLoad }: MovieDrawerProps)
 
             <div className={styles.content}>
               {movie.trailerKey && (
-                <div className={styles.trailerWrapper}>
-                  <iframe
-                    className={styles.trailerIframe}
-                    src={`https://www.youtube.com/embed/${movie.trailerKey}`}
-                    title="Trailer"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
+                <TrailerEmbed youtubeId={movie.trailerKey} />
               )}
 
               {movie.overview && <div className={styles.description}>{movie.overview}</div>}

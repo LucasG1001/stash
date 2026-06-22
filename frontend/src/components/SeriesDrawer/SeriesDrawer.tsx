@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { SeriesDetail } from "../../types/series";
 import { fetchSeriesById } from "../../services/seriesService";
+import { TrailerEmbed } from "../TrailerEmbed/TrailerEmbed";
 import styles from "./SeriesDrawer.module.css";
 
 interface SeriesDrawerProps {
@@ -94,15 +95,7 @@ export function SeriesDrawer({ seriesId, onClose, onSeriesLoad }: SeriesDrawerPr
 
             <div className={styles.content}>
               {series.trailerKey && (
-                <div className={styles.trailerWrapper}>
-                  <iframe
-                    className={styles.trailerIframe}
-                    src={`https://www.youtube.com/embed/${series.trailerKey}`}
-                    title="Trailer"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
+                <TrailerEmbed youtubeId={series.trailerKey} />
               )}
 
               {series.overview && <div className={styles.description}>{series.overview}</div>}

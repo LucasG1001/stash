@@ -104,19 +104,6 @@
   gap: var(--spacing-xl);
 }
 
-.trailerWrapper {
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  aspect-ratio: 16 / 9;
-  background: var(--color-bg-tertiary);
-}
-
-.trailerIframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
 .description {
   font-size: var(--font-size-base);
   line-height: 1.7;

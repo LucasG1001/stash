@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { AnimeDetail } from "../../types/anime";
 import { fetchAnimeById } from "../../services/animeService";
+import { TrailerEmbed } from "../TrailerEmbed/TrailerEmbed";
 import styles from "./AnimeDrawer.module.css";
 
 interface AnimeDrawerProps {
@@ -93,15 +94,7 @@ export function AnimeDrawer({ animeId, onClose, onAnimeLoad }: AnimeDrawerProps)
 
             <div className={styles.content}>
               {anime.trailer && anime.trailer.site === "youtube" && (
-                <div className={styles.trailerWrapper}>
-                  <iframe
-                    className={styles.trailerIframe}
-                    src={`https://www.youtube.com/embed/${anime.trailer.id}`}
-                    title="Trailer"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
+                <TrailerEmbed youtubeId={anime.trailer.id} />
               )}
 
               {anime.description && (

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { GameDetail } from "../../types/game";
 import { fetchGameById } from "../../services/gameService";
+import { TrailerEmbed } from "../TrailerEmbed/TrailerEmbed";
 import styles from "./GameDrawer.module.css";
 
 interface GameDrawerProps {
@@ -86,15 +87,7 @@ export function GameDrawer({ gameId, onClose, onGameLoad }: GameDrawerProps) {
 
             <div className={styles.content}>
               {game.trailer && (
-                <div className={styles.trailerWrapper}>
-                  <iframe
-                    className={styles.trailer}
-                    src={`https://www.youtube.com/embed/${game.trailer.youtubeId}`}
-                    title="Trailer"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
+                <TrailerEmbed youtubeId={game.trailer.youtubeId} />
               )}
 
               {game.screenshots.length > 0 && (
