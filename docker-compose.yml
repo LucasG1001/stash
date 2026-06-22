@@ -49,9 +49,14 @@ services:
         # O nginx (dentro do container web) faz proxy de /api -> server:3333.
         VITE_API_URL: "/"
     restart: unless-stopped
-    ports:
-      # Única porta exposta ao host. Acesse via WireGuard: http://<ip-wg>:${WEB_PORT}
-      - "${WEB_PORT:-8080}:80"
+    # Sem porta no host: o proxy reverso central (caddy-docker-proxy, stack ./proxy)
+    # descobre este container pela rede proxy-net via labels e termina o TLS.
+    labels:
+      caddy: ${MEDIA_DOMAIN}
+      caddy.reverse_proxy: "{{upstreams 80}}"
+    networks:
+      - default
+      - proxy-net
     depends_on:
       - server
 
@@ -62,4 +67,8 @@ networks:
   # Rede deste projeto. A notify-api também se pluga nela para receber as chamadas.
   # Crie uma vez na VPS:  docker network create media-net
   media-net:
+    external: true
+  # Rede compartilhada com o proxy reverso central (Caddy). Crie uma vez:
+  #   docker network create proxy-net
+  proxy-net:
     external: true

@@ -1,0 +1,37 @@
+# Proxy reverso central (Caddy via caddy-docker-proxy).
+# Stack compartilhada por todos os projetos da VPS: cada app entra na rede
+# proxy-net e declara labels `caddy`/`caddy.reverse_proxy` que este Caddy descobre
+# pelo socket do Docker. Os certificados saem por ACME DNS-01 na Hostinger.
+#
+# Pré-requisito (rodar uma vez na VPS):  docker network create proxy-net
+name: proxy
+
+services:
+  caddy:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Token da API do Cloudflare (Zone:DNS:Edit + Zone:Zone:Read) usado pelo ACME DNS-01.
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+      # Caddyfile base com as opções globais (acme_dns), mesclado com as labels.
+      CADDY_DOCKER_CADDYFILE_PATH: /etc/caddy/Caddyfile
+    volumes:
+      # Leitura do socket para descobrir containers com labels caddy.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Persistência de certificados e estado do ACME.
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - proxy-net
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  proxy-net:
+    external: true
