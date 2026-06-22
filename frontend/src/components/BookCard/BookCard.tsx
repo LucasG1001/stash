@@ -39,6 +39,8 @@ export function BookCard({ book, libraryEntry, onClick, onAdd, isLibraryView, in
       className={styles.card}
       style={{ animationDelay: `${Math.min(index, 12) * 0.04}s` }}
       onClick={onClick}
+      role="button"
+      aria-label={book.title}
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
     >
@@ -58,12 +60,14 @@ export function BookCard({ book, libraryEntry, onClick, onAdd, isLibraryView, in
 
         <div className={styles.topBadges}>
           <button
+            type="button"
             className={`${styles.addButton} ${libraryEntry ? styles.inLibrary : ""}`}
             onClick={(e) => {
               e.stopPropagation();
               onAdd(e);
             }}
             title={libraryEntry ? "Na biblioteca" : "Adicionar à biblioteca"}
+            aria-label={libraryEntry ? "Na biblioteca" : "Adicionar à biblioteca"}
           >
             {libraryEntry ? (
               <span className={styles.statusDot} style={{ backgroundColor: getLibraryStatusColor(libraryEntry.status) }} />

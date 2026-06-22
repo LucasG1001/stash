@@ -20,6 +20,11 @@ export const EMPTY_SLICE: Slice = { entries: [], loading: true, error: null, loa
 
 const inFlight = new Set<string>();
 
+function mergeServerEntries<T extends { id: string }>(server: T[], local: T[]): T[] {
+  const serverIds = new Set(server.map((e) => e.id));
+  return [...local.filter((e) => !serverIds.has(e.id)), ...server];
+}
+
 export interface LibraryService<TEntry, TCreate, TUpdate> {
   fetchLibrary: () => Promise<TEntry[]>;
   addToLibrary: (entry: TCreate) => Promise<TEntry | TEntry[]>;
@@ -53,7 +58,7 @@ export function useLibraryStore<TEntry extends { id: string }, TCreate, TUpdate>
     setSlice(media, (p) => ({ ...p, loading: true, error: null }));
     try {
       const data = await service.fetchLibrary();
-      setSlice(media, (p) => ({ ...p, entries: data, loaded: true, loading: false }));
+      setSlice(media, (p) => ({ ...p, entries: mergeServerEntries(data, p.entries as TEntry[]), loaded: true, loading: false }));
     } catch {
       setSlice(media, (p) => ({ ...p, error: "Erro ao carregar biblioteca.", loading: false }));
     }
@@ -64,45 +69,66 @@ export function useLibraryStore<TEntry extends { id: string }, TCreate, TUpdate>
     inFlight.add(media);
     setSlice(media, (p) => ({ ...p, loading: true, error: null }));
     service.fetchLibrary()
-      .then((data) => setSlice(media, (p) => ({ ...p, entries: data, loaded: true, loading: false })))
+      .then((data) => setSlice(media, (p) => ({ ...p, entries: mergeServerEntries(data, p.entries as TEntry[]), loaded: true, loading: false })))
       .catch(() => setSlice(media, (p) => ({ ...p, error: "Erro ao carregar biblioteca.", loading: false })))
       .finally(() => inFlight.delete(media));
   }, [media, slice.loaded, service, setSlice]);
 
   const add = useCallback(async (entry: TCreate): Promise<TEntry | null> => {
+    const tempId = `temp-${Date.now()}`;
+    const optimistic = { id: tempId, ...entry } as unknown as TEntry;
+    setSlice(media, (p) => ({ ...p, entries: [optimistic, ...(p.entries as TEntry[])], error: null }));
     try {
       const created = await service.addToLibrary(entry);
       const list = Array.isArray(created) ? created : [created];
       setSlice(media, (p) => {
         const ids = new Set(list.map((e) => e.id));
-        const kept = (p.entries as TEntry[]).filter((e) => !ids.has(e.id));
+        const kept = (p.entries as TEntry[]).filter((e) => e.id !== tempId && !ids.has(e.id));
         return { ...p, entries: [...list, ...kept] };
       });
       return list[0] ?? null;
     } catch {
-      setSlice(media, (p) => ({ ...p, error: "Erro ao adicionar à biblioteca." }));
+      setSlice(media, (p) => ({ ...p, entries: (p.entries as TEntry[]).filter((e) => e.id !== tempId), error: "Erro ao adicionar à biblioteca." }));
       return null;
     }
   }, [media, service, setSlice]);
 
   const update = useCallback(async (id: string, data: TUpdate): Promise<TEntry | null> => {
+    let previous: TEntry | undefined;
+    setSlice(media, (p) => {
+      const list = p.entries as TEntry[];
+      previous = list.find((e) => e.id === id);
+      return { ...p, entries: list.map((e) => (e.id === id ? ({ ...e, ...data } as TEntry) : e)), error: null };
+    });
     try {
       const updated = await service.updateLibraryEntry(id, data);
       setSlice(media, (p) => ({ ...p, entries: (p.entries as TEntry[]).map((e) => (e.id === id ? updated : e)) }));
       return updated;
     } catch {
-      setSlice(media, (p) => ({ ...p, error: "Erro ao atualizar item." }));
+      setSlice(media, (p) => ({ ...p, entries: (p.entries as TEntry[]).map((e) => (e.id === id && previous ? previous : e)), error: "Erro ao atualizar item." }));
       return null;
     }
   }, [media, service, setSlice]);
 
   const remove = useCallback(async (id: string): Promise<boolean> => {
+    let removed: TEntry | undefined;
+    let index = -1;
+    setSlice(media, (p) => {
+      const list = p.entries as TEntry[];
+      index = list.findIndex((e) => e.id === id);
+      removed = list[index];
+      return { ...p, entries: list.filter((e) => e.id !== id), error: null };
+    });
     try {
       await service.removeFromLibrary(id);
-      setSlice(media, (p) => ({ ...p, entries: (p.entries as TEntry[]).filter((e) => e.id !== id) }));
       return true;
     } catch {
-      setSlice(media, (p) => ({ ...p, error: "Erro ao remover da biblioteca." }));
+      setSlice(media, (p) => {
+        if (!removed) return { ...p, error: "Erro ao remover da biblioteca." };
+        const list = [...(p.entries as TEntry[])];
+        list.splice(index >= 0 ? index : list.length, 0, removed);
+        return { ...p, entries: list, error: "Erro ao remover da biblioteca." };
+      });
       return false;
     }
   }, [media, service, setSlice]);

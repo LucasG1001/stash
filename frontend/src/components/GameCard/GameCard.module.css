@@ -6,8 +6,6 @@
   transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
   background: var(--color-bg-card);
   border: 1px solid var(--color-border-subtle);
-  content-visibility: auto;
-  contain-intrinsic-size: auto 300px;
   animation: cardEnter 0.45s ease backwards;
 }
 
@@ -208,4 +206,12 @@
   color: #fbbf24;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+@media (max-width: 768px) {
+  .addButton {
+    width: 32px;
+    height: 32px;
+    font-size: var(--font-size-lg);
+  }
 }

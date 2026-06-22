@@ -10,6 +10,7 @@ export function useGridColumns(): [number, (node: HTMLDivElement | null) => void
 
     const measure = () => {
       const template = getComputedStyle(node).gridTemplateColumns;
+      if (!template || template === "none") return;
       const count = template.split(" ").filter(Boolean).length;
       setCols((prev) => (count > 0 && count !== prev ? count : prev));
     };
