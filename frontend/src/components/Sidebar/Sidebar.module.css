@@ -217,6 +217,12 @@
   transform: rotate(180deg);
 }
 
+.mobileNav,
+.chooserOverlay,
+.chooserSheet {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .sidebar {
     top: auto;
@@ -230,65 +236,116 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .logo {
-    display: none;
-  }
-
-  .toggle {
-    display: none;
-  }
-
-  .navSection {
-    display: none;
-  }
-
+  .logo,
+  .toggle,
   .nav {
+    display: none;
+  }
+
+  .mobileNav {
+    display: flex;
     flex-direction: row;
-    padding: 0;
-    gap: 0;
+    width: 100%;
     align-items: stretch;
   }
 
-  .navItem {
+  .barItem {
     flex: 1;
+    display: flex;
     flex-direction: column;
-    gap: 2px;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
+    gap: 2px;
     padding: var(--spacing-xs);
-    border-radius: 0;
+    color: var(--color-text-secondary);
     font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    border: none;
+    background: none;
     text-align: center;
   }
 
-  .navItem:hover {
-    background: none;
+  .barItemActive {
+    color: var(--color-accent);
   }
 
-  .navItemActive,
-  .navItemActive:hover {
-    background: none;
-  }
-
-  .navItemActive::before {
-    left: 50%;
-    top: 0;
-    bottom: auto;
-    transform: translateX(-50%);
-    width: 40%;
-    height: 3px;
-  }
-
-  .navIcon {
+  .barIcon {
     width: 22px;
     height: 22px;
+    color: var(--color-text-tertiary);
   }
 
-  .navLabel {
-    font-size: var(--font-size-xs);
+  .barItemActive .barIcon {
+    color: var(--color-accent);
   }
 
-  .navBadge {
-    display: none;
+  .barLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .barCaret {
+    width: 12px;
+    height: 12px;
+    transform: rotate(-90deg);
+  }
+
+  .chooserOverlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: var(--color-bg-overlay);
+    z-index: 200;
+    animation: fadeIn var(--transition-fast);
+  }
+
+  .chooserSheet {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--mobile-nav-height);
+    background: var(--color-bg-secondary);
+    border-top: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: var(--spacing-lg);
+    padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom));
+    z-index: 201;
+  }
+
+  .chooserGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+  }
+
+  .chooserItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    transition: color var(--transition-fast), background var(--transition-fast);
+  }
+
+  .chooserItem:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-text-primary);
+  }
+
+  .chooserItemActive,
+  .chooserItemActive:hover {
+    background: var(--color-accent-subtle);
+    color: var(--color-accent);
+  }
+
+  .chooserIcon {
+    width: 28px;
+    height: 28px;
   }
 }

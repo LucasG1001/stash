@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
-import { NavLink } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import styles from "./Sidebar.module.css";
 import {
   AnimeIcon,
@@ -8,6 +9,7 @@ import {
   GameIcon,
   HomeIcon,
   LogoIcon,
+  MediaIcon,
   MovieIcon,
   SeriesIcon,
   SettingsIcon,
@@ -34,7 +36,15 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+  const location = useLocation();
+  const [chooserOpen, setChooserOpen] = useState(false);
+
+  const current = NAV_ITEMS.find((item) => item.path === location.pathname);
+  const CenterIcon = current ? current.icon : MediaIcon;
+  const centerLabel = current ? current.label : "Mídia";
+
   return (
+    <>
     <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
       <div className={styles.logo}>
         <div className={styles.logoIcon}>
@@ -92,6 +102,65 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <span className={styles.navLabel}>Configurações</span>
         </NavLink>
       </nav>
+
+      <nav className={styles.mobileNav}>
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) => `${styles.barItem} ${isActive ? styles.barItemActive : ""}`}
+        >
+          <HomeIcon className={styles.barIcon} />
+          <span className={styles.barLabel}>Início</span>
+        </NavLink>
+
+        <button
+          type="button"
+          className={`${styles.barItem} ${current ? styles.barItemActive : ""}`}
+          onClick={() => setChooserOpen((open) => !open)}
+          aria-haspopup="menu"
+          aria-expanded={chooserOpen}
+        >
+          <CenterIcon className={styles.barIcon} />
+          <span className={styles.barLabel}>
+            {centerLabel}
+            <ChevronIcon className={styles.barCaret} />
+          </span>
+        </button>
+
+        <NavLink
+          to="/config"
+          className={({ isActive }) => `${styles.barItem} ${isActive ? styles.barItemActive : ""}`}
+        >
+          <SettingsIcon className={styles.barIcon} />
+          <span className={styles.barLabel}>Config</span>
+        </NavLink>
+      </nav>
     </aside>
+
+    {chooserOpen && (
+      <div className={styles.chooserOverlay} onClick={() => setChooserOpen(false)}>
+        <div className={styles.chooserSheet} onClick={(event) => event.stopPropagation()}>
+          <div className={styles.chooserGrid}>
+            {NAV_ITEMS.map((item) => {
+              const ItemIcon = item.icon;
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setChooserOpen(false)}
+                  className={({ isActive }) =>
+                    `${styles.chooserItem} ${isActive ? styles.chooserItemActive : ""}`
+                  }
+                >
+                  <ItemIcon className={styles.chooserIcon} />
+                  <span>{item.label}</span>
+                </NavLink>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
