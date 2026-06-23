@@ -173,12 +173,30 @@
   }
 
   .item {
-    grid-template-columns: 20px auto 1fr;
-    gap: var(--spacing-sm);
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "icon time detail"
+      ".    title title";
+    align-items: center;
+    column-gap: var(--spacing-sm);
+    row-gap: 2px;
     padding: var(--spacing-sm);
   }
 
+  .itemIcon {
+    grid-area: icon;
+  }
+
+  .itemTime {
+    grid-area: time;
+  }
+
   .itemDetail {
-    display: none;
+    grid-area: detail;
+    text-align: right;
+  }
+
+  .itemTitle {
+    grid-area: title;
   }
 }

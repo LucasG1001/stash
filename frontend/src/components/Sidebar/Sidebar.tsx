@@ -107,10 +107,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <NavLink
           to="/"
           end
+          aria-label="Início"
           className={({ isActive }) => `${styles.barItem} ${isActive ? styles.barItemActive : ""}`}
         >
           <HomeIcon className={styles.barIcon} />
-          <span className={styles.barLabel}>Início</span>
         </NavLink>
 
         <button
@@ -119,20 +119,17 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           onClick={() => setChooserOpen((open) => !open)}
           aria-haspopup="menu"
           aria-expanded={chooserOpen}
+          aria-label={centerLabel}
         >
           <CenterIcon className={styles.barIcon} />
-          <span className={styles.barLabel}>
-            {centerLabel}
-            <ChevronIcon className={styles.barCaret} />
-          </span>
         </button>
 
         <NavLink
           to="/config"
+          aria-label="Configurações"
           className={({ isActive }) => `${styles.barItem} ${isActive ? styles.barItemActive : ""}`}
         >
           <SettingsIcon className={styles.barIcon} />
-          <span className={styles.barLabel}>Config</span>
         </NavLink>
       </nav>
     </aside>
