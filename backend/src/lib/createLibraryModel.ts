@@ -5,6 +5,7 @@ export interface FieldSpec {
   field: string;
   default?: unknown;
   numeric?: boolean;
+  readonly?: boolean;
 }
 
 export interface LibraryModelConfig {
@@ -61,16 +62,17 @@ export function createLibraryModel<TEntry, TCreate, TUpdate>(
 
   const create = async (entry: TCreate): Promise<TEntry> => {
     const data = entry as Row;
-    const insertCols = [externalId.column, ...fields.map((f) => f.column)];
+    const insertable = fields.filter((f) => !f.readonly);
+    const insertCols = [externalId.column, ...insertable.map((f) => f.column)];
     const values: unknown[] = [
       data[externalId.field],
-      ...fields.map((f) => {
+      ...insertable.map((f) => {
         const value = data[f.field];
         return value === undefined ? f.default ?? null : value;
       }),
     ];
     const placeholders = values.map((_, i) => `$${i + 1}`);
-    const statusParam = fields.findIndex((f) => f.field === statusField) + 2;
+    const statusParam = insertable.findIndex((f) => f.field === statusField) + 2;
     insertCols.push(completion.column);
     placeholders.push(`CASE WHEN $${statusParam} = '${completion.whenStatus}' THEN NOW() ELSE NULL END`);
     const result = await pool.query<Row>(
@@ -87,6 +89,7 @@ export function createLibraryModel<TEntry, TCreate, TUpdate>(
     let index = 1;
 
     for (const f of fields) {
+      if (f.readonly) continue;
       if (patch[f.field] === undefined) continue;
       if (f.field === statusField) {
         const statusParam = index++;

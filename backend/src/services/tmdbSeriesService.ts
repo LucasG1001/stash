@@ -104,3 +104,23 @@ export async function fetchSeriesById(id: number): Promise<SeriesDetail> {
   });
   return toSeriesDetail(data);
 }
+
+export interface SeriesSyncResult {
+  episodes: number | null;
+  airStatus: string | null;
+  nextAiringEpisode: { episode: number; airingAt: number } | null;
+}
+
+export async function fetchSeriesSyncData(id: number): Promise<SeriesSyncResult> {
+  const data = await queryTmdb<TmdbTvDetail>(`/tv/${id}`, {});
+  const next = data.next_episode_to_air ?? null;
+  const nextAiringEpisode =
+    next && next.air_date
+      ? { episode: next.episode_number, airingAt: Math.floor(new Date(`${next.air_date}T12:00:00Z`).getTime() / 1000) }
+      : null;
+  return {
+    episodes: data.number_of_episodes,
+    airStatus: data.status,
+    nextAiringEpisode,
+  };
+}

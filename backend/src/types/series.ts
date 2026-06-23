@@ -27,6 +27,13 @@ export interface TmdbProvider {
   logo_path: string | null;
 }
 
+export interface TmdbEpisode {
+  air_date: string | null;
+  episode_number: number;
+  season_number: number;
+  name: string | null;
+}
+
 export interface TmdbTvDetail extends TmdbTvListItem {
   number_of_seasons: number | null;
   number_of_episodes: number | null;
@@ -34,6 +41,8 @@ export interface TmdbTvDetail extends TmdbTvListItem {
   genres: TmdbGenre[];
   tagline: string | null;
   status: string | null;
+  next_episode_to_air?: TmdbEpisode | null;
+  last_episode_to_air?: TmdbEpisode | null;
   videos?: { results: TmdbVideo[] };
   "watch/providers"?: {
     results: Record<string, { flatrate?: TmdbProvider[] }>;

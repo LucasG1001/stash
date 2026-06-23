@@ -1,6 +1,7 @@
 import { httpRequest } from "../lib/httpClient.js";
 import { fetchAnimeById } from "./anilistService.js";
 import type { LibraryEntry } from "../types/library.js";
+import type { SeriesLibraryEntry } from "../types/seriesLibrary.js";
 
 const NOTIFY_API_URL = process.env.NOTIFY_API_URL?.replace(/\/$/, "");
 const NOTIFY_API_KEY = process.env.NOTIFY_API_KEY;
@@ -144,5 +145,45 @@ export async function notifyAnimeFinished(entry: LibraryEntry, totalEpisodes: nu
       ...fields,
     ],
     buttons: [...buttons, { text: "🔗 AniList", url }],
+  });
+}
+
+// ---------- séries ----------
+
+function seriesUrl(tmdbId: number): string {
+  return `https://www.themoviedb.org/tv/${tmdbId}`;
+}
+
+export async function notifySeriesNewEpisode(
+  entry: SeriesLibraryEntry,
+  episode: number,
+  totalEpisodes: number | null = entry.episodes
+): Promise<void> {
+  const url = seriesUrl(entry.tmdbId);
+  await send("serie-novo-episodio", {
+    title: `🆕 ${entry.title}`,
+    description: `Episódio ${episode} lançado`,
+    image: entry.posterImage ?? undefined,
+    url,
+    fields: [
+      {
+        name: "Episódio",
+        value: totalEpisodes ? `${episode} / ${totalEpisodes}` : String(episode),
+        inline: true,
+      },
+    ],
+    buttons: [{ text: "🔗 TMDB", url }],
+  });
+}
+
+export async function notifySeriesFinished(entry: SeriesLibraryEntry, totalEpisodes: number | null): Promise<void> {
+  const url = seriesUrl(entry.tmdbId);
+  await send("serie-finalizada", {
+    title: `✅ ${entry.title}`,
+    description: "Série finalizada",
+    image: entry.posterImage ?? undefined,
+    url,
+    fields: [{ name: "Total de episódios", value: totalEpisodes ? String(totalEpisodes) : "?", inline: true }],
+    buttons: [{ text: "🔗 TMDB", url }],
   });
 }

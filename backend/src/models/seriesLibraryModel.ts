@@ -1,5 +1,12 @@
+import { pool } from "../database/connection.js";
 import { createLibraryModel } from "../lib/createLibraryModel.js";
-import type { SeriesLibraryEntry, CreateSeriesLibraryEntry, UpdateSeriesLibraryEntry } from "../types/seriesLibrary.js";
+import type {
+  SeriesLibraryEntry,
+  CreateSeriesLibraryEntry,
+  UpdateSeriesLibraryEntry,
+  SeriesLibraryRow,
+  SeriesNextAiringEpisode,
+} from "../types/seriesLibrary.js";
 
 export const seriesLibraryModel = createLibraryModel<SeriesLibraryEntry, CreateSeriesLibraryEntry, UpdateSeriesLibraryEntry>({
   table: "series_library",
@@ -13,7 +20,62 @@ export const seriesLibraryModel = createLibraryModel<SeriesLibraryEntry, CreateS
     { column: "seasons", field: "seasons", default: null },
     { column: "episodes", field: "episodes", default: null },
     { column: "series_status", field: "seriesStatus", default: "RELEASED" },
+    { column: "next_airing_episode", field: "nextAiringEpisode", default: null, readonly: true },
+    { column: "synced_at", field: "syncedAt", default: null, readonly: true },
   ],
   statusField: "status",
   completion: { column: "watched_at", field: "watchedAt", whenStatus: "watched" },
 });
+
+function toSeriesEntry(row: SeriesLibraryRow): SeriesLibraryEntry {
+  return {
+    id: row.id,
+    tmdbId: row.tmdb_id,
+    title: row.title,
+    posterImage: row.poster_image,
+    status: row.status,
+    score: parseFloat(row.score),
+    firstAirDate: row.first_air_date,
+    seasons: row.seasons,
+    episodes: row.episodes,
+    seriesStatus: row.series_status,
+    nextAiringEpisode: row.next_airing_episode,
+    syncedAt: row.synced_at,
+    watchedAt: row.watched_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function findStaleSeries(
+  ongoingTtlHours: number,
+  endedTtlHours: number
+): Promise<SeriesLibraryEntry[]> {
+  const result = await pool.query<SeriesLibraryRow>(
+    `SELECT * FROM series_library
+     WHERE status != 'dropped'
+       AND (
+         synced_at IS NULL
+         OR (next_airing_episode IS NOT NULL AND synced_at < NOW() - ($1 || ' hours')::interval)
+         OR (next_airing_episode IS NULL AND synced_at < NOW() - ($2 || ' hours')::interval)
+       )`,
+    [ongoingTtlHours, endedTtlHours]
+  );
+  return result.rows.map(toSeriesEntry);
+}
+
+export interface SeriesSyncData {
+  episodes: number | null;
+  nextAiringEpisode: SeriesNextAiringEpisode | null;
+}
+
+export async function updateSeriesSyncData(tmdbId: number, data: SeriesSyncData): Promise<void> {
+  await pool.query(
+    `UPDATE series_library
+     SET episodes = $2,
+         next_airing_episode = $3,
+         synced_at = NOW()
+     WHERE tmdb_id = $1`,
+    [tmdbId, data.episodes, JSON.stringify(data.nextAiringEpisode ?? null)]
+  );
+}

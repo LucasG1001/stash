@@ -1,5 +1,10 @@
 export type SeriesLibraryStatus = "plan_to_watch" | "watching" | "watched" | "dropped";
 
+export interface SeriesNextAiringEpisode {
+  episode: number;
+  airingAt: number;
+}
+
 export interface SeriesLibraryEntry {
   id: string;
   tmdbId: number;
@@ -11,6 +16,8 @@ export interface SeriesLibraryEntry {
   seasons: number | null;
   episodes: number | null;
   seriesStatus: string;
+  nextAiringEpisode: SeriesNextAiringEpisode | null;
+  syncedAt: string | null;
   watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -50,6 +57,8 @@ export interface SeriesLibraryRow {
   seasons: number | null;
   episodes: number | null;
   series_status: string;
+  next_airing_episode: SeriesNextAiringEpisode | null;
+  synced_at: string | null;
   watched_at: string | null;
   created_at: string;
   updated_at: string;

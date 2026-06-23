@@ -6,9 +6,11 @@ import {
   BookIcon,
   ChevronIcon,
   GameIcon,
+  HomeIcon,
   LogoIcon,
   MovieIcon,
   SeriesIcon,
+  SettingsIcon,
 } from "./Sidebar.icons";
 
 interface NavItem {
@@ -51,6 +53,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </div>
 
       <nav className={styles.nav}>
+        <NavLink
+          to="/"
+          end
+          title="Início"
+          className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+        >
+          <HomeIcon className={styles.navIcon} />
+          <span className={styles.navLabel}>Início</span>
+        </NavLink>
+
         <span className={styles.navSection}>Biblioteca</span>
         {NAV_ITEMS.map((item) => {
           const ItemIcon = item.icon;
@@ -69,6 +81,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </NavLink>
           );
         })}
+
+        <span className={styles.navSection}>Sistema</span>
+        <NavLink
+          to="/config"
+          title="Configurações"
+          className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+        >
+          <SettingsIcon className={styles.navIcon} />
+          <span className={styles.navLabel}>Configurações</span>
+        </NavLink>
       </nav>
     </aside>
   );

@@ -86,6 +86,12 @@ export async function migrate(): Promise<void> {
   `);
 
   await pool.query(`
+    ALTER TABLE series_library
+    ADD COLUMN IF NOT EXISTS next_airing_episode JSONB,
+    ADD COLUMN IF NOT EXISTS synced_at TIMESTAMPTZ;
+  `);
+
+  await pool.query(`
     DO $$
     BEGIN
       IF EXISTS (

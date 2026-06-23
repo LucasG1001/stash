@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { LibraryProvider } from "./context/LibraryContext";
+import { DashboardPage } from "./pages/DashboardPage/DashboardPage";
 import { AnimePage } from "./pages/AnimePage/AnimePage";
 import { MoviesPage } from "./pages/MoviesPage/MoviesPage";
 import { SeriesPage } from "./pages/SeriesPage/SeriesPage";
 import { BooksPage } from "./pages/BooksPage/BooksPage";
 import { GamesPage } from "./pages/GamesPage/GamesPage";
+import { SettingsPage } from "./pages/SettingsPage/SettingsPage";
 import styles from "./App.module.css";
 
 const SIDEBAR_STORAGE_KEY = "sidebar-collapsed";
@@ -33,12 +35,13 @@ function App() {
             className={`${styles.content} ${collapsed ? styles.contentCollapsed : ""}`}
           >
             <Routes>
-            <Route path="/" element={<Navigate to="/anime" replace />} />
+            <Route path="/" element={<DashboardPage />} />
             <Route path="/anime" element={<AnimePage />} />
             <Route path="/filmes" element={<MoviesPage />} />
             <Route path="/series" element={<SeriesPage />} />
             <Route path="/livros" element={<BooksPage />} />
             <Route path="/jogos" element={<GamesPage />} />
+            <Route path="/config" element={<SettingsPage />} />
             </Routes>
           </main>
         </div>
