@@ -189,3 +189,9 @@ export async function remove(id: string): Promise<boolean> {
   const result = await pool.query("DELETE FROM anime_library WHERE id = $1", [id]);
   return (result.rowCount ?? 0) > 0;
 }
+
+export async function removeMany(ids: string[]): Promise<number> {
+  if (ids.length === 0) return 0;
+  const result = await pool.query("DELETE FROM anime_library WHERE id = ANY($1::uuid[])", [ids]);
+  return result.rowCount ?? 0;
+}

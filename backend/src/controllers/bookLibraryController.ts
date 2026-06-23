@@ -2,7 +2,7 @@ import { createLibraryController } from "../lib/createLibraryController.js";
 import { bookLibraryModel } from "../models/bookLibraryModel.js";
 import { bookCreateSchema, bookUpdateSchema } from "../schemas/library.js";
 
-export const { getAll, create, update, remove } = createLibraryController({
+export const { getAll, create, update, remove, removeMany } = createLibraryController({
   model: bookLibraryModel,
   externalIdField: "googleBooksId",
   createSchema: bookCreateSchema,

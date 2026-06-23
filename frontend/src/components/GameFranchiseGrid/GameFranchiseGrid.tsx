@@ -18,6 +18,7 @@ interface GameFranchiseGridProps {
   onCardClick: (game: GameCardType) => void;
   onAddToLibrary: (game: GameCardType) => void;
   getLibraryEntry: (igdbId: number) => GameLibraryEntry | undefined;
+  onDeleteGroup: (group: GameGroup) => void;
   emptyMessage?: string;
   animationKey?: string;
 }
@@ -29,19 +30,15 @@ export function GameFranchiseGrid({
   onCardClick,
   onAddToLibrary,
   getLibraryEntry,
+  onDeleteGroup,
   emptyMessage = "Nenhum jogo encontrado.",
   animationKey,
 }: GameFranchiseGridProps) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [cols, setGridRef] = useGridColumns();
 
   const toggle = (key: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    setExpandedKey((prev) => (prev === key ? null : key));
   };
 
   if (loading && groups.length === 0) {
@@ -91,7 +88,7 @@ export function GameFranchiseGrid({
       };
     }
 
-    const isExpanded = expanded.has(group.key);
+    const isExpanded = expandedKey === group.key;
     return {
       card: (
         <GameFranchiseCard
@@ -101,6 +98,7 @@ export function GameFranchiseGrid({
           onToggle={() => toggle(group.key)}
           onCardClick={onCardClick}
           onAddToLibrary={onAddToLibrary}
+          onDelete={() => onDeleteGroup(group)}
           libraryEntry={getLibraryEntry(group.representative.igdbId)}
           index={index}
         />

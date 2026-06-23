@@ -28,6 +28,7 @@ export interface LibraryController {
   create(req: Request, res: Response): Promise<void>;
   update(req: Request, res: Response): Promise<void>;
   remove(req: Request, res: Response): Promise<void>;
+  removeMany(req: Request, res: Response): Promise<void>;
 }
 
 export function createLibraryController<TEntry, TCreate, TUpdate>(
@@ -108,5 +109,19 @@ export function createLibraryController<TEntry, TCreate, TUpdate>(
     }
   };
 
-  return { getAll, create, update, remove };
+  const removeMany = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const ids = (req.body as { ids?: unknown }).ids;
+      if (!Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === "string")) {
+        res.status(400).json({ error: messages.invalid });
+        return;
+      }
+      const deleted = await model.removeMany(ids as string[]);
+      res.json({ deleted });
+    } catch {
+      res.status(500).json({ error: messages.errorRemove });
+    }
+  };
+
+  return { getAll, create, update, remove, removeMany };
 }

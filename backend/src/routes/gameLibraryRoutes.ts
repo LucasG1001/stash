@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { getAll, create, update, remove } from "../controllers/gameLibraryController.js";
+import { getAll, create, update, remove, removeMany } from "../controllers/gameLibraryController.js";
 
 const router = Router();
 
 router.get("/", getAll);
 router.post("/", create);
+router.post("/bulk-delete", removeMany);
 router.put("/:id", update);
 router.delete("/:id", remove);
 

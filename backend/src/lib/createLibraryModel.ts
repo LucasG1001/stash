@@ -23,6 +23,7 @@ export interface LibraryModel<TEntry, TCreate, TUpdate> {
   create(entry: TCreate): Promise<TEntry>;
   update(id: string, data: TUpdate): Promise<TEntry | null>;
   remove(id: string): Promise<boolean>;
+  removeMany(ids: string[]): Promise<number>;
 }
 
 type Row = Record<string, unknown>;
@@ -125,5 +126,11 @@ export function createLibraryModel<TEntry, TCreate, TUpdate>(
     return (result.rowCount ?? 0) > 0;
   };
 
-  return { findAll, findById, findByExternalId, create, update, remove };
+  const removeMany = async (ids: string[]): Promise<number> => {
+    if (ids.length === 0) return 0;
+    const result = await pool.query(`DELETE FROM ${table} WHERE id = ANY($1::uuid[])`, [ids]);
+    return result.rowCount ?? 0;
+  };
+
+  return { findAll, findById, findByExternalId, create, update, remove, removeMany };
 }

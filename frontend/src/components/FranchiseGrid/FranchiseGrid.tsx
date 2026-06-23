@@ -18,6 +18,7 @@ interface FranchiseGridProps {
   onCardClick: (anime: AnimeCardType) => void;
   onAddToLibrary: (anime: AnimeCardType) => void;
   getLibraryEntry: (anilistId: number) => LibraryEntry | undefined;
+  onDeleteGroup: (group: FranchiseGroup) => void;
   emptyMessage?: string;
   animationKey?: string;
 }
@@ -29,19 +30,15 @@ export function FranchiseGrid({
   onCardClick,
   onAddToLibrary,
   getLibraryEntry,
+  onDeleteGroup,
   emptyMessage = "Nenhum anime encontrado.",
   animationKey,
 }: FranchiseGridProps) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [cols, setGridRef] = useGridColumns();
 
   const toggle = (key: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    setExpandedKey((prev) => (prev === key ? null : key));
   };
 
   if (loading && groups.length === 0) {
@@ -91,7 +88,7 @@ export function FranchiseGrid({
       };
     }
 
-    const isExpanded = expanded.has(group.key);
+    const isExpanded = expandedKey === group.key;
     return {
       card: (
         <FranchiseCard
@@ -101,6 +98,7 @@ export function FranchiseGrid({
           onToggle={() => toggle(group.key)}
           onCardClick={onCardClick}
           onAddToLibrary={onAddToLibrary}
+          onDelete={() => onDeleteGroup(group)}
           libraryEntry={getLibraryEntry(group.representative.anilistId)}
           index={index}
         />

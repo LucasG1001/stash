@@ -22,7 +22,7 @@ const base = createLibraryController({
   },
 });
 
-export const { getAll, update, remove } = base;
+export const { getAll, update, remove, removeMany } = base;
 
 export async function create(req: Request, res: Response): Promise<void> {
   try {

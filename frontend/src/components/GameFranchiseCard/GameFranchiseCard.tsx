@@ -11,11 +11,12 @@ interface GameFranchiseCardProps {
   onToggle: () => void;
   onCardClick: (game: GameCardType) => void;
   onAddToLibrary: (game: GameCardType) => void;
+  onDelete: () => void;
   libraryEntry?: GameLibraryEntry;
   index: number;
 }
 
-export function GameFranchiseCard({ group, expanded, onToggle, onCardClick, onAddToLibrary, libraryEntry, index }: GameFranchiseCardProps) {
+export function GameFranchiseCard({ group, expanded, onToggle, onCardClick, onAddToLibrary, onDelete, libraryEntry, index }: GameFranchiseCardProps) {
   const card = gameLibraryEntryToCard(group.representative);
 
   return (
@@ -28,6 +29,20 @@ export function GameFranchiseCard({ group, expanded, onToggle, onCardClick, onAd
         isLibraryView
         index={index}
       />
+      <button
+        className={styles.deleteButton}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (window.confirm(`Remover toda a coleção "${group.representative.title}" (${group.count} itens) da biblioteca?`)) onDelete();
+        }}
+        title="Remover coleção da biblioteca"
+        aria-label="Remover coleção da biblioteca"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+          <path d="M10 11v6M14 11v6" />
+        </svg>
+      </button>
       <button
         className={`${styles.franchiseBadge} ${expanded ? styles.expanded : ""}`}
         onClick={(e) => {

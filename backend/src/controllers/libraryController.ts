@@ -96,3 +96,17 @@ export async function remove(req: Request, res: Response): Promise<void> {
     res.status(500).json({ error: "Erro ao remover anime da biblioteca." });
   }
 }
+
+export async function removeMany(req: Request, res: Response): Promise<void> {
+  try {
+    const ids = (req.body as { ids?: unknown }).ids;
+    if (!Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === "string")) {
+      res.status(400).json({ error: "Dados inválidos." });
+      return;
+    }
+    const deleted = await libraryModel.removeMany(ids as string[]);
+    res.json({ deleted });
+  } catch {
+    res.status(500).json({ error: "Erro ao remover anime da biblioteca." });
+  }
+}

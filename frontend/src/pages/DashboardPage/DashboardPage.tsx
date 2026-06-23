@@ -9,6 +9,7 @@ import { AnimeDrawer } from "../../components/AnimeDrawer/AnimeDrawer";
 import { MovieDrawer } from "../../components/MovieDrawer/MovieDrawer";
 import { SeriesDrawer } from "../../components/SeriesDrawer/SeriesDrawer";
 import { GameDrawer } from "../../components/GameDrawer/GameDrawer";
+import { BookDrawer } from "../../components/BookDrawer/BookDrawer";
 import { AnimeIcon, MovieIcon, SeriesIcon, BookIcon, GameIcon } from "../../components/Sidebar/Sidebar.icons";
 import { buildAgenda, splitAgenda, groupByDay, groupByMonth, type AgendaItem, type AgendaGroup } from "../../utils/agenda";
 import styles from "./DashboardPage.module.css";
@@ -18,11 +19,15 @@ const MEDIA_EMOJI: Record<AgendaItem["media"], string> = {
   movie: "🎬",
   series: "📺",
   game: "🎮",
+  book: "📚",
 };
 
-function itemTime(item: AgendaItem): string {
-  if (!item.hasTime) return "—";
-  return new Date(item.when).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+function itemWhen(item: AgendaItem, withDate: boolean): string {
+  const d = new Date(item.when);
+  const time = item.hasTime ? d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
+  if (!withDate) return time || "—";
+  const date = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  return time ? `${date} ${time}` : date;
 }
 
 export function DashboardPage() {
@@ -36,6 +41,7 @@ export function DashboardPage() {
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
   const [selectedSeriesId, setSelectedSeriesId] = useState<number | null>(null);
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
 
   const counters = [
     { label: "Anime", path: "/anime", icon: AnimeIcon, count: animes.filter((e) => e.status === "watched").length },
@@ -45,19 +51,20 @@ export function DashboardPage() {
     { label: "Jogos", path: "/jogos", icon: GameIcon, count: games.filter((e) => e.status === "beaten").length },
   ];
 
-  const agenda = buildAgenda(animes, movies, series, games);
+  const agenda = buildAgenda(animes, movies, series, games, books);
   const { week, later } = splitAgenda(agenda);
   const weekGroups = groupByDay(week);
   const laterGroups = groupByMonth(later);
 
   const openItem = (item: AgendaItem) => {
-    if (item.media === "anime") setSelectedAnimeId(item.externalId);
-    else if (item.media === "movie") setSelectedMovieId(item.externalId);
-    else if (item.media === "series") setSelectedSeriesId(item.externalId);
-    else setSelectedGameId(item.externalId);
+    if (item.media === "anime") setSelectedAnimeId(item.externalId as number);
+    else if (item.media === "movie") setSelectedMovieId(item.externalId as number);
+    else if (item.media === "series") setSelectedSeriesId(item.externalId as number);
+    else if (item.media === "game") setSelectedGameId(item.externalId as number);
+    else setSelectedBookId(item.externalId as string);
   };
 
-  const renderGroups = (groups: AgendaGroup[]) =>
+  const renderGroups = (groups: AgendaGroup[], withDate: boolean) =>
     groups.map((group) => (
       <div className={styles.group} key={group.key}>
         <div className={styles.groupHeader}>{group.label}</div>
@@ -70,7 +77,7 @@ export function DashboardPage() {
               onClick={() => openItem(item)}
             >
               <span className={styles.itemEmoji}>{MEDIA_EMOJI[item.media]}</span>
-              <span className={styles.itemTime}>{itemTime(item)}</span>
+              <span className={styles.itemTime}>{itemWhen(item, withDate)}</span>
               <span className={styles.itemTitle}>{item.title}</span>
               <span className={styles.itemDetail}>{item.detail}</span>
             </button>
@@ -102,13 +109,13 @@ export function DashboardPage() {
             {weekGroups.length > 0 && (
               <div className={styles.block}>
                 <div className={styles.blockTitle}>Esta semana</div>
-                {renderGroups(weekGroups)}
+                {renderGroups(weekGroups, false)}
               </div>
             )}
             {laterGroups.length > 0 && (
               <div className={styles.block}>
                 <div className={styles.blockTitle}>Mais adiante</div>
-                {renderGroups(laterGroups)}
+                {renderGroups(laterGroups, true)}
               </div>
             )}
           </>
@@ -126,6 +133,9 @@ export function DashboardPage() {
       )}
       {selectedGameId !== null && (
         <GameDrawer gameId={selectedGameId} onClose={() => setSelectedGameId(null)} />
+      )}
+      {selectedBookId !== null && (
+        <BookDrawer bookId={selectedBookId} onClose={() => setSelectedBookId(null)} />
       )}
     </div>
   );

@@ -18,6 +18,7 @@ interface MovieFranchiseGridProps {
   onCardClick: (movie: MovieCardType) => void;
   onAddToLibrary: (movie: MovieCardType) => void;
   getLibraryEntry: (tmdbId: number) => MovieLibraryEntry | undefined;
+  onDeleteGroup: (group: MovieGroup) => void;
   emptyMessage?: string;
   animationKey?: string;
 }
@@ -29,19 +30,15 @@ export function MovieFranchiseGrid({
   onCardClick,
   onAddToLibrary,
   getLibraryEntry,
+  onDeleteGroup,
   emptyMessage = "Nenhum filme encontrado.",
   animationKey,
 }: MovieFranchiseGridProps) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [cols, setGridRef] = useGridColumns();
 
   const toggle = (key: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    setExpandedKey((prev) => (prev === key ? null : key));
   };
 
   if (loading && groups.length === 0) {
@@ -91,7 +88,7 @@ export function MovieFranchiseGrid({
       };
     }
 
-    const isExpanded = expanded.has(group.key);
+    const isExpanded = expandedKey === group.key;
     return {
       card: (
         <MovieFranchiseCard
@@ -101,6 +98,7 @@ export function MovieFranchiseGrid({
           onToggle={() => toggle(group.key)}
           onCardClick={onCardClick}
           onAddToLibrary={onAddToLibrary}
+          onDelete={() => onDeleteGroup(group)}
           libraryEntry={getLibraryEntry(group.representative.tmdbId)}
           index={index}
         />

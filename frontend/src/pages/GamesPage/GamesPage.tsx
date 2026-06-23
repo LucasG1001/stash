@@ -47,6 +47,7 @@ export function GamesPage() {
     add: addEntry,
     update: updateEntry,
     remove: removeEntry,
+    removeMany: removeManyEntries,
     findByIgdbId,
   } = useGameLibrary();
 
@@ -239,6 +240,7 @@ export function GamesPage() {
           onCardClick={handleCardClick}
           onAddToLibrary={handleOpenLibraryModal}
           getLibraryEntry={(id) => findByIgdbId(id)}
+          onDeleteGroup={(group) => removeManyEntries(group.members.map((m) => m.id))}
           animationKey={gridKey}
           emptyMessage="Sua biblioteca está vazia."
         />

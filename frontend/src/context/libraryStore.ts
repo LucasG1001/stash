@@ -30,6 +30,7 @@ export interface LibraryService<TEntry, TCreate, TUpdate> {
   addToLibrary: (entry: TCreate) => Promise<TEntry | TEntry[]>;
   updateLibraryEntry: (id: string, data: TUpdate) => Promise<TEntry>;
   removeFromLibrary: (id: string) => Promise<void>;
+  removeManyFromLibrary: (ids: string[]) => Promise<void>;
 }
 
 export interface LibraryStore<TEntry, TCreate, TUpdate> {
@@ -40,6 +41,7 @@ export interface LibraryStore<TEntry, TCreate, TUpdate> {
   add: (entry: TCreate) => Promise<TEntry | null>;
   update: (id: string, data: TUpdate) => Promise<TEntry | null>;
   remove: (id: string) => Promise<boolean>;
+  removeMany: (ids: string[]) => Promise<boolean>;
   findByExternalId: (externalId: number | string) => TEntry | undefined;
 }
 
@@ -133,10 +135,27 @@ export function useLibraryStore<TEntry extends { id: string }, TCreate, TUpdate>
     }
   }, [media, service, setSlice]);
 
+  const removeMany = useCallback(async (ids: string[]): Promise<boolean> => {
+    if (ids.length === 0) return true;
+    const idSet = new Set(ids);
+    let snapshot: TEntry[] = [];
+    setSlice(media, (p) => {
+      snapshot = p.entries as TEntry[];
+      return { ...p, entries: snapshot.filter((e) => !idSet.has(e.id)), error: null };
+    });
+    try {
+      await service.removeManyFromLibrary(ids);
+      return true;
+    } catch {
+      setSlice(media, (p) => ({ ...p, entries: snapshot, error: "Erro ao remover da biblioteca." }));
+      return false;
+    }
+  }, [media, service, setSlice]);
+
   const findByExternalId = useCallback(
     (externalId: number | string): TEntry | undefined => entries.find((e) => getExternalId(e) === externalId),
     [entries, getExternalId]
   );
 
-  return { entries, loading: slice.loading, error: slice.error, load, add, update, remove, findByExternalId };
+  return { entries, loading: slice.loading, error: slice.error, load, add, update, remove, removeMany, findByExternalId };
 }

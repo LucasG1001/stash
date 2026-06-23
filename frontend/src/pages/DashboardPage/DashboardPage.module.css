@@ -82,7 +82,7 @@
 
 .item {
   display: grid;
-  grid-template-columns: 24px 56px 1fr auto;
+  grid-template-columns: 24px 96px 1fr auto;
   align-items: center;
   gap: var(--spacing-md);
   width: 100%;

@@ -39,3 +39,32 @@
 .expanded .chevron {
   transform: rotate(180deg);
 }
+
+.deleteButton {
+  position: absolute;
+  top: calc(var(--spacing-sm) + 34px);
+  right: var(--spacing-sm);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.wrapper:hover .deleteButton {
+  opacity: 1;
+}
+
+.deleteButton:hover {
+  background: var(--color-error);
+  border-color: var(--color-error);
+}

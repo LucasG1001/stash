@@ -47,6 +47,7 @@ export function MoviesPage() {
     add: addEntry,
     update: updateEntry,
     remove: removeEntry,
+    removeMany: removeManyEntries,
     findByTmdbId,
   } = useMovieLibrary();
 
@@ -238,6 +239,7 @@ export function MoviesPage() {
           onCardClick={handleCardClick}
           onAddToLibrary={handleOpenLibraryModal}
           getLibraryEntry={(id) => findByTmdbId(id)}
+          onDeleteGroup={(group) => removeManyEntries(group.members.map((m) => m.id))}
           animationKey={gridKey}
           emptyMessage="Sua biblioteca está vazia."
         />

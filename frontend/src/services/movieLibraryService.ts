@@ -19,3 +19,7 @@ export async function updateLibraryEntry(id: string, data: UpdateMovieLibraryEnt
 export async function removeFromLibrary(id: string): Promise<void> {
   await api.delete(`/api/movie-library/${id}`);
 }
+
+export async function removeManyFromLibrary(ids: string[]): Promise<void> {
+  await api.post("/api/movie-library/bulk-delete", { ids });
+}

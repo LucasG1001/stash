@@ -2,13 +2,14 @@ import type { LibraryEntry } from "../types/library";
 import type { MovieLibraryEntry } from "../types/movieLibrary";
 import type { GameLibraryEntry } from "../types/gameLibrary";
 import type { SeriesLibraryEntry } from "../types/seriesLibrary";
+import type { BookLibraryEntry } from "../types/bookLibrary";
 import { MONTH_PT } from "./month";
 
-export type AgendaMedia = "anime" | "movie" | "series" | "game";
+export type AgendaMedia = "anime" | "movie" | "series" | "game" | "book";
 
 export interface AgendaItem {
   media: AgendaMedia;
-  externalId: number;
+  externalId: number | string;
   title: string;
   poster: string | null;
   when: number;
@@ -32,7 +33,8 @@ function startOfToday(): number {
 
 function dateOnlyToMs(date: string | null): number | null {
   if (!date) return null;
-  const ms = new Date(`${date}T00:00:00`).getTime();
+  let ms = new Date(`${date}T00:00:00`).getTime();
+  if (Number.isNaN(ms)) ms = new Date(date).getTime();
   return Number.isNaN(ms) ? null : ms;
 }
 
@@ -40,13 +42,14 @@ export function buildAgenda(
   animes: LibraryEntry[],
   movies: MovieLibraryEntry[],
   series: SeriesLibraryEntry[],
-  games: GameLibraryEntry[]
+  games: GameLibraryEntry[],
+  books: BookLibraryEntry[]
 ): AgendaItem[] {
   const floor = startOfToday();
   const items: AgendaItem[] = [];
 
   for (const a of animes) {
-    if (a.status !== "watching" || !a.nextAiringEpisode) continue;
+    if (a.status === "dropped" || !a.nextAiringEpisode) continue;
     const when = a.nextAiringEpisode.airingAt * 1000;
     if (when < floor) continue;
     items.push({
@@ -61,7 +64,7 @@ export function buildAgenda(
   }
 
   for (const s of series) {
-    if (s.status !== "watching" || !s.nextAiringEpisode) continue;
+    if (s.status === "dropped" || !s.nextAiringEpisode) continue;
     const when = s.nextAiringEpisode.airingAt * 1000;
     if (when < floor) continue;
     items.push({
@@ -76,7 +79,7 @@ export function buildAgenda(
   }
 
   for (const m of movies) {
-    if (m.status !== "plan_to_watch") continue;
+    if (m.status === "dropped") continue;
     const when = dateOnlyToMs(m.releaseDate);
     if (when == null || when < floor) continue;
     items.push({
@@ -91,7 +94,7 @@ export function buildAgenda(
   }
 
   for (const g of games) {
-    if (g.status !== "plan_to_play") continue;
+    if (g.status === "dropped") continue;
     const when = dateOnlyToMs(g.released);
     if (when == null || when < floor) continue;
     items.push({
@@ -99,6 +102,21 @@ export function buildAgenda(
       externalId: g.igdbId,
       title: g.title,
       poster: g.backgroundImage,
+      when,
+      detail: "Lançamento",
+      hasTime: false,
+    });
+  }
+
+  for (const b of books) {
+    if (b.status === "dropped") continue;
+    const when = dateOnlyToMs(b.publishedDate);
+    if (when == null || when < floor) continue;
+    items.push({
+      media: "book",
+      externalId: b.googleBooksId,
+      title: b.title,
+      poster: b.coverImage,
       when,
       detail: "Lançamento",
       hasTime: false,

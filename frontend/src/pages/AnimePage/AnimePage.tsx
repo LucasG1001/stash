@@ -48,6 +48,7 @@ export function AnimePage() {
     add: addEntry,
     update: updateEntry,
     remove: removeEntry,
+    removeMany: removeManyEntries,
     findByAnilistId,
   } = useLibrary();
 
@@ -246,6 +247,7 @@ export function AnimePage() {
           onCardClick={handleCardClick}
           onAddToLibrary={handleOpenLibraryModal}
           getLibraryEntry={(id) => findByAnilistId(id)}
+          onDeleteGroup={(group) => removeManyEntries(group.members.map((m) => m.id))}
           animationKey={gridKey}
           emptyMessage="Sua biblioteca está vazia."
         />
