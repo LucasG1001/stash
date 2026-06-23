@@ -15,6 +15,7 @@ import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
 import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildGameCollectionGroups } from "../../utils/gameCollectionGroups";
+import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
 import styles from "./GamesPage.module.css";
 
 const TABS = [
@@ -120,11 +121,10 @@ export function GamesPage() {
     }
   }, [findByIgdbId, updateEntry]);
 
-  const filteredLibraryEntries = libraryFilter === "all"
-    ? libraryEntries.filter(entry => entry.status !== "dropped")
-    : libraryEntries.filter(entry => entry.status === libraryFilter);
-
-  const collectionGroups = buildGameCollectionGroups(filteredLibraryEntries, scoreSortDir, releaseSortDir);
+  const collectionGroups = filterGroupsByStatus(
+    buildGameCollectionGroups(libraryEntries, scoreSortDir, releaseSortDir),
+    libraryFilter
+  );
 
   const gridKey =
     activeTab === "library"

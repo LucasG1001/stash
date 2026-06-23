@@ -16,6 +16,7 @@ import { SEASON_PT, getCurrentRealSeason, getSurroundingSeasons } from "../../ut
 import { getRecentYears } from "../../utils/year";
 import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildFranchiseGroups } from "../../utils/franchiseGroups";
+import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
 import styles from "./AnimePage.module.css";
 
 const TABS = [
@@ -122,11 +123,10 @@ export function AnimePage() {
     }
   }, [findByAnilistId, updateEntry]);
 
-  const filteredLibraryEntries = libraryFilter === "all"
-    ? libraryEntries.filter(entry => entry.status !== "dropped")
-    : libraryEntries.filter(entry => entry.status === libraryFilter);
-
-  const franchiseGroups = buildFranchiseGroups(filteredLibraryEntries, scoreSortDir, releaseSortDir);
+  const franchiseGroups = filterGroupsByStatus(
+    buildFranchiseGroups(libraryEntries, scoreSortDir, releaseSortDir),
+    libraryFilter
+  );
 
   const gridKey =
     activeTab === "library"

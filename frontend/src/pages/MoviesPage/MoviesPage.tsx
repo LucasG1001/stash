@@ -15,6 +15,7 @@ import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
 import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildMovieCollectionGroups } from "../../utils/movieCollectionGroups";
+import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
 import styles from "./MoviesPage.module.css";
 
 const TABS = [
@@ -119,11 +120,10 @@ export function MoviesPage() {
     }
   }, [findByTmdbId, updateEntry]);
 
-  const filteredLibraryEntries = libraryFilter === "all"
-    ? libraryEntries.filter(entry => entry.status !== "dropped")
-    : libraryEntries.filter(entry => entry.status === libraryFilter);
-
-  const collectionGroups = buildMovieCollectionGroups(filteredLibraryEntries, scoreSortDir, releaseSortDir);
+  const collectionGroups = filterGroupsByStatus(
+    buildMovieCollectionGroups(libraryEntries, scoreSortDir, releaseSortDir),
+    libraryFilter
+  );
 
   const gridKey =
     activeTab === "library"
