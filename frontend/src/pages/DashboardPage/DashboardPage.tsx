@@ -38,11 +38,11 @@ export function DashboardPage() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
 
   const counters = [
-    { label: "Anime", path: "/anime", icon: AnimeIcon, count: animes.length },
-    { label: "Filmes", path: "/filmes", icon: MovieIcon, count: movies.length },
-    { label: "Séries", path: "/series", icon: SeriesIcon, count: series.length },
-    { label: "Livros", path: "/livros", icon: BookIcon, count: books.length },
-    { label: "Jogos", path: "/jogos", icon: GameIcon, count: games.length },
+    { label: "Anime", path: "/anime", icon: AnimeIcon, count: animes.filter((e) => e.status === "watched").length },
+    { label: "Filmes", path: "/filmes", icon: MovieIcon, count: movies.filter((e) => e.status === "watched").length },
+    { label: "Séries", path: "/series", icon: SeriesIcon, count: series.filter((e) => e.status === "watched").length },
+    { label: "Livros", path: "/livros", icon: BookIcon, count: books.filter((e) => e.status === "read").length },
+    { label: "Jogos", path: "/jogos", icon: GameIcon, count: games.filter((e) => e.status === "beaten").length },
   ];
 
   const agenda = buildAgenda(animes, movies, series, games);
@@ -81,8 +81,6 @@ export function DashboardPage() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Início</h1>
-
       <section className={styles.counters}>
         {counters.map((c) => {
           const Icon = c.icon;
@@ -97,8 +95,6 @@ export function DashboardPage() {
       </section>
 
       <section className={styles.agenda}>
-        <h2 className={styles.sectionTitle}>📅 Agenda</h2>
-
         {agenda.length === 0 ? (
           <div className={styles.empty}>Nada agendado nos próximos dias.</div>
         ) : (
