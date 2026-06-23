@@ -24,7 +24,7 @@ const TABS = [
 const STATUS_OPTIONS = Object.entries(SERIES_LIBRARY_STATUS_LABELS) as [SeriesLibraryStatus, string][];
 
 export function SeriesPage() {
-  const [activeTab, setActiveTab] = useState("popular");
+  const [activeTab, setActiveTab] = useState("search");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSeriesId, setSelectedSeriesId] = useState<number | null>(null);
   const [selectedSeriesForModal, setSelectedSeriesForModal] = useState<SeriesCard | null>(null);

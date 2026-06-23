@@ -27,7 +27,7 @@ const TABS = [
 const STATUS_OPTIONS = Object.entries(GAME_LIBRARY_STATUS_LABELS) as [GameLibraryStatus, string][];
 
 export function GamesPage() {
-  const [activeTab, setActiveTab] = useState("popular");
+  const [activeTab, setActiveTab] = useState("search");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [selectedGameForModal, setSelectedGameForModal] = useState<GameCard | null>(null);
