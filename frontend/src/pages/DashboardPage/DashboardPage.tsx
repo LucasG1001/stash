@@ -14,12 +14,12 @@ import { AnimeIcon, MovieIcon, SeriesIcon, BookIcon, GameIcon } from "../../comp
 import { buildAgenda, splitAgenda, groupByDay, groupByMonth, type AgendaItem, type AgendaGroup } from "../../utils/agenda";
 import styles from "./DashboardPage.module.css";
 
-const MEDIA_EMOJI: Record<AgendaItem["media"], string> = {
-  anime: "🌸",
-  movie: "🎬",
-  series: "📺",
-  game: "🎮",
-  book: "📚",
+const MEDIA_ICON: Record<AgendaItem["media"], typeof AnimeIcon> = {
+  anime: AnimeIcon,
+  movie: MovieIcon,
+  series: SeriesIcon,
+  game: GameIcon,
+  book: BookIcon,
 };
 
 function itemWhen(item: AgendaItem, withDate: boolean): string {
@@ -69,19 +69,22 @@ export function DashboardPage() {
       <div className={styles.group} key={group.key}>
         <div className={styles.groupHeader}>{group.label}</div>
         <div className={styles.groupItems}>
-          {group.items.map((item) => (
-            <button
-              type="button"
-              className={styles.item}
-              key={`${item.media}-${item.externalId}`}
-              onClick={() => openItem(item)}
-            >
-              <span className={styles.itemEmoji}>{MEDIA_EMOJI[item.media]}</span>
-              <span className={styles.itemTime}>{itemWhen(item, withDate)}</span>
-              <span className={styles.itemTitle}>{item.title}</span>
-              <span className={styles.itemDetail}>{item.detail}</span>
-            </button>
-          ))}
+          {group.items.map((item) => {
+            const Icon = MEDIA_ICON[item.media];
+            return (
+              <button
+                type="button"
+                className={styles.item}
+                key={`${item.media}-${item.externalId}`}
+                onClick={() => openItem(item)}
+              >
+                <Icon className={styles.itemIcon} />
+                <span className={styles.itemTime}>{itemWhen(item, withDate)}</span>
+                <span className={styles.itemTitle}>{item.title}</span>
+                <span className={styles.itemDetail}>{item.detail}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     ));
