@@ -6,6 +6,7 @@ import cors from "cors";
 import { migrate } from "./database/migrate.js";
 import { refreshStaleEntries } from "./services/librarySyncService.js";
 import { refreshStaleSeries } from "./services/seriesLibrarySyncService.js";
+import { refreshCollections } from "./services/collectionSyncService.js";
 import { animeRoutes } from "./routes/animeRoutes.js";
 import { libraryRoutes } from "./routes/libraryRoutes.js";
 import { movieRoutes } from "./routes/movieRoutes.js";
@@ -22,6 +23,8 @@ import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 const app = express();
 const PORT = process.env.PORT || 3333;
 const SYNC_INTERVAL_MS = 30 * 60 * 1000;
+const COLLECTION_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const COLLECTION_SYNC_INITIAL_DELAY_MS = 60 * 1000;
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
@@ -50,6 +53,11 @@ async function start(): Promise<void> {
     refreshStaleEntries().catch((error) => console.error("Falha no job de sincronização:", error));
     refreshStaleSeries().catch((error) => console.error("Falha no job de sincronização de séries:", error));
   }, SYNC_INTERVAL_MS);
+
+  const runCollectionSync = () =>
+    refreshCollections().catch((error) => console.error("Falha no job de sincronização de coleções:", error));
+  setTimeout(runCollectionSync, COLLECTION_SYNC_INITIAL_DELAY_MS);
+  setInterval(runCollectionSync, COLLECTION_SYNC_INTERVAL_MS);
 }
 
 start();

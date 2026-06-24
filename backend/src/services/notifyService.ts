@@ -187,3 +187,29 @@ export async function notifySeriesFinished(entry: SeriesLibraryEntry, totalEpiso
     buttons: [{ text: "🔗 TMDB", url }],
   });
 }
+
+// ---------- coleções ----------
+
+const MEDIA_TYPE_LABEL: Record<"anime" | "filme" | "jogo", string> = {
+  anime: "Anime",
+  filme: "Filme",
+  jogo: "Jogo",
+};
+
+export async function notifyNewCollectionItem(args: {
+  mediaType: "anime" | "filme" | "jogo";
+  title: string;
+  image?: string;
+  url?: string;
+}): Promise<void> {
+  const planLabel = args.mediaType === "jogo" ? "Planejo Jogar" : "Planejo Assistir";
+  const image = args.image?.startsWith("http") ? args.image : undefined;
+  await send("colecao-novo-item", {
+    title: `📦 ${args.title}`,
+    description: `Novo lançamento adicionado à sua coleção (${planLabel})`,
+    image,
+    url: args.url,
+    fields: [{ name: "Tipo", value: MEDIA_TYPE_LABEL[args.mediaType], inline: true }],
+    buttons: args.url ? [{ text: "🔗 Ver", url: args.url }] : undefined,
+  });
+}
