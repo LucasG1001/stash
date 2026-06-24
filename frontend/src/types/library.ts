@@ -12,6 +12,7 @@ export interface LibraryEntry {
   totalEpisodes: number | null;
   animeStatus?: string;
   franchiseId: number | null;
+  isCover: boolean;
   format?: string | null;
   seasonYear: number | null;
   nextAiringEpisode: AnimeNextAiringEpisode | null;

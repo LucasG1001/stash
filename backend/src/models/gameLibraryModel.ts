@@ -14,9 +14,11 @@ export const gameLibraryModel = createLibraryModel<GameLibraryEntry, CreateGameL
     { column: "metacritic", field: "metacritic", default: null },
     { column: "game_status", field: "gameStatus", default: "RELEASED" },
     { column: "collection_id", field: "collectionId", default: null },
+    { column: "is_cover", field: "isCover", default: false, readonly: true },
   ],
   statusField: "status",
   completion: { column: "finished_at", field: "finishedAt", whenStatus: "beaten" },
+  collectionColumn: "collection_id",
 });
 
 function toEntry(row: GameLibraryRow): GameLibraryEntry {
@@ -31,6 +33,7 @@ function toEntry(row: GameLibraryRow): GameLibraryEntry {
     metacritic: row.metacritic,
     gameStatus: row.game_status,
     collectionId: row.collection_id,
+    isCover: row.is_cover,
     finishedAt: row.finished_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

@@ -29,6 +29,7 @@ export interface LibraryService<TEntry, TCreate, TUpdate> {
   fetchLibrary: () => Promise<TEntry[]>;
   addToLibrary: (entry: TCreate) => Promise<TEntry | TEntry[]>;
   updateLibraryEntry: (id: string, data: TUpdate) => Promise<TEntry>;
+  setCover?: (id: string) => Promise<TEntry>;
   removeFromLibrary: (id: string) => Promise<void>;
   removeManyFromLibrary: (ids: string[]) => Promise<void>;
 }
@@ -40,6 +41,7 @@ export interface LibraryStore<TEntry, TCreate, TUpdate> {
   load: () => Promise<void>;
   add: (entry: TCreate) => Promise<TEntry | null>;
   update: (id: string, data: TUpdate) => Promise<TEntry | null>;
+  setCover: (id: string) => Promise<TEntry | null>;
   remove: (id: string) => Promise<boolean>;
   removeMany: (ids: string[]) => Promise<boolean>;
   findByExternalId: (externalId: number | string) => TEntry | undefined;
@@ -48,7 +50,8 @@ export interface LibraryStore<TEntry, TCreate, TUpdate> {
 export function useLibraryStore<TEntry extends { id: string }, TCreate, TUpdate>(
   media: string,
   service: LibraryService<TEntry, TCreate, TUpdate>,
-  getExternalId: (entry: TEntry) => number | string
+  getExternalId: (entry: TEntry) => number | string,
+  getCollectionKey?: (entry: TEntry) => number | null | undefined
 ): LibraryStore<TEntry, TCreate, TUpdate> {
   const ctx = useContext(LibraryContext);
   if (!ctx) throw new Error("useLibraryStore requer o LibraryProvider.");
@@ -112,6 +115,34 @@ export function useLibraryStore<TEntry extends { id: string }, TCreate, TUpdate>
     }
   }, [media, service, setSlice]);
 
+  const setCover = useCallback(async (id: string): Promise<TEntry | null> => {
+    if (!service.setCover) return null;
+    let snapshot: TEntry[] = [];
+    setSlice(media, (p) => {
+      const list = p.entries as TEntry[];
+      snapshot = list;
+      const target = list.find((e) => e.id === id);
+      const key = target && getCollectionKey ? getCollectionKey(target) : undefined;
+      return {
+        ...p,
+        entries: list.map((e) => {
+          if (e.id === id) return { ...e, isCover: true } as TEntry;
+          if (key != null && getCollectionKey && getCollectionKey(e) === key) return { ...e, isCover: false } as TEntry;
+          return e;
+        }),
+        error: null,
+      };
+    });
+    try {
+      const updated = await service.setCover(id);
+      setSlice(media, (p) => ({ ...p, entries: (p.entries as TEntry[]).map((e) => (e.id === id ? updated : e)) }));
+      return updated;
+    } catch {
+      setSlice(media, (p) => ({ ...p, entries: snapshot, error: "Erro ao definir capa da coleção." }));
+      return null;
+    }
+  }, [media, service, setSlice, getCollectionKey]);
+
   const remove = useCallback(async (id: string): Promise<boolean> => {
     let removed: TEntry | undefined;
     let index = -1;
@@ -157,5 +188,5 @@ export function useLibraryStore<TEntry extends { id: string }, TCreate, TUpdate>
     [entries, getExternalId]
   );
 
-  return { entries, loading: slice.loading, error: slice.error, load, add, update, remove, removeMany, findByExternalId };
+  return { entries, loading: slice.loading, error: slice.error, load, add, update, setCover, remove, removeMany, findByExternalId };
 }

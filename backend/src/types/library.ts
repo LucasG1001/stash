@@ -10,6 +10,7 @@ export interface LibraryEntry {
   totalEpisodes: number | null;
   animeStatus: string;
   franchiseId: number | null;
+  isCover: boolean;
   format: string | null;
   seasonYear: number | null;
   nextAiringEpisode: AniListNextAiringEpisode | null;
@@ -63,6 +64,7 @@ export interface LibraryRow {
   total_episodes: number | null;
   anime_status: string;
   franchise_id: number | null;
+  is_cover: boolean;
   format: string | null;
   season_year: number | null;
   next_airing_episode: AniListNextAiringEpisode | null;

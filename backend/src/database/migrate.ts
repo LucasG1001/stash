@@ -42,6 +42,11 @@ export async function migrate(): Promise<void> {
   `);
 
   await pool.query(`
+    ALTER TABLE anime_library
+    ADD COLUMN IF NOT EXISTS is_cover BOOLEAN NOT NULL DEFAULT FALSE;
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS movie_library (
       id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       tmdb_id       INTEGER NOT NULL UNIQUE,
@@ -65,6 +70,11 @@ export async function migrate(): Promise<void> {
 
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_movie_library_collection_id ON movie_library (collection_id);
+  `);
+
+  await pool.query(`
+    ALTER TABLE movie_library
+    ADD COLUMN IF NOT EXISTS is_cover BOOLEAN NOT NULL DEFAULT FALSE;
   `);
 
   await pool.query(`
@@ -133,6 +143,11 @@ export async function migrate(): Promise<void> {
 
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_game_library_collection_id ON game_library (collection_id);
+  `);
+
+  await pool.query(`
+    ALTER TABLE game_library
+    ADD COLUMN IF NOT EXISTS is_cover BOOLEAN NOT NULL DEFAULT FALSE;
   `);
 
   await pool.query(`

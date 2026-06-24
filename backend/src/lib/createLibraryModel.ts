@@ -14,6 +14,7 @@ export interface LibraryModelConfig {
   fields: FieldSpec[];
   statusField: string;
   completion: { column: string; field: string; whenStatus: string };
+  collectionColumn?: string;
 }
 
 export interface LibraryModel<TEntry, TCreate, TUpdate> {
@@ -24,6 +25,7 @@ export interface LibraryModel<TEntry, TCreate, TUpdate> {
   update(id: string, data: TUpdate): Promise<TEntry | null>;
   remove(id: string): Promise<boolean>;
   removeMany(ids: string[]): Promise<number>;
+  setCover?(id: string): Promise<TEntry | null>;
 }
 
 type Row = Record<string, unknown>;
@@ -31,7 +33,7 @@ type Row = Record<string, unknown>;
 export function createLibraryModel<TEntry, TCreate, TUpdate>(
   config: LibraryModelConfig
 ): LibraryModel<TEntry, TCreate, TUpdate> {
-  const { table, externalId, fields, statusField, completion } = config;
+  const { table, externalId, fields, statusField, completion, collectionColumn } = config;
 
   const toEntry = (row: Row): TEntry => {
     const entry: Row = { id: row.id };
@@ -132,5 +134,39 @@ export function createLibraryModel<TEntry, TCreate, TUpdate>(
     return result.rowCount ?? 0;
   };
 
-  return { findAll, findById, findByExternalId, create, update, remove, removeMany };
+  const setCover = async (id: string): Promise<TEntry | null> => {
+    const col = collectionColumn as string;
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        `UPDATE ${table} SET is_cover = FALSE
+         WHERE ${col} = (SELECT ${col} FROM ${table} WHERE id = $1) AND ${col} IS NOT NULL`,
+        [id]
+      );
+      const result = await client.query<Row>(
+        `UPDATE ${table} SET is_cover = TRUE WHERE id = $1 RETURNING *`,
+        [id]
+      );
+      await client.query("COMMIT");
+      return result.rows[0] ? toEntry(result.rows[0]) : null;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  };
+
+  const model: LibraryModel<TEntry, TCreate, TUpdate> = {
+    findAll,
+    findById,
+    findByExternalId,
+    create,
+    update,
+    remove,
+    removeMany,
+  };
+  if (collectionColumn) model.setCover = setCover;
+  return model;
 }

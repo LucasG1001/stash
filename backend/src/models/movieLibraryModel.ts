@@ -14,9 +14,11 @@ export const movieLibraryModel = createLibraryModel<MovieLibraryEntry, CreateMov
     { column: "runtime", field: "runtime", default: null },
     { column: "movie_status", field: "movieStatus", default: "RELEASED" },
     { column: "collection_id", field: "collectionId", default: null },
+    { column: "is_cover", field: "isCover", default: false, readonly: true },
   ],
   statusField: "status",
   completion: { column: "watched_at", field: "watchedAt", whenStatus: "watched" },
+  collectionColumn: "collection_id",
 });
 
 function toEntry(row: MovieLibraryRow): MovieLibraryEntry {
@@ -31,6 +33,7 @@ function toEntry(row: MovieLibraryRow): MovieLibraryEntry {
     runtime: row.runtime,
     movieStatus: row.movie_status,
     collectionId: row.collection_id,
+    isCover: row.is_cover,
     watchedAt: row.watched_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

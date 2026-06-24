@@ -49,6 +49,7 @@ export function AnimePage() {
     error: libraryError,
     add: addEntry,
     update: updateEntry,
+    setCover: setCoverEntry,
     remove: removeEntry,
     removeMany: removeManyEntries,
     findByAnilistId,
@@ -294,6 +295,10 @@ export function AnimePage() {
           onClose={() => setSelectedAnimeForModal(null)}
           onSave={handleModalSave}
           onRemove={handleModalRemove}
+          onSetCover={(id) => {
+            setCoverEntry(id);
+            setSelectedAnimeForModal(null);
+          }}
         />
       )}
     </div>

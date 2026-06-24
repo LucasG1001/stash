@@ -48,6 +48,7 @@ export function MoviesPage() {
     error: libraryError,
     add: addEntry,
     update: updateEntry,
+    setCover: setCoverEntry,
     remove: removeEntry,
     removeMany: removeManyEntries,
     findByTmdbId,
@@ -286,6 +287,10 @@ export function MoviesPage() {
           onClose={() => setSelectedMovieForModal(null)}
           onSave={handleModalSave}
           onRemove={handleModalRemove}
+          onSetCover={(id) => {
+            setCoverEntry(id);
+            setSelectedMovieForModal(null);
+          }}
         />
       )}
     </div>

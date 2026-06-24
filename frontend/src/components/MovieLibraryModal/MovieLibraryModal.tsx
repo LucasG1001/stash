@@ -9,9 +9,10 @@ interface MovieLibraryModalProps {
   onClose: () => void;
   onSave: (movie: MovieCard, data: { status: MovieLibraryStatus; score: number }) => void;
   onRemove: (id: string) => void;
+  onSetCover: (id: string) => void;
 }
 
-export function MovieLibraryModal({ movie, libraryEntry, onClose, onSave, onRemove }: MovieLibraryModalProps) {
+export function MovieLibraryModal({ movie, libraryEntry, onClose, onSave, onRemove, onSetCover }: MovieLibraryModalProps) {
   return (
     <LibraryModalBase
       title={movie.title}
@@ -21,6 +22,9 @@ export function MovieLibraryModal({ movie, libraryEntry, onClose, onSave, onRemo
       initialStatus={libraryEntry?.status ?? "plan_to_watch"}
       initialScore={libraryEntry?.score ?? 0}
       hasEntry={!!libraryEntry}
+      canSetCover={!!libraryEntry && libraryEntry.collectionId != null}
+      isCover={libraryEntry?.isCover ?? false}
+      onSetCover={() => libraryEntry && onSetCover(libraryEntry.id)}
       onClose={onClose}
       onSave={(data) => onSave(movie, { status: data.status as MovieLibraryStatus, score: data.score })}
       onRemove={() => libraryEntry && onRemove(libraryEntry.id)}

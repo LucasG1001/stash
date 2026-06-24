@@ -9,6 +9,9 @@ interface LibraryModalBaseProps {
   initialStatus: string;
   initialScore: number;
   hasEntry: boolean;
+  canSetCover?: boolean;
+  isCover?: boolean;
+  onSetCover?: () => void;
   onClose: () => void;
   onSave: (data: { status: string; score: number }) => void;
   onRemove: () => void;
@@ -22,6 +25,9 @@ export function LibraryModalBase({
   initialStatus,
   initialScore,
   hasEntry,
+  canSetCover = false,
+  isCover = false,
+  onSetCover,
   onClose,
   onSave,
   onRemove,
@@ -93,6 +99,12 @@ export function LibraryModalBase({
               </button>
             )}
           </div>
+
+          {canSetCover && (
+            <button className={styles.coverButton} onClick={onSetCover} disabled={isCover}>
+              {isCover ? "✓ Capa da coleção" : "Definir como capa da coleção"}
+            </button>
+          )}
         </div>
       </div>
     </div>

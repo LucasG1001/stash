@@ -11,6 +11,7 @@ export interface GameLibraryEntry {
   metacritic: number | null;
   gameStatus: string;
   collectionId: number | null;
+  isCover: boolean;
   finishedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -49,6 +50,7 @@ export interface GameLibraryRow {
   metacritic: number | null;
   game_status: string;
   collection_id: number | null;
+  is_cover: boolean;
   finished_at: string | null;
   created_at: string;
   updated_at: string;

@@ -11,6 +11,7 @@ export interface MovieLibraryEntry {
   runtime: number | null;
   movieStatus: string;
   collectionId: number | null;
+  isCover: boolean;
   watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -49,6 +50,7 @@ export interface MovieLibraryRow {
   runtime: number | null;
   movie_status: string;
   collection_id: number | null;
+  is_cover: boolean;
   watched_at: string | null;
   created_at: string;
   updated_at: string;

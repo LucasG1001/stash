@@ -11,6 +11,7 @@ export interface GameLibraryEntry {
   metacritic: number | null;
   gameStatus: string;
   collectionId: number | null;
+  isCover: boolean;
   finishedAt: string | null;
   createdAt: string;
   updatedAt: string;

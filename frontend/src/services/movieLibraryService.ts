@@ -16,6 +16,11 @@ export async function updateLibraryEntry(id: string, data: UpdateMovieLibraryEnt
   return response.data;
 }
 
+export async function setCover(id: string): Promise<MovieLibraryEntry> {
+  const response = await api.put<MovieLibraryEntry>(`/api/movie-library/${id}/cover`);
+  return response.data;
+}
+
 export async function removeFromLibrary(id: string): Promise<void> {
   await api.delete(`/api/movie-library/${id}`);
 }

@@ -16,6 +16,11 @@ export async function updateLibraryEntry(id: string, data: UpdateLibraryEntry): 
   return response.data;
 }
 
+export async function setCover(id: string): Promise<LibraryEntry> {
+  const response = await api.put<LibraryEntry>(`/api/library/${id}/cover`);
+  return response.data;
+}
+
 export async function removeFromLibrary(id: string): Promise<void> {
   await api.delete(`/api/library/${id}`);
 }

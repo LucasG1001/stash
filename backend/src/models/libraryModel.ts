@@ -12,6 +12,7 @@ function toLibraryEntry(row: LibraryRow): LibraryEntry {
     totalEpisodes: row.total_episodes,
     animeStatus: row.anime_status,
     franchiseId: row.franchise_id,
+    isCover: row.is_cover,
     format: row.format,
     seasonYear: row.season_year,
     nextAiringEpisode: row.next_airing_episode,
@@ -183,6 +184,29 @@ export async function updateSyncData(anilistId: number, data: SyncLibraryData): 
       data.seasonYear ?? null,
     ]
   );
+}
+
+export async function setCover(id: string): Promise<LibraryEntry | null> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `UPDATE anime_library SET is_cover = FALSE
+       WHERE franchise_id = (SELECT franchise_id FROM anime_library WHERE id = $1) AND franchise_id IS NOT NULL`,
+      [id]
+    );
+    const result = await client.query<LibraryRow>(
+      `UPDATE anime_library SET is_cover = TRUE WHERE id = $1 RETURNING *`,
+      [id]
+    );
+    await client.query("COMMIT");
+    return result.rows[0] ? toLibraryEntry(result.rows[0]) : null;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function remove(id: string): Promise<boolean> {

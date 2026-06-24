@@ -21,11 +21,7 @@ function byChronology(a: MovieLibraryEntry, b: MovieLibraryEntry): number {
 }
 
 function pickRepresentative(ordered: MovieLibraryEntry[]): MovieLibraryEntry {
-  let best = ordered[0];
-  for (const entry of ordered) {
-    if (entry.score > best.score) best = entry;
-  }
-  return best;
+  return ordered.find((m) => m.isCover) ?? ordered[0];
 }
 
 export function buildMovieCollectionGroups(
@@ -45,7 +41,8 @@ export function buildMovieCollectionGroups(
   map.forEach((members, key) => {
     const ordered = [...members].sort(byChronology);
     const completedCount = ordered.filter((m) => m.status === "watched").length;
-    groups.push({ key, representative: pickRepresentative(ordered), members: [...ordered].reverse(), count: ordered.length, completedCount });
+    const representative = pickRepresentative(ordered);
+    groups.push({ key, representative, members: [...ordered].reverse(), count: ordered.length, completedCount });
   });
 
   if (scoreSortDir !== "off") {

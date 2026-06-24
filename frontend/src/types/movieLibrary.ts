@@ -11,6 +11,7 @@ export interface MovieLibraryEntry {
   runtime: number | null;
   movieStatus: string;
   collectionId: number | null;
+  isCover: boolean;
   watchedAt: string | null;
   createdAt: string;
   updatedAt: string;

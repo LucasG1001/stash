@@ -83,6 +83,20 @@ export async function update(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function setCover(req: Request, res: Response): Promise<void> {
+  try {
+    const id = String(req.params.id);
+    const entry = await libraryModel.setCover(id);
+    if (!entry) {
+      res.status(404).json({ error: "Anime não encontrado na biblioteca." });
+      return;
+    }
+    res.json(entry);
+  } catch {
+    res.status(500).json({ error: "Erro ao definir capa da coleção." });
+  }
+}
+
 export async function remove(req: Request, res: Response): Promise<void> {
   try {
     const id = String(req.params.id);

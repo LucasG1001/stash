@@ -48,6 +48,7 @@ export function GamesPage() {
     error: libraryError,
     add: addEntry,
     update: updateEntry,
+    setCover: setCoverEntry,
     remove: removeEntry,
     removeMany: removeManyEntries,
     findByIgdbId,
@@ -287,6 +288,10 @@ export function GamesPage() {
           onClose={() => setSelectedGameForModal(null)}
           onSave={handleModalSave}
           onRemove={handleModalRemove}
+          onSetCover={(id) => {
+            setCoverEntry(id);
+            setSelectedGameForModal(null);
+          }}
         />
       )}
     </div>

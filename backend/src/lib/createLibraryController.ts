@@ -27,6 +27,7 @@ export interface LibraryController {
   getAll(req: Request, res: Response): Promise<void>;
   create(req: Request, res: Response): Promise<void>;
   update(req: Request, res: Response): Promise<void>;
+  setCover(req: Request, res: Response): Promise<void>;
   remove(req: Request, res: Response): Promise<void>;
   removeMany(req: Request, res: Response): Promise<void>;
 }
@@ -95,6 +96,24 @@ export function createLibraryController<TEntry, TCreate, TUpdate>(
     }
   };
 
+  const setCover = async (req: Request, res: Response): Promise<void> => {
+    try {
+      if (!model.setCover) {
+        res.status(400).json({ error: messages.invalid });
+        return;
+      }
+      const id = String(req.params.id);
+      const entry = await model.setCover(id);
+      if (!entry) {
+        res.status(404).json({ error: messages.notFound });
+        return;
+      }
+      res.json(entry);
+    } catch {
+      res.status(500).json({ error: messages.errorUpdate });
+    }
+  };
+
   const remove = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = String(req.params.id);
@@ -123,5 +142,5 @@ export function createLibraryController<TEntry, TCreate, TUpdate>(
     }
   };
 
-  return { getAll, create, update, remove, removeMany };
+  return { getAll, create, update, setCover, remove, removeMany };
 }

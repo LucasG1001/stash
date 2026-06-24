@@ -6,7 +6,8 @@ export function useMovieLibrary() {
   const store = useLibraryStore<MovieLibraryEntry, CreateMovieLibraryEntry, UpdateMovieLibraryEntry>(
     "movie",
     movieLibraryService,
-    (entry) => entry.tmdbId
+    (entry) => entry.tmdbId,
+    (entry) => entry.collectionId
   );
   return { ...store, findByTmdbId: store.findByExternalId };
 }

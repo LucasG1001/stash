@@ -9,9 +9,10 @@ interface GameLibraryModalProps {
   onClose: () => void;
   onSave: (game: GameCard, data: { status: GameLibraryStatus; score: number }) => void;
   onRemove: (id: string) => void;
+  onSetCover: (id: string) => void;
 }
 
-export function GameLibraryModal({ game, libraryEntry, onClose, onSave, onRemove }: GameLibraryModalProps) {
+export function GameLibraryModal({ game, libraryEntry, onClose, onSave, onRemove, onSetCover }: GameLibraryModalProps) {
   return (
     <LibraryModalBase
       title={game.title}
@@ -21,6 +22,9 @@ export function GameLibraryModal({ game, libraryEntry, onClose, onSave, onRemove
       initialStatus={libraryEntry?.status ?? "plan_to_play"}
       initialScore={libraryEntry?.score ?? 0}
       hasEntry={!!libraryEntry}
+      canSetCover={!!libraryEntry && libraryEntry.collectionId != null}
+      isCover={libraryEntry?.isCover ?? false}
+      onSetCover={() => libraryEntry && onSetCover(libraryEntry.id)}
       onClose={onClose}
       onSave={(data) => onSave(game, { status: data.status as GameLibraryStatus, score: data.score })}
       onRemove={() => libraryEntry && onRemove(libraryEntry.id)}

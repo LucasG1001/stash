@@ -6,7 +6,8 @@ export function useLibrary() {
   const store = useLibraryStore<LibraryEntry, CreateLibraryEntry, UpdateLibraryEntry>(
     "anime",
     libraryService,
-    (entry) => entry.anilistId
+    (entry) => entry.anilistId,
+    (entry) => entry.franchiseId
   );
   return { ...store, findByAnilistId: store.findByExternalId };
 }
