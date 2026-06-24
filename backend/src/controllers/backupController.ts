@@ -6,6 +6,7 @@ import { movieLibraryModel } from "../models/movieLibraryModel.js";
 import { seriesLibraryModel } from "../models/seriesLibraryModel.js";
 import { gameLibraryModel } from "../models/gameLibraryModel.js";
 import { bookLibraryModel } from "../models/bookLibraryModel.js";
+import { notifyError } from "../services/notifyService.js";
 
 interface ColumnSpec {
   column: string;
@@ -131,7 +132,8 @@ export async function exportAll(_req: Request, res: Response): Promise<void> {
       games,
       books,
     });
-  } catch {
+  } catch (error) {
+    void notifyError("API backup/export", error);
     res.status(500).json({ error: "Erro ao exportar a biblioteca." });
   }
 }
@@ -180,8 +182,9 @@ export async function importAll(req: Request, res: Response): Promise<void> {
     }
     await client.query("COMMIT");
     res.json({ imported });
-  } catch {
+  } catch (error) {
     await client.query("ROLLBACK");
+    void notifyError("API backup/import", error);
     res.status(500).json({ error: "Erro ao importar o backup." });
   } finally {
     client.release();

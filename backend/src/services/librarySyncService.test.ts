@@ -7,6 +7,7 @@ import type { AnimeCard } from "../types/anime.js";
 vi.mock("./notifyService.js", () => ({
   notifyNewEpisode: vi.fn(),
   notifyAnimeFinished: vi.fn(),
+  notifyError: vi.fn(),
 }));
 
 function makeEntry(overrides: Partial<LibraryEntry> = {}): LibraryEntry {

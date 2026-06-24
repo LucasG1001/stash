@@ -4,6 +4,7 @@ import { gameLibraryModel, bulkUpsertGames } from "../models/gameLibraryModel.js
 import { discoverGameCollection } from "../services/igdbService.js";
 import { gameCreateSchema, gameUpdateSchema } from "../schemas/library.js";
 import type { CreateGameLibraryEntry } from "../types/gameLibrary.js";
+import { notifyError } from "../services/notifyService.js";
 
 const base = createLibraryController({
   model: gameLibraryModel,
@@ -66,7 +67,8 @@ export async function create(req: Request, res: Response): Promise<void> {
     const group = await bulkUpsertGames(entries, collectionId);
     group.sort((a, b) => (a.igdbId === data.igdbId ? -1 : b.igdbId === data.igdbId ? 1 : 0));
     res.status(201).json(group);
-  } catch {
+  } catch (error) {
+    void notifyError("API POST /api/game-library", error);
     res.status(500).json({ error: "Erro ao adicionar jogo à biblioteca." });
   }
 }

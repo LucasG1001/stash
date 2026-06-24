@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { fetchPopularMovies, fetchNowPlayingMovies, searchMovies, fetchMovieById } from "../services/tmdbService.js";
+import { notifyError } from "../services/notifyService.js";
 
 export async function getPopular(req: Request, res: Response): Promise<void> {
   try {
@@ -13,7 +14,8 @@ export async function getPopular(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await fetchPopularMovies(year, month, page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API movie/popular", error);
     res.status(500).json({ error: "Erro ao buscar filmes populares." });
   }
 }
@@ -23,7 +25,8 @@ export async function getNowPlaying(req: Request, res: Response): Promise<void> 
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await fetchNowPlayingMovies(page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API movie/now-playing", error);
     res.status(500).json({ error: "Erro ao buscar filmes em cartaz." });
   }
 }
@@ -38,7 +41,8 @@ export async function search(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await searchMovies(query, page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API movie/search", error);
     res.status(500).json({ error: "Erro ao buscar filmes." });
   }
 }
@@ -52,7 +56,8 @@ export async function getById(req: Request, res: Response): Promise<void> {
     }
     const movie = await fetchMovieById(id);
     res.json(movie);
-  } catch {
+  } catch (error) {
+    void notifyError("API movie/:id", error);
     res.status(500).json({ error: "Erro ao buscar detalhes do filme." });
   }
 }

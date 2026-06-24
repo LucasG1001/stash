@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { fetchPopularSeries, searchSeries, fetchSeriesById } from "../services/tmdbSeriesService.js";
+import { notifyError } from "../services/notifyService.js";
 
 export async function getPopular(req: Request, res: Response): Promise<void> {
   try {
@@ -13,7 +14,8 @@ export async function getPopular(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await fetchPopularSeries(year, month, page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API series/popular", error);
     res.status(500).json({ error: "Erro ao buscar séries populares." });
   }
 }
@@ -28,7 +30,8 @@ export async function search(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await searchSeries(query, page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API series/search", error);
     res.status(500).json({ error: "Erro ao buscar séries." });
   }
 }
@@ -42,7 +45,8 @@ export async function getById(req: Request, res: Response): Promise<void> {
     }
     const series = await fetchSeriesById(id);
     res.json(series);
-  } catch {
+  } catch (error) {
+    void notifyError("API series/:id", error);
     res.status(500).json({ error: "Erro ao buscar detalhes da série." });
   }
 }

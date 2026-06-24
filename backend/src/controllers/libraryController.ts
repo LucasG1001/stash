@@ -4,13 +4,15 @@ import { discoverFranchise } from "../services/anilistService.js";
 import { refreshStaleEntries } from "../services/librarySyncService.js";
 import { animeCreateSchema, animeUpdateSchema } from "../schemas/library.js";
 import type { CreateLibraryEntry } from "../types/library.js";
+import { notifyError } from "../services/notifyService.js";
 
 export async function getAll(_req: Request, res: Response): Promise<void> {
   try {
     await refreshStaleEntries();
     const entries = await libraryModel.findAll();
     res.json(entries);
-  } catch {
+  } catch (error) {
+    void notifyError("API GET /api/library", error);
     res.status(500).json({ error: "Erro ao buscar biblioteca." });
   }
 }
@@ -56,7 +58,8 @@ export async function create(req: Request, res: Response): Promise<void> {
     const group = await libraryModel.bulkUpsert(entries, franchiseId);
     group.sort((a, b) => (a.anilistId === anilistId ? -1 : b.anilistId === anilistId ? 1 : 0));
     res.status(201).json(group);
-  } catch {
+  } catch (error) {
+    void notifyError("API POST /api/library", error);
     res.status(500).json({ error: "Erro ao adicionar anime à biblioteca." });
   }
 }
@@ -78,7 +81,8 @@ export async function update(req: Request, res: Response): Promise<void> {
     }
 
     res.json(entry);
-  } catch {
+  } catch (error) {
+    void notifyError("API PUT /api/library/:id", error);
     res.status(500).json({ error: "Erro ao atualizar anime na biblioteca." });
   }
 }
@@ -92,7 +96,8 @@ export async function setCover(req: Request, res: Response): Promise<void> {
       return;
     }
     res.json(entry);
-  } catch {
+  } catch (error) {
+    void notifyError("API PUT /api/library/:id/cover", error);
     res.status(500).json({ error: "Erro ao definir capa da coleção." });
   }
 }
@@ -106,7 +111,8 @@ export async function remove(req: Request, res: Response): Promise<void> {
       return;
     }
     res.status(204).send();
-  } catch {
+  } catch (error) {
+    void notifyError("API DELETE /api/library/:id", error);
     res.status(500).json({ error: "Erro ao remover anime da biblioteca." });
   }
 }
@@ -120,7 +126,8 @@ export async function removeMany(req: Request, res: Response): Promise<void> {
     }
     const deleted = await libraryModel.removeMany(ids as string[]);
     res.json({ deleted });
-  } catch {
+  } catch (error) {
+    void notifyError("API POST /api/library/bulk-delete", error);
     res.status(500).json({ error: "Erro ao remover anime da biblioteca." });
   }
 }

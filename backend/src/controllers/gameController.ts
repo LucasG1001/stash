@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import axios from "axios";
 import { fetchPopularGames, fetchUpcomingGames, searchGames, fetchGameById } from "../services/igdbService.js";
+import { notifyError } from "../services/notifyService.js";
 
 const IGDB_IMAGE_BASE = "https://images.igdb.com/igdb/image/upload";
 const IMAGE_SIZE_RE = /^t_[a-z0-9_]+$/;
@@ -23,7 +24,8 @@ export async function proxyImage(req: Request, res: Response): Promise<void> {
     res.setHeader("Content-Type", String(upstream.headers["content-type"] ?? "image/jpeg"));
     res.setHeader("Cache-Control", "public, max-age=2592000, immutable");
     res.send(Buffer.from(upstream.data));
-  } catch {
+  } catch (error) {
+    void notifyError("API game/image", error);
     res.status(502).json({ error: "Erro ao carregar imagem." });
   }
 }
@@ -40,7 +42,8 @@ export async function getPopular(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await fetchPopularGames(year, month, page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API game/popular", error);
     res.status(500).json({ error: "Erro ao buscar jogos populares." });
   }
 }
@@ -50,7 +53,8 @@ export async function getUpcoming(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await fetchUpcomingGames(page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API game/upcoming", error);
     res.status(500).json({ error: "Erro ao buscar lançamentos." });
   }
 }
@@ -65,7 +69,8 @@ export async function search(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await searchGames(query, page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API game/search", error);
     res.status(500).json({ error: "Erro ao buscar jogos." });
   }
 }
@@ -79,7 +84,8 @@ export async function getById(req: Request, res: Response): Promise<void> {
     }
     const game = await fetchGameById(id);
     res.json(game);
-  } catch {
+  } catch (error) {
+    void notifyError("API game/:id", error);
     res.status(500).json({ error: "Erro ao buscar detalhes do jogo." });
   }
 }

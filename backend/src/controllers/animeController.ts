@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { fetchSeasonAnimes, fetchPopularAnimes, searchAnimes, fetchAnimeById, getCurrentSeason } from "../services/anilistService.js";
+import { notifyError } from "../services/notifyService.js";
 
 export async function getSeason(req: Request, res: Response): Promise<void> {
   try {
@@ -21,7 +22,8 @@ export async function getSeason(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await fetchSeasonAnimes(season, year, page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API anime/season", error);
     res.status(500).json({ error: "Erro ao buscar animes da temporada." });
   }
 }
@@ -33,7 +35,8 @@ export async function getPopular(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await fetchPopularAnimes(page, year);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API anime/popular", error);
     res.status(500).json({ error: "Erro ao buscar animes populares." });
   }
 }
@@ -48,7 +51,8 @@ export async function search(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await searchAnimes(query, page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API anime/search", error);
     res.status(500).json({ error: "Erro ao buscar animes." });
   }
 }
@@ -62,7 +66,8 @@ export async function getById(req: Request, res: Response): Promise<void> {
     }
     const anime = await fetchAnimeById(id);
     res.json(anime);
-  } catch {
+  } catch (error) {
+    void notifyError("API anime/:id", error);
     res.status(500).json({ error: "Erro ao buscar detalhes do anime." });
   }
 }

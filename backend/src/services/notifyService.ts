@@ -63,6 +63,46 @@ async function send(type: string, payload: NotifyPayload): Promise<void> {
   }
 }
 
+// ---------- erros ----------
+
+const ERROR_DEDUPE_WINDOW_MS = 60 * 1000;
+const ERROR_DESCRIPTION_LIMIT = 3500;
+const recentErrors = new Map<string, number>();
+
+/**
+ * Envia qualquer erro do backend para o Telegram (mesmo canal das notificações).
+ * Nunca lança e registra no stdout. Erros idênticos são suprimidos por uma janela curta.
+ */
+export async function notifyError(
+  context: string,
+  error: unknown,
+  meta?: Record<string, string>
+): Promise<void> {
+  const message = error instanceof Error ? error.message : String(error);
+  const stack = error instanceof Error ? error.stack : undefined;
+
+  console.error(`[${context}]`, error);
+
+  const signature = `${context}::${message}`;
+  const now = Date.now();
+  const last = recentErrors.get(signature);
+  if (last !== undefined && now - last < ERROR_DEDUPE_WINDOW_MS) return;
+  recentErrors.set(signature, now);
+  for (const [key, ts] of recentErrors) {
+    if (now - ts >= ERROR_DEDUPE_WINDOW_MS) recentErrors.delete(key);
+  }
+
+  const description = (stack ? `${message}\n\n${stack}` : message).slice(0, ERROR_DESCRIPTION_LIMIT);
+  const fields: NotifyField[] = [
+    { name: "Origem", value: context, inline: true },
+    { name: "Ambiente", value: process.env.NODE_ENV ?? "development", inline: true },
+    { name: "Quando", value: new Date().toISOString() },
+    ...Object.entries(meta ?? {}).map(([name, value]) => ({ name, value: String(value).slice(0, 1024) })),
+  ];
+
+  await send("erro", { title: `🚨 Erro — ${context}`, description, fields });
+}
+
 // ---------- anime ----------
 
 function animeUrl(anilistId: number): string {

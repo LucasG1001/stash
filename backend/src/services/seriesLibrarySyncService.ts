@@ -1,6 +1,6 @@
 import { findStaleSeries, updateSeriesSyncData } from "../models/seriesLibraryModel.js";
 import { fetchSeriesSyncData, type SeriesSyncResult } from "./tmdbSeriesService.js";
-import { notifySeriesNewEpisode, notifySeriesFinished } from "./notifyService.js";
+import { notifySeriesNewEpisode, notifySeriesFinished, notifyError } from "./notifyService.js";
 import type { SeriesLibraryEntry } from "../types/seriesLibrary.js";
 
 const ONGOING_TTL_HOURS = 12;
@@ -46,7 +46,7 @@ async function doRefresh(): Promise<void> {
           nextAiringEpisode: fresh.nextAiringEpisode,
         });
       } catch (error) {
-        console.error(`Falha ao revalidar série ${entry.tmdbId} com o TMDB:`, error);
+        await notifyError("seriesLibrarySyncService.refreshStaleSeries", error, { tmdbId: String(entry.tmdbId) });
       }
     })
   );

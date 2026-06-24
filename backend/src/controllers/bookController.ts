@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { fetchBooksByGenre, searchBooks, fetchBookById } from "../services/googleBooksService.js";
+import { notifyError } from "../services/notifyService.js";
 
 export async function getByGenre(req: Request, res: Response): Promise<void> {
   try {
@@ -7,7 +8,8 @@ export async function getByGenre(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await fetchBooksByGenre(genre, page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API book/list", error);
     res.status(500).json({ error: "Erro ao buscar livros." });
   }
 }
@@ -22,7 +24,8 @@ export async function search(req: Request, res: Response): Promise<void> {
     const page = parseInt(String(req.query.page || "1")) || 1;
     const result = await searchBooks(query, page);
     res.json(result);
-  } catch {
+  } catch (error) {
+    void notifyError("API book/list", error);
     res.status(500).json({ error: "Erro ao buscar livros." });
   }
 }
@@ -36,7 +39,8 @@ export async function getById(req: Request, res: Response): Promise<void> {
     }
     const book = await fetchBookById(id);
     res.json(book);
-  } catch {
+  } catch (error) {
+    void notifyError("API book/:id", error);
     res.status(500).json({ error: "Erro ao buscar detalhes do livro." });
   }
 }

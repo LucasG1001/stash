@@ -19,11 +19,12 @@ import { bookRoutes } from "./routes/bookRoutes.js";
 import { bookLibraryRoutes } from "./routes/bookLibraryRoutes.js";
 import { backupRoutes } from "./routes/backupRoutes.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
+import { notifyError } from "./services/notifyService.js";
 
 const app = express();
 const PORT = process.env.PORT || 3333;
 const SYNC_INTERVAL_MS = 30 * 60 * 1000;
-const COLLECTION_SYNC_HOUR = 8;
+const COLLECTION_SYNC_HOUR = 4;
 const COLLECTION_SYNC_MINUTE = 0;
 
 function scheduleDailyAt(hour: number, minute: number, task: () => void): void {
@@ -61,13 +62,21 @@ async function start(): Promise<void> {
     process.stdout.write(`Backend rodando em http://localhost:${PORT}\n`);
   });
   setInterval(() => {
-    refreshStaleEntries().catch((error) => console.error("Falha no job de sincronização:", error));
-    refreshStaleSeries().catch((error) => console.error("Falha no job de sincronização de séries:", error));
+    refreshStaleEntries().catch((error) => void notifyError("Job refreshStaleEntries", error));
+    refreshStaleSeries().catch((error) => void notifyError("Job refreshStaleSeries", error));
   }, SYNC_INTERVAL_MS);
 
   const runCollectionSync = () =>
-    refreshCollections().catch((error) => console.error("Falha no job de sincronização de coleções:", error));
+    refreshCollections().catch((error) => void notifyError("Job refreshCollections", error));
   scheduleDailyAt(COLLECTION_SYNC_HOUR, COLLECTION_SYNC_MINUTE, runCollectionSync);
 }
+
+process.on("unhandledRejection", (reason) => {
+  void notifyError("unhandledRejection", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  void notifyError("uncaughtException", error).finally(() => process.exit(1));
+});
 
 start();

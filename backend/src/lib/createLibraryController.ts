@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import type { ZodType } from "zod";
 import type { LibraryModel } from "./createLibraryModel.js";
+import { notifyError } from "../services/notifyService.js";
 
 export interface LibraryControllerMessages {
   required: string;
@@ -40,7 +41,8 @@ export function createLibraryController<TEntry, TCreate, TUpdate>(
   const getAll = async (_req: Request, res: Response): Promise<void> => {
     try {
       res.json(await model.findAll());
-    } catch {
+    } catch (error) {
+      void notifyError(messages.errorGetAll, error);
       res.status(500).json({ error: messages.errorGetAll });
     }
   };
@@ -68,7 +70,8 @@ export function createLibraryController<TEntry, TCreate, TUpdate>(
       const entry = await model.create(body as TCreate);
       if (onCreated) onCreated(entry);
       res.status(201).json(entry);
-    } catch {
+    } catch (error) {
+      void notifyError(messages.errorCreate, error);
       res.status(500).json({ error: messages.errorCreate });
     }
   };
@@ -91,7 +94,8 @@ export function createLibraryController<TEntry, TCreate, TUpdate>(
         return;
       }
       res.json(entry);
-    } catch {
+    } catch (error) {
+      void notifyError(messages.errorUpdate, error);
       res.status(500).json({ error: messages.errorUpdate });
     }
   };
@@ -109,7 +113,8 @@ export function createLibraryController<TEntry, TCreate, TUpdate>(
         return;
       }
       res.json(entry);
-    } catch {
+    } catch (error) {
+      void notifyError(messages.errorUpdate, error);
       res.status(500).json({ error: messages.errorUpdate });
     }
   };
@@ -123,7 +128,8 @@ export function createLibraryController<TEntry, TCreate, TUpdate>(
         return;
       }
       res.status(204).send();
-    } catch {
+    } catch (error) {
+      void notifyError(messages.errorRemove, error);
       res.status(500).json({ error: messages.errorRemove });
     }
   };
@@ -137,7 +143,8 @@ export function createLibraryController<TEntry, TCreate, TUpdate>(
       }
       const deleted = await model.removeMany(ids as string[]);
       res.json({ deleted });
-    } catch {
+    } catch (error) {
+      void notifyError(messages.errorRemove, error);
       res.status(500).json({ error: messages.errorRemove });
     }
   };

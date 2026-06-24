@@ -4,7 +4,7 @@ import { gameLibraryModel, bulkUpsertGames } from "../models/gameLibraryModel.js
 import { discoverFranchise } from "./anilistService.js";
 import { discoverCollection } from "./tmdbService.js";
 import { discoverGameCollection } from "./igdbService.js";
-import { notifyNewCollectionItem } from "./notifyService.js";
+import { notifyNewCollectionItem, notifyError } from "./notifyService.js";
 import type { AnimeCard } from "../types/anime.js";
 import type { MovieCard } from "../types/movie.js";
 import type { GameCard } from "../types/game.js";
@@ -74,7 +74,7 @@ async function syncOne<E, C, Cr>(adapter: CollectionSyncAdapter<E, C, Cr>): Prom
         added++;
       }
     } catch (error) {
-      console.error(`Falha ao sincronizar coleção (${adapter.label}, seed ${seed}):`, error);
+      await notifyError("collectionSyncService.syncOne", error, { mediaType: adapter.label, seed: String(seed) });
     }
   }
 

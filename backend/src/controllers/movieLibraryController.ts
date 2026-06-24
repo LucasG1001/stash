@@ -4,6 +4,7 @@ import { movieLibraryModel, bulkUpsertMovies } from "../models/movieLibraryModel
 import { discoverCollection } from "../services/tmdbService.js";
 import { movieCreateSchema, movieUpdateSchema } from "../schemas/library.js";
 import type { CreateMovieLibraryEntry } from "../types/movieLibrary.js";
+import { notifyError } from "../services/notifyService.js";
 
 const base = createLibraryController({
   model: movieLibraryModel,
@@ -65,7 +66,8 @@ export async function create(req: Request, res: Response): Promise<void> {
     const group = await bulkUpsertMovies(entries, collectionId);
     group.sort((a, b) => (a.tmdbId === data.tmdbId ? -1 : b.tmdbId === data.tmdbId ? 1 : 0));
     res.status(201).json(group);
-  } catch {
+  } catch (error) {
+    void notifyError("API POST /api/movie-library", error);
     res.status(500).json({ error: "Erro ao adicionar filme à biblioteca." });
   }
 }

@@ -1,6 +1,6 @@
 import * as libraryModel from "../models/libraryModel.js";
 import { fetchAnimesByIds } from "./anilistService.js";
-import { notifyNewEpisode, notifyAnimeFinished } from "./notifyService.js";
+import { notifyNewEpisode, notifyAnimeFinished, notifyError } from "./notifyService.js";
 import type { AniListNextAiringEpisode } from "../types/anime.js";
 import type { LibraryEntry } from "../types/library.js";
 import type { AnimeCard } from "../types/anime.js";
@@ -66,6 +66,6 @@ async function doRefresh(): Promise<void> {
       })
     );
   } catch (error) {
-    console.error("Falha ao revalidar biblioteca com o AniList:", error);
+    await notifyError("librarySyncService.refreshStaleEntries", error);
   }
 }
