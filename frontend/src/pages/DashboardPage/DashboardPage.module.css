@@ -12,6 +12,8 @@
 }
 
 .counter {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -25,18 +27,24 @@
 }
 
 .counter:hover {
-  border-color: var(--color-accent);
+  border-color: var(--media-color);
   transform: translateY(-2px);
 }
 
-.counterIcon {
-  width: 22px;
-  height: 22px;
-  color: var(--color-text-tertiary);
-  margin-bottom: var(--spacing-xs);
+.watermark {
+  position: absolute;
+  right: -8px;
+  bottom: -12px;
+  width: 76px;
+  height: 76px;
+  color: var(--media-color);
+  opacity: 0.1;
+  pointer-events: none;
 }
 
 .counterValue {
+  position: relative;
+  z-index: 1;
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-extrabold);
   color: var(--color-text-primary);
@@ -44,8 +52,25 @@
 }
 
 .counterLabel {
+  position: relative;
+  z-index: 1;
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
+}
+
+.delta {
+  position: relative;
+  z-index: 1;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--media-color);
+}
+
+.context {
+  position: relative;
+  z-index: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
 }
 
 .block {

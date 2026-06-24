@@ -42,6 +42,12 @@
   --color-status-finished: #3b82f6;
   --color-status-upcoming: #f59e0b;
 
+  --color-media-anime: #8b5cf6;
+  --color-media-movie: #3b82f6;
+  --color-media-series: #f43f5e;
+  --color-media-book: #f59e0b;
+  --color-media-game: #22c55e;
+
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --font-size-xs: 0.6875rem;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useLibrary } from "../../hooks/useLibrary";
 import { useMovieLibrary } from "../../hooks/useMovieLibrary";
@@ -30,6 +30,25 @@ function itemWhen(item: AgendaItem, withDate: boolean): string {
   return time ? `${date} ${time}` : date;
 }
 
+function countByStatus<T extends { status: string }>(entries: T[], status: string): number {
+  return entries.filter((entry) => entry.status === status).length;
+}
+
+function countThisYear<T>(entries: T[], getDate: (entry: T) => string | null): number {
+  const year = new Date().getFullYear();
+  return entries.filter((entry) => {
+    const date = getDate(entry);
+    return date !== null && new Date(date).getFullYear() === year;
+  }).length;
+}
+
+function contextLine(inProgress: number | null, backlog: number): string {
+  const segments: string[] = [];
+  if (inProgress !== null && inProgress > 0) segments.push(`${inProgress} em andamento`);
+  if (backlog > 0) segments.push(`${backlog} na pilha`);
+  return segments.join(" · ");
+}
+
 export function DashboardPage() {
   const { entries: animes } = useLibrary();
   const { entries: movies } = useMovieLibrary();
@@ -43,13 +62,43 @@ export function DashboardPage() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
 
-  const counters = [
-    { label: "Anime", path: "/anime", icon: AnimeIcon, count: animes.filter((e) => e.status === "watched").length },
-    { label: "Filmes", path: "/filmes", icon: MovieIcon, count: movies.filter((e) => e.status === "watched").length },
-    { label: "Séries", path: "/series", icon: SeriesIcon, count: series.filter((e) => e.status === "watched").length },
-    { label: "Livros", path: "/livros", icon: BookIcon, count: books.filter((e) => e.status === "read").length },
-    { label: "Jogos", path: "/jogos", icon: GameIcon, count: games.filter((e) => e.status === "beaten").length },
-  ];
+  const counters = useMemo(() => [
+    {
+      label: "Anime", path: "/anime", icon: AnimeIcon, color: "var(--color-media-anime)",
+      completed: countByStatus(animes, "watched"),
+      inProgress: countByStatus(animes, "watching"),
+      backlog: countByStatus(animes, "plan_to_watch"),
+      thisYear: countThisYear(animes, (e) => e.watchedAt),
+    },
+    {
+      label: "Filmes", path: "/filmes", icon: MovieIcon, color: "var(--color-media-movie)",
+      completed: countByStatus(movies, "watched"),
+      inProgress: null,
+      backlog: countByStatus(movies, "plan_to_watch"),
+      thisYear: countThisYear(movies, (e) => e.watchedAt),
+    },
+    {
+      label: "Séries", path: "/series", icon: SeriesIcon, color: "var(--color-media-series)",
+      completed: countByStatus(series, "watched"),
+      inProgress: countByStatus(series, "watching"),
+      backlog: countByStatus(series, "plan_to_watch"),
+      thisYear: countThisYear(series, (e) => e.watchedAt),
+    },
+    {
+      label: "Livros", path: "/livros", icon: BookIcon, color: "var(--color-media-book)",
+      completed: countByStatus(books, "read"),
+      inProgress: countByStatus(books, "reading"),
+      backlog: countByStatus(books, "plan_to_read"),
+      thisYear: countThisYear(books, (e) => e.readAt),
+    },
+    {
+      label: "Jogos", path: "/jogos", icon: GameIcon, color: "var(--color-media-game)",
+      completed: countByStatus(games, "beaten"),
+      inProgress: countByStatus(games, "playing"),
+      backlog: countByStatus(games, "plan_to_play"),
+      thisYear: countThisYear(games, (e) => e.finishedAt),
+    },
+  ], [animes, movies, series, books, games]);
 
   const agenda = useMemo(
     () => buildAgenda(animes, movies, series, games, books),
@@ -98,11 +147,19 @@ export function DashboardPage() {
       <section className={styles.counters}>
         {counters.map((c) => {
           const Icon = c.icon;
+          const context = contextLine(c.inProgress, c.backlog);
           return (
-            <Link to={c.path} className={styles.counter} key={c.path}>
-              <Icon className={styles.counterIcon} />
-              <span className={styles.counterValue}>{c.count}</span>
+            <Link
+              to={c.path}
+              className={styles.counter}
+              key={c.path}
+              style={{ "--media-color": c.color } as CSSProperties}
+            >
+              <Icon className={styles.watermark} />
+              <span className={styles.counterValue}>{c.completed}</span>
               <span className={styles.counterLabel}>{c.label}</span>
+              {c.thisYear > 0 && <span className={styles.delta}>+{c.thisYear} este ano</span>}
+              {context && <span className={styles.context}>{context}</span>}
             </Link>
           );
         })}
