@@ -16,9 +16,12 @@ function byChronology(a: LibraryEntry, b: LibraryEntry): number {
   return a.anilistId - b.anilistId;
 }
 
-function pickRepresentative(members: LibraryEntry[]): LibraryEntry {
-  const root = members.find((m) => m.franchiseId != null && m.anilistId === m.franchiseId);
-  return root ?? members[0];
+function pickRepresentative(ordered: LibraryEntry[]): LibraryEntry {
+  let best = ordered[0];
+  for (const entry of ordered) {
+    if (entry.score > best.score) best = entry;
+  }
+  return best;
 }
 
 export function buildFranchiseGroups(
@@ -38,7 +41,7 @@ export function buildFranchiseGroups(
   map.forEach((members, key) => {
     const ordered = [...members].sort(byChronology);
     const completedCount = ordered.filter((m) => m.status === "watched").length;
-    groups.push({ key, representative: pickRepresentative(ordered), members: ordered, count: ordered.length, completedCount });
+    groups.push({ key, representative: pickRepresentative(ordered), members: [...ordered].reverse(), count: ordered.length, completedCount });
   });
 
   if (scoreSortDir !== "off") {
