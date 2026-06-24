@@ -10,6 +10,7 @@ export interface BookLibraryEntry {
   score: number;
   publishedDate: string | null;
   pageCount: number | null;
+  isCover: boolean;
   readAt: string | null;
   createdAt: string;
   updatedAt: string;

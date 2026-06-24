@@ -6,13 +6,18 @@ export async function fetchLibrary(): Promise<BookLibraryEntry[]> {
   return response.data;
 }
 
-export async function addToLibrary(entry: CreateBookLibraryEntry): Promise<BookLibraryEntry> {
-  const response = await api.post<BookLibraryEntry>("/api/book-library", entry);
+export async function addToLibrary(entry: CreateBookLibraryEntry): Promise<BookLibraryEntry[]> {
+  const response = await api.post<BookLibraryEntry[]>("/api/book-library", entry);
   return response.data;
 }
 
 export async function updateLibraryEntry(id: string, data: UpdateBookLibraryEntry): Promise<BookLibraryEntry> {
   const response = await api.put<BookLibraryEntry>(`/api/book-library/${id}`, data);
+  return response.data;
+}
+
+export async function setCover(id: string): Promise<BookLibraryEntry> {
+  const response = await api.put<BookLibraryEntry>(`/api/book-library/${id}/cover`);
   return response.data;
 }
 

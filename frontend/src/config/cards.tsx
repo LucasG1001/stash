@@ -132,18 +132,12 @@ export const bookCardConfig: MediaCardConfig<BookCard> = {
   formatScore: (s) => s.toFixed(1),
   scoreColor: scoreColorFn(4, 2.5),
   libraryStatusColor: catalogStatusColor,
-  renderMeta: (b) => {
-    const authorLine = b.authors.length > 0
-      ? b.authors.join(", ")
-      : b.publishedDate
-      ? b.publishedDate.slice(0, 4)
-      : "—";
-    return (
-      <div className={cardStyles.meta}>
-        <span className={cardStyles.author}>{authorLine}</span>
-      </div>
-    );
-  },
+  renderMeta: (b) => (
+    <div className={cardStyles.meta}>
+      <span className={cardStyles.author}>{b.authors.length > 0 ? b.authors.join(", ") : "—"}</span>
+      <span className={cardStyles.year}>📅 {b.publishedDate ? b.publishedDate.slice(0, 4) : "—"}</span>
+    </div>
+  ),
 };
 
 export const gameCardConfig: MediaCardConfig<GameCard> = {

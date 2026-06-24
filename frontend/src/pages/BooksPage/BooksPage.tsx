@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
 import { MediaGrid } from "../../components/MediaGrid/MediaGrid";
+import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { bookCardConfig } from "../../config/cards";
 import { BookDrawer } from "../../components/BookDrawer/BookDrawer";
 import { BookLibraryModal } from "../../components/BookLibraryModal/BookLibraryModal";
@@ -12,7 +13,10 @@ import type { BookCard, BookDetail } from "../../types/book";
 import type { BookLibraryStatus } from "../../types/bookLibrary";
 import { BOOK_LIBRARY_STATUS_LABELS } from "../../types/bookLibrary";
 import { BOOK_GENRES } from "../../utils/bookGenres";
-import { nextScoreSortDir, compareByScore, type ScoreSortDir } from "../../utils/librarySort";
+import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
+import { buildBookCollectionGroups, authorKey } from "../../utils/bookCollectionGroups";
+import { bookLibraryEntryToCard } from "../../utils/bookLibraryEntryToCard";
+import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
 import styles from "./BooksPage.module.css";
 
 const TABS = [
@@ -41,7 +45,9 @@ export function BooksPage() {
     error: libraryError,
     add: addEntry,
     update: updateEntry,
+    setCover: setCoverEntry,
     remove: removeEntry,
+    removeMany: removeManyEntries,
     findByGoogleBooksId,
   } = useBookLibrary();
 
@@ -115,36 +121,12 @@ export function BooksPage() {
     }
   }, [findByGoogleBooksId, updateEntry]);
 
-  const filteredLibraryEntries = libraryFilter === "all"
-    ? libraryEntries.filter(entry => entry.status !== "dropped")
-    : libraryEntries.filter(entry => entry.status === libraryFilter);
-
   const showReadSort = libraryFilter === "read";
 
-  const sortedLibraryEntries = scoreSortDir !== "off"
-    ? [...filteredLibraryEntries].sort((a, b) => compareByScore(a, b, scoreSortDir))
-    : showReadSort
-    ? [...filteredLibraryEntries].sort((a, b) => {
-        const ta = a.readAt ? new Date(a.readAt).getTime() : 0;
-        const tb = b.readAt ? new Date(b.readAt).getTime() : 0;
-        const diff = ta - tb;
-        return readSortDir === "desc" ? -diff : diff;
-      })
-    : filteredLibraryEntries;
-
-  const libraryBookCards: BookCard[] = sortedLibraryEntries.map((entry) => ({
-    id: entry.googleBooksId,
-    title: entry.title,
-    coverImage: entry.coverImage,
-    authors: entry.authors ? entry.authors.split(", ") : [],
-    publishedDate: entry.publishedDate,
-    averageRating: null,
-    ratingsCount: null,
-  }));
-
-  const displayBooks = activeTab === "library" ? libraryBookCards : books;
-  const displayLoading = activeTab === "library" ? libraryLoading : loading;
-  const displayError = activeTab === "library" ? libraryError : error;
+  const collectionGroups = filterGroupsByStatus(
+    buildBookCollectionGroups(libraryEntries, scoreSortDir, readSortDir, showReadSort),
+    libraryFilter
+  );
 
   const gridKey =
     activeTab === "library"
@@ -239,26 +221,43 @@ export function BooksPage() {
         </div>
       )}
 
-      <MediaGrid
-        items={displayBooks}
-        config={bookCardConfig}
-        loading={displayLoading}
-        error={displayError}
-        hasNextPage={activeTab !== "library" && hasNextPage}
-        onLoadMore={loadMore}
-        onCardClick={handleCardClick}
-        onAddToLibrary={handleOpenLibraryModal}
-        getLibraryEntry={(id) => findByGoogleBooksId(id)}
-        isLibraryView={activeTab === "library"}
-        animationKey={gridKey}
-        emptyMessage={
-          activeTab === "library"
-            ? "Sua biblioteca está vazia. Adicione livros para começar!"
-            : activeTab === "search" && searchQuery.length < 2
-            ? "Digite pelo menos 2 caracteres para buscar."
-            : "Nenhum livro encontrado."
-        }
-      />
+      {activeTab === "library" ? (
+        <FranchiseGrid
+          groups={collectionGroups}
+          loading={libraryLoading}
+          error={libraryError}
+          cardConfig={bookCardConfig}
+          entryToCard={bookLibraryEntryToCard}
+          getExternalId={(e) => e.googleBooksId}
+          onCardClick={handleCardClick}
+          onAddToLibrary={handleOpenLibraryModal}
+          getLibraryEntry={(id) => findByGoogleBooksId(id)}
+          onDeleteGroup={(group) => removeManyEntries(group.members.map((m) => m.id))}
+          expandTitle="Ver livros do autor"
+          animationKey={gridKey}
+          emptyMessage="Sua biblioteca está vazia."
+          emptyHint="Adicione livros para começar!"
+        />
+      ) : (
+        <MediaGrid
+          items={books}
+          config={bookCardConfig}
+          loading={loading}
+          error={error}
+          hasNextPage={hasNextPage}
+          onLoadMore={loadMore}
+          onCardClick={handleCardClick}
+          onAddToLibrary={handleOpenLibraryModal}
+          getLibraryEntry={(id) => findByGoogleBooksId(id)}
+          isLibraryView={false}
+          animationKey={gridKey}
+          emptyMessage={
+            activeTab === "search" && searchQuery.length < 2
+              ? "Digite pelo menos 2 caracteres para buscar."
+              : "Nenhum livro encontrado."
+          }
+        />
+      )}
 
       {selectedBookId !== null && (
         <BookDrawer
@@ -268,15 +267,28 @@ export function BooksPage() {
         />
       )}
 
-      {selectedBookForModal !== null && (
-        <BookLibraryModal
-          book={selectedBookForModal}
-          libraryEntry={findByGoogleBooksId(selectedBookForModal.id)}
-          onClose={() => setSelectedBookForModal(null)}
-          onSave={handleModalSave}
-          onRemove={handleModalRemove}
-        />
-      )}
+      {selectedBookForModal !== null && (() => {
+        const modalEntry = findByGoogleBooksId(selectedBookForModal.id);
+        const modalAuthorKey = modalEntry ? authorKey(modalEntry) : null;
+        const canSetCover =
+          !!modalEntry &&
+          modalAuthorKey !== null &&
+          libraryEntries.filter((e) => authorKey(e) === modalAuthorKey).length > 1;
+        return (
+          <BookLibraryModal
+            book={selectedBookForModal}
+            libraryEntry={modalEntry}
+            onClose={() => setSelectedBookForModal(null)}
+            onSave={handleModalSave}
+            onRemove={handleModalRemove}
+            onSetCover={(id) => {
+              setCoverEntry(id);
+              setSelectedBookForModal(null);
+            }}
+            canSetCover={canSetCover}
+          />
+        );
+      })()}
     </div>
   );
 }
