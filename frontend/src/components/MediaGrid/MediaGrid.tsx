@@ -1,25 +1,25 @@
-import type { BookCard as BookCardType } from "../../types/book";
-import type { BookLibraryEntry } from "../../types/bookLibrary";
-import { BookCard } from "../BookCard/BookCard";
+import { MediaCard, type MediaCardConfig } from "../MediaCard/MediaCard";
 import { LoadingSkeleton } from "../LoadingSkeleton/LoadingSkeleton";
-import styles from "./BookGrid.module.css";
+import styles from "./MediaGrid.module.css";
 
-interface BookGridProps {
-  books: BookCardType[];
+interface MediaGridProps<T extends { id: number | string }, E extends { status: string; score: number }> {
+  items: T[];
+  config: MediaCardConfig<T>;
   loading: boolean;
   error: string | null;
   hasNextPage: boolean;
   onLoadMore: () => void;
-  onCardClick: (book: BookCardType) => void;
-  onAddToLibrary: (book: BookCardType) => void;
-  getLibraryEntry: (googleBooksId: string) => BookLibraryEntry | undefined;
+  onCardClick: (item: T) => void;
+  onAddToLibrary: (item: T) => void;
+  getLibraryEntry: (id: T["id"]) => E | undefined;
   emptyMessage?: string;
   isLibraryView?: boolean;
   animationKey?: string;
 }
 
-export function BookGrid({
-  books,
+export function MediaGrid<T extends { id: number | string }, E extends { status: string; score: number }>({
+  items,
+  config,
   loading,
   error,
   hasNextPage,
@@ -27,15 +27,15 @@ export function BookGrid({
   onCardClick,
   onAddToLibrary,
   getLibraryEntry,
-  emptyMessage = "Nenhum livro encontrado.",
+  emptyMessage = "Nada encontrado.",
   isLibraryView,
   animationKey,
-}: BookGridProps) {
-  if (loading && books.length === 0) {
+}: MediaGridProps<T, E>) {
+  if (loading && items.length === 0) {
     return <LoadingSkeleton />;
   }
 
-  if (error && books.length === 0) {
+  if (error && items.length === 0) {
     return (
       <div className={styles.grid}>
         <div className={styles.errorState}>
@@ -47,7 +47,7 @@ export function BookGrid({
     );
   }
 
-  if (!loading && books.length === 0) {
+  if (!loading && items.length === 0) {
     return (
       <div className={styles.grid}>
         <div className={styles.emptyState}>
@@ -61,13 +61,14 @@ export function BookGrid({
 
   return (
     <div className={styles.grid} key={animationKey}>
-      {books.map((book, index) => (
-        <BookCard
-          key={book.id}
-          book={book}
-          libraryEntry={getLibraryEntry(book.id)}
-          onClick={() => onCardClick(book)}
-          onAdd={() => onAddToLibrary(book)}
+      {items.map((item, index) => (
+        <MediaCard
+          key={item.id}
+          item={item}
+          config={config}
+          libraryEntry={getLibraryEntry(item.id)}
+          onClick={() => onCardClick(item)}
+          onAdd={() => onAddToLibrary(item)}
           isLibraryView={isLibraryView}
           index={index}
         />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLibrary } from "../../hooks/useLibrary";
 import { useMovieLibrary } from "../../hooks/useMovieLibrary";
@@ -51,10 +51,14 @@ export function DashboardPage() {
     { label: "Jogos", path: "/jogos", icon: GameIcon, count: games.filter((e) => e.status === "beaten").length },
   ];
 
-  const agenda = buildAgenda(animes, movies, series, games, books);
-  const { week, later } = splitAgenda(agenda);
-  const weekGroups = groupByDay(week);
-  const laterGroups = groupByMonth(later);
+  const agenda = useMemo(
+    () => buildAgenda(animes, movies, series, games, books),
+    [animes, movies, series, games, books]
+  );
+  const { weekGroups, laterGroups } = useMemo(() => {
+    const { week, later } = splitAgenda(agenda);
+    return { weekGroups: groupByDay(week), laterGroups: groupByMonth(later) };
+  }, [agenda]);
 
   const openItem = (item: AgendaItem) => {
     if (item.media === "anime") setSelectedAnimeId(item.externalId as number);

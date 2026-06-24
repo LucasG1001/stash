@@ -1,28 +1,54 @@
-import type { AnimeCard as AnimeCardType } from "../../types/anime";
-import type { LibraryEntry } from "../../types/library";
-import type { FranchiseGroup } from "../../utils/franchiseGroups";
-import { libraryEntryToCard } from "../../utils/libraryEntryToCard";
-import { AnimeCard } from "../AnimeCard/AnimeCard";
+import { MediaCard, type MediaCardConfig } from "../MediaCard/MediaCard";
 import styles from "./FranchiseCard.module.css";
 
-interface FranchiseCardProps {
-  group: FranchiseGroup;
-  expanded: boolean;
-  onToggle: () => void;
-  onCardClick: (anime: AnimeCardType) => void;
-  onAddToLibrary: (anime: AnimeCardType) => void;
-  onDelete: () => void;
-  libraryEntry?: LibraryEntry;
-  index: number;
+export interface MediaGroup<E> {
+  key: string;
+  representative: E;
+  members: E[];
+  count: number;
+  completedCount: number;
 }
 
-export function FranchiseCard({ group, expanded, onToggle, onCardClick, onAddToLibrary, onDelete, libraryEntry, index }: FranchiseCardProps) {
-  const card = libraryEntryToCard(group.representative);
+interface FranchiseCardProps<
+  E extends { status: string; score: number; title: string },
+  T extends { id: number | string }
+> {
+  group: MediaGroup<E>;
+  expanded: boolean;
+  onToggle: () => void;
+  onCardClick: (card: T) => void;
+  onAddToLibrary: (card: T) => void;
+  onDelete: () => void;
+  libraryEntry?: E;
+  index: number;
+  cardConfig: MediaCardConfig<T>;
+  entryToCard: (entry: E) => T;
+  expandTitle: string;
+}
+
+export function FranchiseCard<
+  E extends { status: string; score: number; title: string },
+  T extends { id: number | string }
+>({
+  group,
+  expanded,
+  onToggle,
+  onCardClick,
+  onAddToLibrary,
+  onDelete,
+  libraryEntry,
+  index,
+  cardConfig,
+  entryToCard,
+  expandTitle,
+}: FranchiseCardProps<E, T>) {
+  const card = entryToCard(group.representative);
 
   return (
     <div className={styles.wrapper}>
-      <AnimeCard
-        anime={card}
+      <MediaCard
+        item={card}
+        config={cardConfig}
         libraryEntry={libraryEntry}
         onClick={() => onCardClick(card)}
         onAdd={() => onAddToLibrary(card)}
@@ -49,7 +75,7 @@ export function FranchiseCard({ group, expanded, onToggle, onCardClick, onAddToL
           e.stopPropagation();
           onToggle();
         }}
-        title={expanded ? "Recolher franquia" : "Ver temporadas, OVAs e filmes"}
+        title={expanded ? "Recolher coleção" : expandTitle}
       >
         <span className={styles.count}>📚 {group.completedCount}/{group.count}</span>
         <svg className={styles.chevron} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

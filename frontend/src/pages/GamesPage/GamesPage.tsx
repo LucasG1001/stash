@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
-import { GameGrid } from "../../components/GameGrid/GameGrid";
-import { GameFranchiseGrid } from "../../components/GameFranchiseGrid/GameFranchiseGrid";
+import { MediaGrid } from "../../components/MediaGrid/MediaGrid";
+import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { GameDrawer } from "../../components/GameDrawer/GameDrawer";
 import { GameLibraryModal } from "../../components/GameLibraryModal/GameLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { gameCardConfig } from "../../config/cards";
 import { useGames } from "../../hooks/useGames";
 import { useGameLibrary } from "../../hooks/useGameLibrary";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -15,6 +16,7 @@ import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
 import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildGameCollectionGroups } from "../../utils/gameCollectionGroups";
+import { gameLibraryEntryToCard } from "../../utils/gameLibraryEntryToCard";
 import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
 import styles from "./GamesPage.module.css";
 
@@ -233,20 +235,26 @@ export function GamesPage() {
       )}
 
       {activeTab === "library" ? (
-        <GameFranchiseGrid
+        <FranchiseGrid
           groups={collectionGroups}
           loading={libraryLoading}
           error={libraryError}
+          cardConfig={gameCardConfig}
+          entryToCard={gameLibraryEntryToCard}
+          getExternalId={(e) => e.igdbId}
           onCardClick={handleCardClick}
           onAddToLibrary={handleOpenLibraryModal}
           getLibraryEntry={(id) => findByIgdbId(id)}
           onDeleteGroup={(group) => removeManyEntries(group.members.map((m) => m.id))}
+          expandTitle="Ver jogos da coleção"
           animationKey={gridKey}
           emptyMessage="Sua biblioteca está vazia."
+          emptyHint="Adicione jogos para começar!"
         />
       ) : (
-        <GameGrid
-          games={games}
+        <MediaGrid
+          items={games}
+          config={gameCardConfig}
           loading={loading}
           error={error}
           hasNextPage={hasNextPage}

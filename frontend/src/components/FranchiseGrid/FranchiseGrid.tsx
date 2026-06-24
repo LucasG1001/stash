@@ -1,39 +1,51 @@
 import { useState } from "react";
-import type { AnimeCard as AnimeCardType } from "../../types/anime";
-import type { LibraryEntry } from "../../types/library";
-import type { FranchiseGroup } from "../../utils/franchiseGroups";
-import { libraryEntryToCard } from "../../utils/libraryEntryToCard";
 import { useGridColumns } from "../../hooks/useGridColumns";
 import { arrangeRowAwareCells, type RowAwareItem } from "../../utils/rowAwareCells";
-import { AnimeCard } from "../AnimeCard/AnimeCard";
-import { FranchiseCard } from "../FranchiseCard/FranchiseCard";
+import { MediaCard, type MediaCardConfig } from "../MediaCard/MediaCard";
+import { FranchiseCard, type MediaGroup } from "../FranchiseCard/FranchiseCard";
 import { LoadingSkeleton } from "../LoadingSkeleton/LoadingSkeleton";
-import gridStyles from "../AnimeGrid/AnimeGrid.module.css";
+import gridStyles from "../MediaGrid/MediaGrid.module.css";
 import styles from "./FranchiseGrid.module.css";
 
-interface FranchiseGridProps {
-  groups: FranchiseGroup[];
+interface FranchiseGridProps<
+  E extends { status: string; score: number; title: string },
+  T extends { id: number | string }
+> {
+  groups: MediaGroup<E>[];
   loading: boolean;
   error: string | null;
-  onCardClick: (anime: AnimeCardType) => void;
-  onAddToLibrary: (anime: AnimeCardType) => void;
-  getLibraryEntry: (anilistId: number) => LibraryEntry | undefined;
-  onDeleteGroup: (group: FranchiseGroup) => void;
+  cardConfig: MediaCardConfig<T>;
+  entryToCard: (entry: E) => T;
+  getExternalId: (entry: E) => T["id"];
+  getLibraryEntry: (id: T["id"]) => E | undefined;
+  onCardClick: (card: T) => void;
+  onAddToLibrary: (card: T) => void;
+  onDeleteGroup: (group: MediaGroup<E>) => void;
   emptyMessage?: string;
+  emptyHint?: string;
+  expandTitle: string;
   animationKey?: string;
 }
 
-export function FranchiseGrid({
+export function FranchiseGrid<
+  E extends { status: string; score: number; title: string },
+  T extends { id: number | string }
+>({
   groups,
   loading,
   error,
+  cardConfig,
+  entryToCard,
+  getExternalId,
+  getLibraryEntry,
   onCardClick,
   onAddToLibrary,
-  getLibraryEntry,
   onDeleteGroup,
-  emptyMessage = "Nenhum anime encontrado.",
+  emptyMessage = "Nada encontrado.",
+  emptyHint = "Adicione itens para começar!",
+  expandTitle,
   animationKey,
-}: FranchiseGridProps) {
+}: FranchiseGridProps<E, T>) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [cols, setGridRef] = useGridColumns();
 
@@ -63,7 +75,7 @@ export function FranchiseGrid({
         <div className={gridStyles.emptyState}>
           <div className={gridStyles.emptyIcon}>📭</div>
           <div className={gridStyles.emptyTitle}>{emptyMessage}</div>
-          <div className={gridStyles.emptyText}>Adicione animes para começar!</div>
+          <div className={gridStyles.emptyText}>{emptyHint}</div>
         </div>
       </div>
     );
@@ -71,12 +83,13 @@ export function FranchiseGrid({
 
   const items: RowAwareItem[] = groups.map((group, index) => {
     if (group.count === 1) {
-      const card = libraryEntryToCard(group.representative);
+      const card = entryToCard(group.representative);
       return {
         card: (
-          <AnimeCard
+          <MediaCard
             key={group.key}
-            anime={card}
+            item={card}
+            config={cardConfig}
             libraryEntry={getLibraryEntry(card.id)}
             onClick={() => onCardClick(card)}
             onAdd={() => onAddToLibrary(card)}
@@ -99,19 +112,23 @@ export function FranchiseGrid({
           onCardClick={onCardClick}
           onAddToLibrary={onAddToLibrary}
           onDelete={() => onDeleteGroup(group)}
-          libraryEntry={getLibraryEntry(group.representative.anilistId)}
+          libraryEntry={getLibraryEntry(getExternalId(group.representative))}
           index={index}
+          cardConfig={cardConfig}
+          entryToCard={entryToCard}
+          expandTitle={expandTitle}
         />
       ),
       expansion: isExpanded ? (
         <div className={styles.expansion} key={`exp-${group.key}`}>
           {group.members.map((member, memberIndex) => {
-            const card = libraryEntryToCard(member);
+            const card = entryToCard(member);
             return (
-              <AnimeCard
-                key={member.anilistId}
-                anime={card}
-                libraryEntry={getLibraryEntry(member.anilistId)}
+              <MediaCard
+                key={getExternalId(member)}
+                item={card}
+                config={cardConfig}
+                libraryEntry={getLibraryEntry(getExternalId(member))}
                 onClick={() => onCardClick(card)}
                 onAdd={() => onAddToLibrary(card)}
                 isLibraryView

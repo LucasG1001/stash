@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
-import { MovieGrid } from "../../components/MovieGrid/MovieGrid";
-import { MovieFranchiseGrid } from "../../components/MovieFranchiseGrid/MovieFranchiseGrid";
+import { MediaGrid } from "../../components/MediaGrid/MediaGrid";
+import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { MovieDrawer } from "../../components/MovieDrawer/MovieDrawer";
 import { MovieLibraryModal } from "../../components/MovieLibraryModal/MovieLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { movieCardConfig } from "../../config/cards";
 import { useMovies } from "../../hooks/useMovies";
 import { useMovieLibrary } from "../../hooks/useMovieLibrary";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -15,6 +16,7 @@ import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
 import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildMovieCollectionGroups } from "../../utils/movieCollectionGroups";
+import { movieLibraryEntryToCard } from "../../utils/movieLibraryEntryToCard";
 import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
 import styles from "./MoviesPage.module.css";
 
@@ -232,20 +234,26 @@ export function MoviesPage() {
       )}
 
       {activeTab === "library" ? (
-        <MovieFranchiseGrid
+        <FranchiseGrid
           groups={collectionGroups}
           loading={libraryLoading}
           error={libraryError}
+          cardConfig={movieCardConfig}
+          entryToCard={movieLibraryEntryToCard}
+          getExternalId={(e) => e.tmdbId}
           onCardClick={handleCardClick}
           onAddToLibrary={handleOpenLibraryModal}
           getLibraryEntry={(id) => findByTmdbId(id)}
           onDeleteGroup={(group) => removeManyEntries(group.members.map((m) => m.id))}
+          expandTitle="Ver filmes da coleção"
           animationKey={gridKey}
           emptyMessage="Sua biblioteca está vazia."
+          emptyHint="Adicione filmes para começar!"
         />
       ) : (
-        <MovieGrid
-          movies={movies}
+        <MediaGrid
+          items={movies}
+          config={movieCardConfig}
           loading={loading}
           error={error}
           hasNextPage={hasNextPage}

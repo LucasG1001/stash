@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
-import { BookGrid } from "../../components/BookGrid/BookGrid";
+import { MediaGrid } from "../../components/MediaGrid/MediaGrid";
+import { bookCardConfig } from "../../config/cards";
 import { BookDrawer } from "../../components/BookDrawer/BookDrawer";
 import { BookLibraryModal } from "../../components/BookLibraryModal/BookLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
@@ -238,8 +239,9 @@ export function BooksPage() {
         </div>
       )}
 
-      <BookGrid
-        books={displayBooks}
+      <MediaGrid
+        items={displayBooks}
+        config={bookCardConfig}
         loading={displayLoading}
         error={displayError}
         hasNextPage={activeTab !== "library" && hasNextPage}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
-import { SeriesGrid } from "../../components/SeriesGrid/SeriesGrid";
+import { MediaGrid } from "../../components/MediaGrid/MediaGrid";
+import { seriesCardConfig } from "../../config/cards";
 import { SeriesDrawer } from "../../components/SeriesDrawer/SeriesDrawer";
 import { SeriesLibraryModal } from "../../components/SeriesLibraryModal/SeriesLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
@@ -248,8 +249,9 @@ export function SeriesPage() {
         </div>
       )}
 
-      <SeriesGrid
-        series={displaySeries}
+      <MediaGrid
+        items={displaySeries}
+        config={seriesCardConfig}
         loading={displayLoading}
         error={displayError}
         hasNextPage={activeTab !== "library" && hasNextPage}

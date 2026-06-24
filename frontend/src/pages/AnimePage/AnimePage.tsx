@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
-import { AnimeGrid } from "../../components/AnimeGrid/AnimeGrid";
+import { MediaGrid } from "../../components/MediaGrid/MediaGrid";
 import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { AnimeDrawer } from "../../components/AnimeDrawer/AnimeDrawer";
 import { LibraryModal } from "../../components/LibraryModal/LibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { animeCardConfig } from "../../config/cards";
 import { useAnime } from "../../hooks/useAnime";
 import { useLibrary } from "../../hooks/useLibrary";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -16,6 +17,7 @@ import { SEASON_PT, getCurrentRealSeason, getSurroundingSeasons } from "../../ut
 import { getRecentYears } from "../../utils/year";
 import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildFranchiseGroups } from "../../utils/franchiseGroups";
+import { libraryEntryToCard } from "../../utils/libraryEntryToCard";
 import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
 import styles from "./AnimePage.module.css";
 
@@ -244,16 +246,22 @@ export function AnimePage() {
           groups={franchiseGroups}
           loading={libraryLoading}
           error={libraryError}
+          cardConfig={animeCardConfig}
+          entryToCard={libraryEntryToCard}
+          getExternalId={(e) => e.anilistId}
           onCardClick={handleCardClick}
           onAddToLibrary={handleOpenLibraryModal}
           getLibraryEntry={(id) => findByAnilistId(id)}
           onDeleteGroup={(group) => removeManyEntries(group.members.map((m) => m.id))}
+          expandTitle="Ver temporadas, OVAs e filmes"
           animationKey={gridKey}
           emptyMessage="Sua biblioteca está vazia."
+          emptyHint="Adicione animes para começar!"
         />
       ) : (
-        <AnimeGrid
-          animes={animes}
+        <MediaGrid
+          items={animes}
+          config={animeCardConfig}
           loading={loading}
           error={error}
           hasNextPage={hasNextPage}
