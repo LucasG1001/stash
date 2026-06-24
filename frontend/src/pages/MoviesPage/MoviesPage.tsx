@@ -30,7 +30,7 @@ const TABS = [
 const STATUS_OPTIONS = Object.entries(MOVIE_LIBRARY_STATUS_LABELS) as [MovieLibraryStatus, string][];
 
 export function MoviesPage() {
-  const [activeTab, setActiveTab] = useState("search");
+  const [activeTab, setActiveTab] = useState("now_playing");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
   const [selectedMovieForModal, setSelectedMovieForModal] = useState<MovieCard | null>(null);

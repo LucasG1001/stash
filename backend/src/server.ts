@@ -23,8 +23,19 @@ import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 const app = express();
 const PORT = process.env.PORT || 3333;
 const SYNC_INTERVAL_MS = 30 * 60 * 1000;
-const COLLECTION_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000;
-const COLLECTION_SYNC_INITIAL_DELAY_MS = 60 * 1000;
+const COLLECTION_SYNC_HOUR = 8;
+const COLLECTION_SYNC_MINUTE = 0;
+
+function scheduleDailyAt(hour: number, minute: number, task: () => void): void {
+  const now = new Date();
+  const next = new Date(now);
+  next.setHours(hour, minute, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  setTimeout(() => {
+    task();
+    scheduleDailyAt(hour, minute, task);
+  }, next.getTime() - now.getTime());
+}
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
@@ -56,8 +67,7 @@ async function start(): Promise<void> {
 
   const runCollectionSync = () =>
     refreshCollections().catch((error) => console.error("Falha no job de sincronização de coleções:", error));
-  setTimeout(runCollectionSync, COLLECTION_SYNC_INITIAL_DELAY_MS);
-  setInterval(runCollectionSync, COLLECTION_SYNC_INTERVAL_MS);
+  scheduleDailyAt(COLLECTION_SYNC_HOUR, COLLECTION_SYNC_MINUTE, runCollectionSync);
 }
 
 start();

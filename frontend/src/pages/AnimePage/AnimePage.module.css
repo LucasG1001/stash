@@ -134,7 +134,19 @@
     width: 100%;
   }
 
-  .sortButton {
-    width: 100%;
+  .filterWrapper {
+    flex-wrap: nowrap;
+  }
+
+  .filterWrapper .seasonSelect,
+  .filterWrapper .sortButton {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+  }
+
+  .filterWrapper .sortButton {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }

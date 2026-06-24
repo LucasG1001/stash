@@ -132,11 +132,18 @@
     margin-bottom: var(--spacing-base);
   }
 
-  .filterSelect {
-    width: 100%;
+  .filterWrapper {
+    flex-wrap: nowrap;
+  }
+
+  .filterSelect,
+  .sortButton {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .sortButton {
-    width: 100%;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }

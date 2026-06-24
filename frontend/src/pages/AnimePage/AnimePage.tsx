@@ -31,7 +31,7 @@ const TABS = [
 const STATUS_OPTIONS = Object.entries(LIBRARY_STATUS_LABELS) as [LibraryStatus, string][];
 
 export function AnimePage() {
-  const [activeTab, setActiveTab] = useState("search");
+  const [activeTab, setActiveTab] = useState("seasons");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAnimeId, setSelectedAnimeId] = useState<number | null>(null);
   const [selectedAnimeForModal, setSelectedAnimeForModal] = useState<AnimeCard | null>(null);

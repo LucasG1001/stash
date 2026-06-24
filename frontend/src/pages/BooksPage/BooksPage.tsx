@@ -24,7 +24,7 @@ const TABS = [
 const STATUS_OPTIONS = Object.entries(BOOK_LIBRARY_STATUS_LABELS) as [BookLibraryStatus, string][];
 
 export function BooksPage() {
-  const [activeTab, setActiveTab] = useState("search");
+  const [activeTab, setActiveTab] = useState("library");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [selectedBookForModal, setSelectedBookForModal] = useState<BookCard | null>(null);
