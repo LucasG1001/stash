@@ -17,6 +17,7 @@ import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildBookCollectionGroups, authorKey } from "../../utils/bookCollectionGroups";
 import { bookLibraryEntryToCard } from "../../utils/bookLibraryEntryToCard";
 import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
+import { filterGroupsBySearch } from "../../utils/filterGroupsBySearch";
 import styles from "./BooksPage.module.css";
 
 const TABS = [
@@ -30,6 +31,7 @@ const STATUS_OPTIONS = Object.entries(BOOK_LIBRARY_STATUS_LABELS) as [BookLibrar
 export function BooksPage() {
   const [activeTab, setActiveTab] = useState("library");
   const [searchQuery, setSearchQuery] = useState("");
+  const [librarySearch, setLibrarySearch] = useState("");
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [selectedBookForModal, setSelectedBookForModal] = useState<BookCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<BookLibraryStatus | "all">("all");
@@ -66,6 +68,7 @@ export function BooksPage() {
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
     setSearchQuery("");
+    setLibrarySearch("");
   };
 
   const handleCardClick = (book: BookCard) => {
@@ -123,14 +126,17 @@ export function BooksPage() {
 
   const showReadSort = libraryFilter === "read";
 
-  const collectionGroups = filterGroupsByStatus(
-    buildBookCollectionGroups(libraryEntries, scoreSortDir, readSortDir, showReadSort),
-    libraryFilter
+  const collectionGroups = filterGroupsBySearch(
+    filterGroupsByStatus(
+      buildBookCollectionGroups(libraryEntries, scoreSortDir, readSortDir, showReadSort),
+      libraryFilter
+    ),
+    librarySearch
   );
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${readSortDir}-${scoreSortDir}`
+      ? `library-${libraryFilter}-${readSortDir}-${scoreSortDir}-${librarySearch}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
       : `discover-${selectedGenre}`;
@@ -171,7 +177,15 @@ export function BooksPage() {
       )}
 
       {activeTab === "library" && (
-        <div className={styles.filterWrapper}>
+        <div className={styles.libraryControls}>
+          <div className={styles.searchWrapper}>
+            <SearchBar
+              value={librarySearch}
+              onChange={setLibrarySearch}
+              placeholder="Buscar na biblioteca..."
+            />
+          </div>
+          <div className={styles.filterWrapper}>
           <select
             className={styles.filterSelect}
             value={libraryFilter}
@@ -190,7 +204,7 @@ export function BooksPage() {
               onClick={() => setReadSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
               title={readSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
             >
-              <span>Data de leitura</span>
+              <span>Leitura</span>
               <span className={`${styles.sortIcon} ${readSortDir === "asc" ? styles.sortIconAsc : ""}`}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 5v14M5 12l7 7 7-7" />
@@ -218,6 +232,7 @@ export function BooksPage() {
               </span>
             )}
           </button>
+          </div>
         </div>
       )}
 

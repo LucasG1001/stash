@@ -30,6 +30,24 @@
   flex-wrap: wrap;
 }
 
+.libraryControls {
+  margin-bottom: var(--spacing-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-base);
+  flex-wrap: wrap;
+}
+
+.libraryControls .searchWrapper {
+  flex: 0 0 260px;
+  margin-bottom: 0;
+}
+
+.libraryControls .filterWrapper {
+  margin-bottom: 0;
+  flex: 0 1 auto;
+}
+
 .sortButton {
   display: inline-flex;
   align-items: center;
@@ -126,8 +144,19 @@
   .tabWrapper,
   .searchWrapper,
   .seasonSelectorWrapper,
-  .filterWrapper {
+  .filterWrapper,
+  .libraryControls {
     margin-bottom: var(--spacing-base);
+  }
+
+  .libraryControls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-base);
+  }
+
+  .libraryControls .searchWrapper {
+    flex: 1 1 auto;
   }
 
   .seasonSelect {

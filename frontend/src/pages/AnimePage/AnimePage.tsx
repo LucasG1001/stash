@@ -19,6 +19,7 @@ import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildFranchiseGroups } from "../../utils/franchiseGroups";
 import { libraryEntryToCard } from "../../utils/libraryEntryToCard";
 import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
+import { filterGroupsBySearch } from "../../utils/filterGroupsBySearch";
 import styles from "./AnimePage.module.css";
 
 const TABS = [
@@ -33,6 +34,7 @@ const STATUS_OPTIONS = Object.entries(LIBRARY_STATUS_LABELS) as [LibraryStatus, 
 export function AnimePage() {
   const [activeTab, setActiveTab] = useState("seasons");
   const [searchQuery, setSearchQuery] = useState("");
+  const [librarySearch, setLibrarySearch] = useState("");
   const [selectedAnimeId, setSelectedAnimeId] = useState<number | null>(null);
   const [selectedAnimeForModal, setSelectedAnimeForModal] = useState<AnimeCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<LibraryStatus | "all">("all");
@@ -71,6 +73,7 @@ export function AnimePage() {
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
     setSearchQuery("");
+    setLibrarySearch("");
   };
 
   const handleCardClick = (anime: AnimeCard) => {
@@ -127,14 +130,17 @@ export function AnimePage() {
     }
   }, [findByAnilistId, updateEntry]);
 
-  const franchiseGroups = filterGroupsByStatus(
-    buildFranchiseGroups(libraryEntries, scoreSortDir, releaseSortDir),
-    libraryFilter
+  const franchiseGroups = filterGroupsBySearch(
+    filterGroupsByStatus(
+      buildFranchiseGroups(libraryEntries, scoreSortDir, releaseSortDir),
+      libraryFilter
+    ),
+    librarySearch
   );
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${releaseSortDir}-${scoreSortDir}`
+      ? `library-${libraryFilter}-${releaseSortDir}-${scoreSortDir}-${librarySearch}`
       : activeTab === "seasons"
       ? `seasons-${selectedSeasonObj.season}-${selectedSeasonObj.year}`
       : activeTab === "search"
@@ -194,7 +200,15 @@ export function AnimePage() {
       )}
 
       {activeTab === "library" && (
-        <div className={styles.filterWrapper}>
+        <div className={styles.libraryControls}>
+          <div className={styles.searchWrapper}>
+            <SearchBar
+              value={librarySearch}
+              onChange={setLibrarySearch}
+              placeholder="Buscar na biblioteca..."
+            />
+          </div>
+          <div className={styles.filterWrapper}>
           <select
             className={styles.seasonSelect}
             value={libraryFilter}
@@ -212,7 +226,7 @@ export function AnimePage() {
             onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
             title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
           >
-            <span>Data de lançamento</span>
+            <span>Lançamento</span>
             <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M5 12l7 7 7-7" />
@@ -239,6 +253,7 @@ export function AnimePage() {
               </span>
             )}
           </button>
+          </div>
         </div>
       )}
 

@@ -18,6 +18,7 @@ import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildGameCollectionGroups } from "../../utils/gameCollectionGroups";
 import { gameLibraryEntryToCard } from "../../utils/gameLibraryEntryToCard";
 import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
+import { filterGroupsBySearch } from "../../utils/filterGroupsBySearch";
 import styles from "./GamesPage.module.css";
 
 const TABS = [
@@ -32,6 +33,7 @@ const STATUS_OPTIONS = Object.entries(GAME_LIBRARY_STATUS_LABELS) as [GameLibrar
 export function GamesPage() {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [searchQuery, setSearchQuery] = useState("");
+  const [librarySearch, setLibrarySearch] = useState("");
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [selectedGameForModal, setSelectedGameForModal] = useState<GameCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<GameLibraryStatus | "all">("all");
@@ -70,6 +72,7 @@ export function GamesPage() {
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
     setSearchQuery("");
+    setLibrarySearch("");
   };
 
   const handleCardClick = (game: GameCard) => {
@@ -125,14 +128,17 @@ export function GamesPage() {
     }
   }, [findByIgdbId, updateEntry]);
 
-  const collectionGroups = filterGroupsByStatus(
-    buildGameCollectionGroups(libraryEntries, scoreSortDir, releaseSortDir),
-    libraryFilter
+  const collectionGroups = filterGroupsBySearch(
+    filterGroupsByStatus(
+      buildGameCollectionGroups(libraryEntries, scoreSortDir, releaseSortDir),
+      libraryFilter
+    ),
+    librarySearch
   );
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${releaseSortDir}-${scoreSortDir}`
+      ? `library-${libraryFilter}-${releaseSortDir}-${scoreSortDir}-${librarySearch}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
       : activeTab === "popular"
@@ -187,7 +193,15 @@ export function GamesPage() {
       )}
 
       {activeTab === "library" && (
-        <div className={styles.filterWrapper}>
+        <div className={styles.libraryControls}>
+          <div className={styles.searchWrapper}>
+            <SearchBar
+              value={librarySearch}
+              onChange={setLibrarySearch}
+              placeholder="Buscar na biblioteca..."
+            />
+          </div>
+          <div className={styles.filterWrapper}>
           <select
             className={styles.filterSelect}
             value={libraryFilter}
@@ -205,7 +219,7 @@ export function GamesPage() {
             onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
             title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
           >
-            <span>Data de lançamento</span>
+            <span>Lançamento</span>
             <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M5 12l7 7 7-7" />
@@ -232,6 +246,7 @@ export function GamesPage() {
               </span>
             )}
           </button>
+          </div>
         </div>
       )}
 
