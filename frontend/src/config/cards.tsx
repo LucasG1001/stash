@@ -51,38 +51,27 @@ export const animeCardConfig: MediaCardConfig<AnimeCard> = {
   formatScore: (s) => (s / 10).toFixed(1),
   scoreColor: scoreColorFn(75, 50),
   libraryStatusColor: catalogStatusColor,
-  renderMeta: (a) => {
-    const episodeText = a.nextAiringEpisode
-      ? `${a.nextAiringEpisode.episode - 1}/${a.episodes ?? "?"}`
-      : `${a.episodes ?? "?"}`;
-    return (
-      <>
-        <div className={cardStyles.meta}>
-          <span className={cardStyles.episodes}>📺 {episodeText} ep</span>
-        </div>
-        {(a.seasonYear || a.streamingLinks.length > 0) && (
-          <div className={cardStyles.bottomRow}>
-            {a.seasonYear ? <span className={cardStyles.year}>📅 {a.seasonYear}</span> : <span />}
-            {a.streamingLinks.length > 0 && (
-              <div className={cardStyles.streamingIcons}>
-                {a.streamingLinks.slice(0, 3).map((link) =>
-                  link.icon ? (
-                    <img
-                      key={link.site}
-                      className={cardStyles.streamingIcon}
-                      src={link.icon}
-                      alt={link.site}
-                      title={link.site}
-                    />
-                  ) : null
-                )}
-              </div>
+  renderMeta: (a) =>
+    a.seasonYear || a.streamingLinks.length > 0 ? (
+      <div className={cardStyles.bottomRow}>
+        {a.seasonYear ? <span className={cardStyles.year}>{a.seasonYear}</span> : <span />}
+        {a.streamingLinks.length > 0 && (
+          <div className={cardStyles.streamingIcons}>
+            {a.streamingLinks.slice(0, 3).map((link) =>
+              link.icon ? (
+                <img
+                  key={link.site}
+                  className={cardStyles.streamingIcon}
+                  src={link.icon}
+                  alt={link.site}
+                  title={link.site}
+                />
+              ) : null
             )}
           </div>
         )}
-      </>
-    );
-  },
+      </div>
+    ) : null,
 };
 
 export const movieCardConfig: MediaCardConfig<MovieCard> = {
@@ -99,7 +88,7 @@ export const movieCardConfig: MediaCardConfig<MovieCard> = {
   libraryStatusColor: catalogStatusColor,
   renderMeta: (m) => (
     <div className={cardStyles.meta}>
-      <span className={cardStyles.year}>📅 {m.releaseDate ? m.releaseDate.slice(0, 4) : "—"}</span>
+      <span className={cardStyles.year}>{m.releaseDate ? m.releaseDate.slice(0, 4) : "—"}</span>
     </div>
   ),
 };
@@ -118,7 +107,7 @@ export const seriesCardConfig: MediaCardConfig<SeriesCard> = {
   libraryStatusColor: catalogStatusColor,
   renderMeta: (s) => (
     <div className={cardStyles.meta}>
-      <span className={cardStyles.year}>📅 {s.firstAirDate ? s.firstAirDate.slice(0, 4) : "—"}</span>
+      <span className={cardStyles.year}>{s.firstAirDate ? s.firstAirDate.slice(0, 4) : "—"}</span>
     </div>
   ),
 };
@@ -135,7 +124,7 @@ export const bookCardConfig: MediaCardConfig<BookCard> = {
   renderMeta: (b) => (
     <div className={cardStyles.meta}>
       <span className={cardStyles.author}>{b.authors.length > 0 ? b.authors.join(", ") : "—"}</span>
-      <span className={cardStyles.year}>📅 {b.publishedDate ? b.publishedDate.slice(0, 4) : "—"}</span>
+      <span className={cardStyles.year}>{b.publishedDate ? b.publishedDate.slice(0, 4) : "—"}</span>
     </div>
   ),
 };
@@ -154,7 +143,7 @@ export const gameCardConfig: MediaCardConfig<GameCard> = {
   libraryStatusColor: catalogStatusColor,
   renderMeta: (g) => (
     <div className={cardStyles.meta}>
-      <span className={cardStyles.year}>📅 {g.released ? g.released.slice(0, 4) : "—"}</span>
+      <span className={cardStyles.year}>{g.released ? g.released.slice(0, 4) : "—"}</span>
       {g.storeSlugs.length > 0 && (
         <div className={cardStyles.storeIcons}>
           {g.storeSlugs.slice(0, 3).map((slug) => (
