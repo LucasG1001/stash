@@ -59,20 +59,24 @@ rclone lsd gdrive:
 
 ### 2.2. Instalar o script
 
+O script vem no próprio repositório (`scripts/backup-to-gdrive.sh`) e roda
+direto de lá. Os caminhos padrão já apontam para a instalação atual
+(`/home/lucas/stash` para o repo/`.env` e `/home/lucas/backups` para os arquivos).
+
 ```bash
-sudo mkdir -p /opt/media-tracker/scripts /opt/media-tracker/backups
-sudo cp scripts/backup-to-gdrive.sh /opt/media-tracker/scripts/
-sudo chmod +x /opt/media-tracker/scripts/backup-to-gdrive.sh
+cd /home/lucas/stash
+git pull
+mkdir -p /home/lucas/backups
+chmod +x scripts/backup-to-gdrive.sh
 ```
 
-Ajuste, no topo do script, se seus caminhos forem diferentes:
-`BACKUP_DIR`, `RCLONE_REMOTE`, `ENV_FILE` (onde estão `POSTGRES_USER`/`POSTGRES_DB`),
-`RETENTION_DAYS`.
+Se quiser mudar algo sem editar o script, dá para sobrescrever por variável de
+ambiente: `BACKUP_DIR`, `RCLONE_REMOTE`, `ENV_FILE`, `RETENTION_DAYS`.
 
 Rode uma vez na mão para validar:
 
 ```bash
-/opt/media-tracker/scripts/backup-to-gdrive.sh
+/home/lucas/stash/scripts/backup-to-gdrive.sh
 ```
 
 ### 2.3. Agendar no cron (diário, 03:00)
@@ -82,7 +86,7 @@ crontab -e
 ```
 
 ```cron
-0 3 * * * /opt/media-tracker/scripts/backup-to-gdrive.sh >> /var/log/media-tracker-backup.log 2>&1
+0 3 * * * /home/lucas/stash/scripts/backup-to-gdrive.sh >> /home/lucas/backups/backup.log 2>&1
 ```
 
 ---

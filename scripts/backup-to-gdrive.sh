@@ -15,10 +15,10 @@ set -euo pipefail
 PROJECT_PREFIX="media-tracker"          # prefixo dos containers (compose "name:")
 POSTGRES_SERVICE="postgres"             # nome do serviço no docker-compose
 SERVER_SERVICE="server"
-BACKUP_DIR="${BACKUP_DIR:-/opt/media-tracker/backups}"
+BACKUP_DIR="${BACKUP_DIR:-/home/lucas/backups}"
 RCLONE_REMOTE="${RCLONE_REMOTE:-gdrive:media-tracker-backups}"
 RETENTION_DAYS="${RETENTION_DAYS:-30}"
-ENV_FILE="${ENV_FILE:-/opt/media-tracker/.env}"
+ENV_FILE="${ENV_FILE:-/home/lucas/stash/.env}"
 
 # ---- Carrega POSTGRES_USER / POSTGRES_DB do .env do projeto ----
 if [ -f "$ENV_FILE" ]; then
@@ -41,7 +41,8 @@ DUMP_FILE="$BACKUP_DIR/media-tracker-$DATE.dump"
 JSON_FILE="$BACKUP_DIR/media-tracker-$DATE.json"
 
 # ---- Dump nativo (custom format, restaurável com pg_restore) ----
-docker exec -t "$PG_CONTAINER" pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB" > "$DUMP_FILE"
+# Sem -t: o TTY corromperia o binário inserindo \r nas quebras de linha.
+docker exec "$PG_CONTAINER" pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB" > "$DUMP_FILE"
 
 # ---- Export JSON (via API interna do backend) ----
 if [ -n "$SERVER_CONTAINER" ]; then
