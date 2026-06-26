@@ -131,3 +131,24 @@ export async function removeMany(req: Request, res: Response): Promise<void> {
     res.status(500).json({ error: "Erro ao remover anime da biblioteca." });
   }
 }
+
+export async function updateManyStatus(req: Request, res: Response): Promise<void> {
+  try {
+    const { ids, status } = req.body as { ids?: unknown; status?: unknown };
+    if (
+      !Array.isArray(ids) ||
+      ids.length === 0 ||
+      !ids.every((id) => typeof id === "string") ||
+      typeof status !== "string" ||
+      status.length === 0
+    ) {
+      res.status(400).json({ error: "Dados inválidos." });
+      return;
+    }
+    const entries = await libraryModel.updateManyStatus(ids as string[], status);
+    res.json({ entries });
+  } catch (error) {
+    void notifyError("API POST /api/library/bulk-update-status", error);
+    res.status(500).json({ error: "Erro ao atualizar anime na biblioteca." });
+  }
+}

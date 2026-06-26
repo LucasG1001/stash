@@ -24,6 +24,10 @@ interface FranchiseCardProps<
   cardConfig: MediaCardConfig<T>;
   entryToCard: (entry: E) => T;
   expandTitle: string;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onLongPress?: () => void;
+  onToggleSelect?: () => void;
 }
 
 export function FranchiseCard<
@@ -41,6 +45,10 @@ export function FranchiseCard<
   cardConfig,
   entryToCard,
   expandTitle,
+  selectionMode,
+  selected,
+  onLongPress,
+  onToggleSelect,
 }: FranchiseCardProps<E, T>) {
   const card = entryToCard(group.representative);
 
@@ -54,6 +62,10 @@ export function FranchiseCard<
         onAdd={() => onAddToLibrary(card)}
         isLibraryView
         index={index}
+        selectionMode={selectionMode}
+        selected={selected}
+        onLongPress={onLongPress}
+        onToggleSelect={onToggleSelect}
       />
       <button
         className={styles.deleteButton}

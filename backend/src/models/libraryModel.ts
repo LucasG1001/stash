@@ -186,6 +186,24 @@ export async function updateSyncData(anilistId: number, data: SyncLibraryData): 
   );
 }
 
+export async function updateManyStatus(ids: string[], status: string): Promise<LibraryEntry[]> {
+  if (ids.length === 0) return [];
+  const result = await pool.query<LibraryRow>(
+    `UPDATE anime_library
+        SET status = $2,
+            watched_at = CASE
+              WHEN $2 = 'watched' AND status != 'watched' THEN NOW()
+              WHEN $2 != 'watched' THEN NULL
+              ELSE watched_at
+            END,
+            updated_at = NOW()
+      WHERE id = ANY($1::uuid[])
+     RETURNING *`,
+    [ids, status]
+  );
+  return result.rows.map(toLibraryEntry);
+}
+
 export async function setCover(id: string): Promise<LibraryEntry | null> {
   const client = await pool.connect();
   try {

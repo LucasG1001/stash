@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useGridColumns } from "../../hooks/useGridColumns";
 import { arrangeRowAwareCells, type RowAwareItem } from "../../utils/rowAwareCells";
 import { MediaCard, type MediaCardConfig } from "../MediaCard/MediaCard";
 import { FranchiseCard, type MediaGroup } from "../FranchiseCard/FranchiseCard";
 import { LoadingSkeleton } from "../LoadingSkeleton/LoadingSkeleton";
+import { SelectionBar } from "../SelectionBar/SelectionBar";
 import gridStyles from "../MediaGrid/MediaGrid.module.css";
 import styles from "./FranchiseGrid.module.css";
 
 interface FranchiseGridProps<
-  E extends { status: string; score: number; title: string },
+  E extends { id: string; status: string; score: number; title: string },
   T extends { id: number | string }
 > {
   groups: MediaGroup<E>[];
@@ -21,6 +22,8 @@ interface FranchiseGridProps<
   onCardClick: (card: T) => void;
   onAddToLibrary: (card: T) => void;
   onDeleteGroup: (group: MediaGroup<E>) => void;
+  statusLabels?: Record<string, string>;
+  onBulkSetStatus?: (ids: string[], status: string) => void | Promise<unknown>;
   emptyMessage?: string;
   emptyHint?: string;
   expandTitle: string;
@@ -28,7 +31,7 @@ interface FranchiseGridProps<
 }
 
 export function FranchiseGrid<
-  E extends { status: string; score: number; title: string },
+  E extends { id: string; status: string; score: number; title: string },
   T extends { id: number | string }
 >({
   groups,
@@ -41,6 +44,8 @@ export function FranchiseGrid<
   onCardClick,
   onAddToLibrary,
   onDeleteGroup,
+  statusLabels,
+  onBulkSetStatus,
   emptyMessage = "Nada encontrado.",
   emptyHint = "Adicione itens para começar!",
   expandTitle,
@@ -48,6 +53,32 @@ export function FranchiseGrid<
 }: FranchiseGridProps<E, T>) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [cols, setGridRef] = useGridColumns();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const selectionEnabled = !!(statusLabels && onBulkSetStatus);
+  const selectionActive = selectionEnabled && selectedIds.size > 0;
+
+  const [prevAnimationKey, setPrevAnimationKey] = useState(animationKey);
+  if (prevAnimationKey !== animationKey) {
+    setPrevAnimationKey(animationKey);
+    if (selectedIds.size > 0) setSelectedIds(new Set());
+  }
+
+  const toggleIds = useCallback((ids: string[]) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      const allIn = ids.every((id) => next.has(id));
+      if (allIn) ids.forEach((id) => next.delete(id));
+      else ids.forEach((id) => next.add(id));
+      return next;
+    });
+  }, []);
+
+  const applyStatus = useCallback(async (status: string) => {
+    if (!onBulkSetStatus) return;
+    await onBulkSetStatus([...selectedIds], status);
+    setSelectedIds(new Set());
+  }, [onBulkSetStatus, selectedIds]);
 
   const toggle = (key: string) => {
     setExpandedKey((prev) => (prev === key ? null : key));
@@ -84,6 +115,7 @@ export function FranchiseGrid<
   const items: RowAwareItem[] = groups.map((group, index) => {
     if (group.count === 1) {
       const card = entryToCard(group.representative);
+      const repId = group.representative.id;
       return {
         card: (
           <MediaCard
@@ -95,6 +127,10 @@ export function FranchiseGrid<
             onAdd={() => onAddToLibrary(card)}
             isLibraryView
             index={index}
+            selectionMode={selectionActive}
+            selected={selectedIds.has(repId)}
+            onLongPress={selectionEnabled ? () => toggleIds([repId]) : undefined}
+            onToggleSelect={selectionEnabled ? () => toggleIds([repId]) : undefined}
           />
         ),
         expansion: null,
@@ -102,6 +138,7 @@ export function FranchiseGrid<
     }
 
     const isExpanded = expandedKey === group.key;
+    const memberIds = group.members.map((m) => m.id);
     return {
       card: (
         <FranchiseCard
@@ -117,6 +154,10 @@ export function FranchiseGrid<
           cardConfig={cardConfig}
           entryToCard={entryToCard}
           expandTitle={expandTitle}
+          selectionMode={selectionActive}
+          selected={memberIds.length > 0 && memberIds.every((id) => selectedIds.has(id))}
+          onLongPress={selectionEnabled ? () => toggleIds(memberIds) : undefined}
+          onToggleSelect={selectionEnabled ? () => toggleIds(memberIds) : undefined}
         />
       ),
       expansion: isExpanded ? (
@@ -133,6 +174,10 @@ export function FranchiseGrid<
                 onAdd={() => onAddToLibrary(card)}
                 isLibraryView
                 index={memberIndex}
+                selectionMode={selectionActive}
+                selected={selectedIds.has(member.id)}
+                onLongPress={selectionEnabled ? () => toggleIds([member.id]) : undefined}
+                onToggleSelect={selectionEnabled ? () => toggleIds([member.id]) : undefined}
               />
             );
           })}
@@ -142,8 +187,18 @@ export function FranchiseGrid<
   });
 
   return (
-    <div className={gridStyles.grid} key={animationKey} ref={setGridRef}>
-      {arrangeRowAwareCells(items, cols)}
-    </div>
+    <>
+      <div className={gridStyles.grid} key={animationKey} ref={setGridRef}>
+        {arrangeRowAwareCells(items, cols)}
+      </div>
+      {selectionActive && statusLabels && (
+        <SelectionBar
+          count={selectedIds.size}
+          statusLabels={statusLabels}
+          onApply={applyStatus}
+          onClear={() => setSelectedIds(new Set())}
+        />
+      )}
+    </>
   );
 }

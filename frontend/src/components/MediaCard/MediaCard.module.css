@@ -32,6 +32,32 @@
   border-color: var(--color-border);
 }
 
+.card.selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent);
+}
+
+.selectionCheck {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  border: 2px solid #fff;
+  color: #fff;
+}
+
+.selectionCheckOn {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
 .imageWrapper {
   position: relative;
   aspect-ratio: 3 / 4.2;

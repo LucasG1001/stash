@@ -23,6 +23,7 @@ export interface LibraryModel<TEntry, TCreate, TUpdate> {
   findByExternalId(externalId: number | string): Promise<TEntry | null>;
   create(entry: TCreate): Promise<TEntry>;
   update(id: string, data: TUpdate): Promise<TEntry | null>;
+  updateManyStatus(ids: string[], status: string): Promise<TEntry[]>;
   remove(id: string): Promise<boolean>;
   removeMany(ids: string[]): Promise<number>;
   setCover?(id: string): Promise<TEntry | null>;
@@ -123,6 +124,26 @@ export function createLibraryModel<TEntry, TCreate, TUpdate>(
     return result.rows[0] ? toEntry(result.rows[0]) : null;
   };
 
+  const statusColumn = fields.find((f) => f.field === statusField)?.column ?? statusField;
+
+  const updateManyStatus = async (ids: string[], status: string): Promise<TEntry[]> => {
+    if (ids.length === 0) return [];
+    const result = await pool.query<Row>(
+      `UPDATE ${table}
+          SET ${statusColumn} = $2,
+              ${completion.column} = CASE
+                WHEN $2 = '${completion.whenStatus}' AND ${statusColumn} != '${completion.whenStatus}' THEN NOW()
+                WHEN $2 != '${completion.whenStatus}' THEN NULL
+                ELSE ${completion.column}
+              END,
+              updated_at = NOW()
+        WHERE id = ANY($1::uuid[])
+       RETURNING *`,
+      [ids, status]
+    );
+    return result.rows.map(toEntry);
+  };
+
   const remove = async (id: string): Promise<boolean> => {
     const result = await pool.query(`DELETE FROM ${table} WHERE id = $1`, [id]);
     return (result.rowCount ?? 0) > 0;
@@ -164,6 +185,7 @@ export function createLibraryModel<TEntry, TCreate, TUpdate>(
     findByExternalId,
     create,
     update,
+    updateManyStatus,
     remove,
     removeMany,
   };

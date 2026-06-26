@@ -29,6 +29,7 @@ export interface LibraryService<TEntry, TCreate, TUpdate> {
   fetchLibrary: () => Promise<TEntry[]>;
   addToLibrary: (entry: TCreate) => Promise<TEntry | TEntry[]>;
   updateLibraryEntry: (id: string, data: TUpdate) => Promise<TEntry>;
+  updateManyStatus: (ids: string[], status: string) => Promise<TEntry[]>;
   setCover?: (id: string) => Promise<TEntry>;
   removeFromLibrary: (id: string) => Promise<void>;
   removeManyFromLibrary: (ids: string[]) => Promise<void>;
@@ -41,6 +42,7 @@ export interface LibraryStore<TEntry, TCreate, TUpdate> {
   load: () => Promise<void>;
   add: (entry: TCreate) => Promise<TEntry | null>;
   update: (id: string, data: TUpdate) => Promise<TEntry | null>;
+  updateMany: (ids: string[], status: string) => Promise<boolean>;
   setCover: (id: string) => Promise<TEntry | null>;
   remove: (id: string) => Promise<boolean>;
   removeMany: (ids: string[]) => Promise<boolean>;
@@ -112,6 +114,29 @@ export function useLibraryStore<TEntry extends { id: string }, TCreate, TUpdate>
     } catch {
       setSlice(media, (p) => ({ ...p, entries: (p.entries as TEntry[]).map((e) => (e.id === id && previous ? previous : e)), error: "Erro ao atualizar item." }));
       return null;
+    }
+  }, [media, service, setSlice]);
+
+  const updateMany = useCallback(async (ids: string[], status: string): Promise<boolean> => {
+    if (ids.length === 0) return true;
+    const idSet = new Set(ids);
+    let snapshot: TEntry[] = [];
+    setSlice(media, (p) => {
+      snapshot = p.entries as TEntry[];
+      return {
+        ...p,
+        entries: snapshot.map((e) => (idSet.has(e.id) ? ({ ...e, status } as TEntry) : e)),
+        error: null,
+      };
+    });
+    try {
+      const updated = await service.updateManyStatus(ids, status);
+      const byId = new Map(updated.map((e) => [e.id, e]));
+      setSlice(media, (p) => ({ ...p, entries: (p.entries as TEntry[]).map((e) => byId.get(e.id) ?? e) }));
+      return true;
+    } catch {
+      setSlice(media, (p) => ({ ...p, entries: snapshot, error: "Erro ao atualizar itens." }));
+      return false;
     }
   }, [media, service, setSlice]);
 
@@ -188,5 +213,5 @@ export function useLibraryStore<TEntry extends { id: string }, TCreate, TUpdate>
     [entries, getExternalId]
   );
 
-  return { entries, loading: slice.loading, error: slice.error, load, add, update, setCover, remove, removeMany, findByExternalId };
+  return { entries, loading: slice.loading, error: slice.error, load, add, update, updateMany, setCover, remove, removeMany, findByExternalId };
 }

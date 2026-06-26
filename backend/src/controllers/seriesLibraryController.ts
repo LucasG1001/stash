@@ -2,7 +2,7 @@ import { createLibraryController } from "../lib/createLibraryController.js";
 import { seriesLibraryModel } from "../models/seriesLibraryModel.js";
 import { seriesCreateSchema, seriesUpdateSchema } from "../schemas/library.js";
 
-export const { getAll, create, update, remove, removeMany } = createLibraryController({
+export const { getAll, create, update, updateManyStatus, remove, removeMany } = createLibraryController({
   model: seriesLibraryModel,
   externalIdField: "tmdbId",
   createSchema: seriesCreateSchema,

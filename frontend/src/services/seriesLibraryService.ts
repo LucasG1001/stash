@@ -23,3 +23,8 @@ export async function removeFromLibrary(id: string): Promise<void> {
 export async function removeManyFromLibrary(ids: string[]): Promise<void> {
   await api.post("/api/series-library/bulk-delete", { ids });
 }
+
+export async function updateManyStatus(ids: string[], status: string): Promise<SeriesLibraryEntry[]> {
+  const response = await api.post<{ entries: SeriesLibraryEntry[] }>("/api/series-library/bulk-update-status", { ids, status });
+  return response.data.entries;
+}

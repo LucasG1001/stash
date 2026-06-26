@@ -50,6 +50,7 @@ export function GamesPage() {
     error: libraryError,
     add: addEntry,
     update: updateEntry,
+    updateMany: updateManyEntries,
     setCover: setCoverEntry,
     remove: removeEntry,
     removeMany: removeManyEntries,
@@ -262,6 +263,8 @@ export function GamesPage() {
           onAddToLibrary={handleOpenLibraryModal}
           getLibraryEntry={(id) => findByIgdbId(id)}
           onDeleteGroup={(group) => removeManyEntries(group.members.map((m) => m.id))}
+          statusLabels={GAME_LIBRARY_STATUS_LABELS}
+          onBulkSetStatus={(ids, status) => updateManyEntries(ids, status)}
           expandTitle="Ver jogos da coleção"
           animationKey={gridKey}
           emptyMessage="Sua biblioteca está vazia."

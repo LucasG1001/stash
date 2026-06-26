@@ -1,4 +1,5 @@
-import type { ReactNode, MouseEvent } from "react";
+import { useRef, type ReactNode, type MouseEvent } from "react";
+import { useLongPress } from "../../hooks/useLongPress";
 import styles from "./MediaCard.module.css";
 
 export type StatusTone = "green" | "blue" | "orange";
@@ -30,6 +31,10 @@ interface MediaCardProps<T, E extends { status: string; score: number }> {
   onAdd: (e: MouseEvent) => void;
   isLibraryView?: boolean;
   index?: number;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onLongPress?: () => void;
+  onToggleSelect?: () => void;
 }
 
 export function MediaCard<T, E extends { status: string; score: number }>({
@@ -40,21 +45,42 @@ export function MediaCard<T, E extends { status: string; score: number }>({
   onAdd,
   isLibraryView,
   index = 0,
+  selectionMode = false,
+  selected = false,
+  onLongPress,
+  onToggleSelect,
 }: MediaCardProps<T, E>) {
   const title = config.getTitle(item);
   const image = config.getImage(item);
   const badge = config.getStatusBadge?.(item) ?? null;
   const score = config.getScore?.(item) ?? null;
 
+  const suppressClickRef = useRef(false);
+  const longPress = useLongPress(onLongPress, suppressClickRef);
+
+  const handleClick = () => {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
+    if (selectionMode && onToggleSelect) onToggleSelect();
+    else onClick();
+  };
+
   return (
     <div
-      className={styles.card}
+      className={`${styles.card} ${selected ? styles.selected : ""}`}
       style={{ animationDelay: `${Math.min(index, 12) * 0.04}s` }}
-      onClick={onClick}
+      onClick={handleClick}
+      onPointerDown={longPress.onPointerDown}
+      onPointerMove={longPress.onPointerMove}
+      onPointerUp={longPress.onPointerUp}
+      onPointerLeave={longPress.onPointerLeave}
+      onPointerCancel={longPress.onPointerCancel}
       role="button"
       aria-label={title}
       tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}
+      onKeyDown={(e) => e.key === "Enter" && handleClick()}
     >
       <div
         className={styles.imageWrapper}
@@ -64,6 +90,16 @@ export function MediaCard<T, E extends { status: string; score: number }>({
           <img className={styles.coverImage} src={image} alt={title} loading="lazy" decoding="async" />
         ) : (
           <div className={styles.coverPlaceholder}>{config.placeholderEmoji ?? "🎬"}</div>
+        )}
+
+        {selectionMode && (
+          <span className={`${styles.selectionCheck} ${selected ? styles.selectionCheckOn : ""}`} aria-hidden="true">
+            {selected && (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            )}
+          </span>
         )}
 
         <div className={styles.overlay}>

@@ -51,6 +51,7 @@ export function AnimePage() {
     error: libraryError,
     add: addEntry,
     update: updateEntry,
+    updateMany: updateManyEntries,
     setCover: setCoverEntry,
     remove: removeEntry,
     removeMany: removeManyEntries,
@@ -269,6 +270,8 @@ export function AnimePage() {
           onAddToLibrary={handleOpenLibraryModal}
           getLibraryEntry={(id) => findByAnilistId(id)}
           onDeleteGroup={(group) => removeManyEntries(group.members.map((m) => m.id))}
+          statusLabels={LIBRARY_STATUS_LABELS}
+          onBulkSetStatus={(ids, status) => updateManyEntries(ids, status)}
           expandTitle="Ver temporadas, OVAs e filmes"
           animationKey={gridKey}
           emptyMessage="Sua biblioteca está vazia."

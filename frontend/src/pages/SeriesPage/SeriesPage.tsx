@@ -44,6 +44,7 @@ export function SeriesPage() {
     error: libraryError,
     add: addEntry,
     update: updateEntry,
+    updateMany: updateManyEntries,
     remove: removeEntry,
     findByTmdbId,
   } = useSeriesLibrary();
@@ -276,6 +277,8 @@ export function SeriesPage() {
         onAddToLibrary={handleOpenLibraryModal}
         getLibraryEntry={(id) => findByTmdbId(id)}
         isLibraryView={activeTab === "library"}
+        statusLabels={SERIES_LIBRARY_STATUS_LABELS}
+        onBulkSetStatus={(ids, status) => updateManyEntries(ids, status)}
         animationKey={gridKey}
         emptyMessage={
           activeTab === "library"

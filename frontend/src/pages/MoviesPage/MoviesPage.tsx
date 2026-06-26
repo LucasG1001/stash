@@ -50,6 +50,7 @@ export function MoviesPage() {
     error: libraryError,
     add: addEntry,
     update: updateEntry,
+    updateMany: updateManyEntries,
     setCover: setCoverEntry,
     remove: removeEntry,
     removeMany: removeManyEntries,
@@ -261,6 +262,8 @@ export function MoviesPage() {
           onAddToLibrary={handleOpenLibraryModal}
           getLibraryEntry={(id) => findByTmdbId(id)}
           onDeleteGroup={(group) => removeManyEntries(group.members.map((m) => m.id))}
+          statusLabels={MOVIE_LIBRARY_STATUS_LABELS}
+          onBulkSetStatus={(ids, status) => updateManyEntries(ids, status)}
           expandTitle="Ver filmes da coleção"
           animationKey={gridKey}
           emptyMessage="Sua biblioteca está vazia."
