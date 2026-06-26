@@ -7,6 +7,7 @@ import { migrate } from "./database/migrate.js";
 import { refreshStaleEntries } from "./services/librarySyncService.js";
 import { refreshStaleSeries } from "./services/seriesLibrarySyncService.js";
 import { refreshCollections } from "./services/collectionSyncService.js";
+import { notifyDueReleases } from "./services/releaseNotifyService.js";
 import { animeRoutes } from "./routes/animeRoutes.js";
 import { libraryRoutes } from "./routes/libraryRoutes.js";
 import { movieRoutes } from "./routes/movieRoutes.js";
@@ -26,6 +27,8 @@ const PORT = process.env.PORT || 3333;
 const SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const COLLECTION_SYNC_HOUR = 4;
 const COLLECTION_SYNC_MINUTE = 0;
+const RELEASE_NOTIFY_HOUR = 9;
+const RELEASE_NOTIFY_MINUTE = 0;
 
 function scheduleDailyAt(hour: number, minute: number, task: () => void): void {
   const now = new Date();
@@ -69,6 +72,11 @@ async function start(): Promise<void> {
   const runCollectionSync = () =>
     refreshCollections().catch((error) => void notifyError("Job refreshCollections", error));
   scheduleDailyAt(COLLECTION_SYNC_HOUR, COLLECTION_SYNC_MINUTE, runCollectionSync);
+
+  const runReleaseNotify = () =>
+    notifyDueReleases().catch((error) => void notifyError("Job notifyDueReleases", error));
+  runReleaseNotify();
+  scheduleDailyAt(RELEASE_NOTIFY_HOUR, RELEASE_NOTIFY_MINUTE, runReleaseNotify);
 }
 
 process.on("unhandledRejection", (reason) => {

@@ -253,3 +253,30 @@ export async function notifyNewCollectionItem(args: {
     buttons: args.url ? [{ text: "🔗 Ver", url: args.url }] : undefined,
   });
 }
+
+// ---------- lançamentos (filmes / jogos) ----------
+
+function igdbAbsoluteImage(proxyPath: string | null): string | undefined {
+  if (!proxyPath) return undefined;
+  const url = proxyPath.replace(/^\/api\/game\/image/, "https://images.igdb.com/igdb/image/upload");
+  return url.startsWith("http") ? url : undefined;
+}
+
+export async function notifyMovieReleased(movie: { tmdbId: number; title: string; posterImage: string | null }): Promise<void> {
+  const url = `https://www.themoviedb.org/movie/${movie.tmdbId}`;
+  await send("filme-lancado", {
+    title: `🎬 ${movie.title}`,
+    description: "Já está disponível!",
+    image: movie.posterImage?.startsWith("http") ? movie.posterImage : undefined,
+    url,
+    buttons: [{ text: "🔗 TMDB", url }],
+  });
+}
+
+export async function notifyGameReleased(game: { title: string; backgroundImage: string | null }): Promise<void> {
+  await send("jogo-lancado", {
+    title: `🎮 ${game.title}`,
+    description: "Foi lançado!",
+    image: igdbAbsoluteImage(game.backgroundImage),
+  });
+}
