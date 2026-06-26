@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import type { PoolClient } from "pg";
+import { spawn } from "node:child_process";
 import { pool } from "../database/connection.js";
 import * as libraryModel from "../models/libraryModel.js";
 import { movieLibraryModel } from "../models/movieLibraryModel.js";
@@ -136,6 +137,43 @@ export async function exportAll(_req: Request, res: Response): Promise<void> {
     void notifyError("API backup/export", error);
     res.status(500).json({ error: "Erro ao exportar a biblioteca." });
   }
+}
+
+export function exportDump(_req: Request, res: Response): void {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    res.status(500).json({ error: "Banco de dados não configurado." });
+    return;
+  }
+
+  const date = new Date().toISOString().slice(0, 10);
+  const child = spawn("pg_dump", ["-Fc", "-d", url]);
+  let stderr = "";
+  let started = false;
+
+  child.stderr.on("data", (chunk) => {
+    stderr += chunk.toString();
+  });
+
+  child.on("error", (error) => {
+    void notifyError("API backup/dump spawn", error);
+    if (!res.headersSent) res.status(500).json({ error: "Erro ao gerar o dump do banco." });
+  });
+
+  child.stdout.once("data", (chunk: Buffer) => {
+    started = true;
+    res.setHeader("Content-Type", "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="media-tracker-backup-${date}.dump"`);
+    res.write(chunk);
+    child.stdout.pipe(res);
+  });
+
+  child.on("close", (code) => {
+    if (code === 0) return;
+    void notifyError("API backup/dump", new Error(stderr || `pg_dump encerrou com código ${code}`));
+    if (!started && !res.headersSent) res.status(500).json({ error: "Erro ao gerar o dump do banco." });
+    else res.end();
+  });
 }
 
 async function upsertRows(client: PoolClient, spec: TableSpec, rows: Record<string, unknown>[]): Promise<number> {

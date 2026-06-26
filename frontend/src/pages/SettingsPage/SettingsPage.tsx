@@ -24,7 +24,7 @@ export function SettingsPage() {
     setBusy(true);
     setFeedback(null);
     try {
-      const res = await api.get("/backup/export");
+      const res = await api.get("/api/backup/export");
       const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -40,12 +40,31 @@ export function SettingsPage() {
     }
   };
 
+  const handleExportDump = async () => {
+    setBusy(true);
+    setFeedback(null);
+    try {
+      const res = await api.get("/api/backup/export/dump", { responseType: "blob" });
+      const url = URL.createObjectURL(res.data as Blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `media-tracker-backup-${new Date().toISOString().slice(0, 10)}.dump`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setFeedback({ type: "success", message: "Dump exportado." });
+    } catch {
+      setFeedback({ type: "error", message: "Erro ao exportar o dump." });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleImport = async (file: File) => {
     setBusy(true);
     setFeedback(null);
     try {
       const data = JSON.parse(await file.text());
-      const res = await api.post("/backup/import", data);
+      const res = await api.post("/api/backup/import", data);
       const imported = (res.data?.imported ?? {}) as Record<string, number>;
       const total = Object.values(imported).reduce((sum, n) => sum + n, 0);
       await Promise.all([loadAnime(), loadMovies(), loadSeries(), loadBooks(), loadGames()]);
@@ -65,13 +84,17 @@ export function SettingsPage() {
       <section className={styles.card}>
         <h2 className={styles.cardTitle}>Backup</h2>
         <p className={styles.cardText}>
-          Exporte toda a sua biblioteca em um arquivo JSON ou importe um backup. A importação mescla os
-          dados (adiciona e atualiza), sem apagar o que já existe.
+          Exporte toda a sua biblioteca em JSON (restaurável aqui pelo botão importar) ou gere um dump
+          nativo do PostgreSQL (.dump) para recuperação completa via pg_restore. A importação de JSON
+          mescla os dados (adiciona e atualiza), sem apagar o que já existe.
         </p>
 
         <div className={styles.actions}>
           <button type="button" className={styles.button} onClick={handleExport} disabled={busy}>
-            Exportar backup
+            Exportar JSON
+          </button>
+          <button type="button" className={styles.button} onClick={handleExportDump} disabled={busy}>
+            Baixar .dump
           </button>
           <button
             type="button"
