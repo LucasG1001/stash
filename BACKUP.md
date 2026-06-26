@@ -33,61 +33,79 @@ Salve esses arquivos onde quiser (HD, Google Drive, etc.).
 Roda sozinho todo dia, independente de você abrir o app. Usa
 [`rclone`](https://rclone.org) para enviar ao Google Drive, com rotação de 30 dias.
 
-### 2.1. Instalar e configurar o rclone (uma vez)
+### 2.1. Conta e credenciais do Google (uma vez)
+
+Decisões de segurança adotadas:
+
+- **Conta Google dedicada** só para backups (Drive isolado do pessoal).
+- **Escopo `drive.file`** (opção `3` no rclone): o rclone só enxerga os arquivos
+  que **ele mesmo cria** — mesmo que o token vaze, o resto do Drive fica intocado.
+- **App OAuth publicado em produção** (não "Testing"): evita o erro
+  `403 access_denied` e a **expiração de token a cada 7 dias** do modo de teste.
+
+No Google Cloud Console (com a conta dona do projeto OAuth):
+`APIs e serviços → Tela de consentimento OAuth → Publicar app` (Testing → In
+production). Não precisa enviar para verificação; o aviso "app não verificado" é
+contornável em `Avançado → Acessar (não seguro)`.
+
+### 2.2. Instalar e configurar o rclone (uma vez)
 
 ```bash
 # instalar
 curl https://rclone.org/install.sh | sudo bash
 
-# configurar o remote do Google Drive (interativo)
+# configurar o remote (interativo)
 rclone config
 #  n) New remote
 #  name> gdrive
 #  Storage> drive
-#  client_id/secret> (Enter para usar os padrões)
-#  scope> 1 (acesso total) ou 2 (somente arquivos criados pelo rclone)
-#  Use auto config? Se o VPS não tem navegador, escolha "No" e siga o fluxo
-#    "rclone authorize" a partir da sua máquina local com navegador.
+#  client_id/secret> (cole o Client ID/Secret do app OAuth criado no Cloud Console)
+#  scope> 3            <-- drive.file: só os arquivos que o rclone criar
+#  Edit advanced config? n
+#  Use web browser to automatically authenticate? n   (VPS sem navegador)
+#    -> rode o "rclone authorize \"drive\" \"...\"" numa máquina com navegador
+#       e FAÇA LOGIN COM A CONTA DEDICADA DE BACKUP; cole o token de volta.
 ```
 
-Teste:
+> Com `drive.file` o rclone não lista pastas que não criou (`rclone lsd gdrive:`
+> pode vir vazio) — isso é esperado. A verificação real é rodar um backup e
+> conferir com `rclone ls gdrive:<projeto>-backups`.
+
+### 2.3. Instalar o script genérico (uma vez, lugar central)
+
+Um único script (`scripts/backup-generic.sh`) atende **todos** os projetos: recebe
+o nome do projeto como argumento e deriva containers, pasta no Drive e pasta local.
+Fica fora dos repositórios, em `/home/lucas/scripts/`:
 
 ```bash
-rclone mkdir gdrive:media-tracker-backups
-rclone lsd gdrive:
+cd /home/lucas/stash && git pull
+mkdir -p /home/lucas/scripts
+cp scripts/backup-generic.sh /home/lucas/scripts/
+chmod +x /home/lucas/scripts/backup-generic.sh
 ```
 
-### 2.2. Instalar o script
-
-O script vem no próprio repositório (`scripts/backup-to-gdrive.sh`) e roda
-direto de lá. Os caminhos padrão já apontam para a instalação atual
-(`/home/lucas/stash` para o repo/`.env` e `/home/lucas/backups` para os arquivos).
+Teste manual (o `SERVER_SERVICE=server` liga também o export JSON):
 
 ```bash
-cd /home/lucas/stash
-git pull
-mkdir -p /home/lucas/backups
-chmod +x scripts/backup-to-gdrive.sh
+SERVER_SERVICE=server /home/lucas/scripts/backup-generic.sh media-tracker
+rclone ls gdrive:media-tracker-backups
 ```
 
-Se quiser mudar algo sem editar o script, dá para sobrescrever por variável de
-ambiente: `BACKUP_DIR`, `RCLONE_REMOTE`, `ENV_FILE`, `RETENTION_DAYS`.
+Convenções e overrides do script: veja [`BACKUP-NOTES.md`](./BACKUP-NOTES.md) §11.
 
-Rode uma vez na mão para validar:
-
-```bash
-/home/lucas/stash/scripts/backup-to-gdrive.sh
-```
-
-### 2.3. Agendar no cron (diário, 03:00)
+### 2.4. Agendar no cron (diário, 03:00)
 
 ```bash
 crontab -e
 ```
 
 ```cron
-0 3 * * * /home/lucas/stash/scripts/backup-to-gdrive.sh >> /home/lucas/backups/backup.log 2>&1
+0 3 * * * SERVER_SERVICE=server /home/lucas/scripts/backup-generic.sh media-tracker >> /home/lucas/backups/media-tracker.log 2>&1
 ```
+
+Para cada **novo projeto**, basta adicionar uma linha análoga (trocando o nome do
+projeto). Adicione `SERVER_SERVICE=server` só se o projeto tiver a rota de export
+JSON; senão o backup gera apenas o `.dump`.
 
 ---
 

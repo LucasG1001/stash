@@ -76,11 +76,23 @@ código** (no config dele). Instala-se **uma vez no VPS** e serve pra todos os
 projetos.
 
 ### A pegadinha do OAuth (importante!)
-Conta Gmail pessoal → tipo de usuário **Externo**. Nesse modo o app nasce em
-**"Testing"**, e nesse estado o **token expira a cada 7 dias** — o backup pararia
-silenciosamente depois de uma semana. **Solução:** publicar o app
-(*Testing → In production*) na tela de consentimento. O aviso de "app não
-verificado" pode ser ignorado pra uso pessoal.
+Conta Gmail → tipo de usuário **Externo**. Nesse modo o app nasce em **"Testing"**,
+e nesse estado: (a) só "usuários de teste" conseguem logar (senão dá
+`403 access_denied`), e (b) o **token expira a cada 7 dias** — o backup pararia
+silenciosamente depois de uma semana. **Solução para os dois:** publicar o app
+(*Testing → In production*) na tela de consentimento. Não precisa enviar para
+verificação; o aviso "app não verificado" se contorna em *Avançado → Acessar*.
+
+### Decisões de segurança adotadas
+1. **Conta Google dedicada só para backups.** O Drive de backups fica isolado da
+   conta pessoal — mesmo num comprometimento, o conteúdo pessoal não é exposto.
+2. **Escopo `drive.file`** (opção `3` no rclone), não `drive` (acesso total).
+   O rclone só enxerga/mexe nos arquivos que **ele mesmo cria**. Se o token vazar
+   do VPS, o atacante alcança só a pasta de backups — não o resto do Drive.
+   Princípio do menor privilégio. (Funciona porque, no backup, o rclone cria tudo:
+   pasta e arquivos; ele tem acesso a tudo que precisa, inclusive para rotacionar.)
+   Efeito colateral esperado: `rclone lsd gdrive:` não lista o que não foi criado
+   pelo rclone — normal.
 
 ## 7. Bugs encontrados durante o setup (e a correção)
 
@@ -109,7 +121,11 @@ vão aparecer de novo em outros projetos:
   (campos em `camelCase` que o `importAll` relê).
 - **`.dump`:** `pg_restore -l` mostrou `Format: CUSTOM`, `TOC Entries: 27`,
   `Dumped from database version: 16.14` → íntegro e restaurável.
-- **rclone → Drive:** upload de teste confirmado no Drive.
+- **rclone → Drive:** upload confirmado na conta dedicada (escopo `drive.file`).
+- **Cron:** disparo automático no horário agendado confirmado (não só o script na
+  mão) — `cron-test.log` registrou `Backup concluído`.
+- **Script genérico:** `backup-generic.sh media-tracker` validado em produção; é o
+  que está no cron atual (substituiu o `backup-to-gdrive.sh`).
 
 ## 9. Restaurar (resumo — detalhes no BACKUP.md)
 
@@ -123,11 +139,14 @@ vão aparecer de novo em outros projetos:
 ## 10. O que é único vs. o que repete (pra próximos projetos)
 
 **Feito uma vez, nunca mais:** instalar rclone no VPS, criar o OAuth/Client ID no
-Google Cloud, configurar o remote `gdrive:`.
+Google Cloud, publicar o app em produção, configurar o remote `gdrive:` (conta
+dedicada, escopo `drive.file`), instalar o `backup-generic.sh` em
+`/home/lucas/scripts/`.
 
-**Por projeto (rápido, ~10 min):** copiar o `backup-to-gdrive.sh` (trocar o
-`PROJECT_PREFIX` e o `RCLONE_REMOTE`), adicionar `postgresql16-client` no
-Dockerfile (se quiser botão no app), 1 linha no cron.
+**Por projeto (rápido):** com o script genérico adotado, é **1 linha no cron**
+(veja §11). A modificação no Dockerfile (`postgresql16-client`) só é necessária se
+você quiser o botão de download dentro daquele app — para o backup automático não
+precisa, pois o `pg_dump` roda dentro do container do Postgres.
 
 ## 11. Versão genérica (zero edição): `scripts/backup-generic.sh`
 
@@ -173,5 +192,6 @@ cp /home/lucas/stash/scripts/backup-generic.sh /home/lucas/scripts/
 chmod +x /home/lucas/scripts/backup-generic.sh
 ```
 
-> O `backup-to-gdrive.sh` (específico do media-tracker, já testado) continua sendo
-> o que o cron deste projeto usa. O genérico é para os próximos.
+> **Status atual:** o media-tracker já usa o `backup-generic.sh` no cron (migrado).
+> O `backup-to-gdrive.sh` (versão específica original) permanece no repositório
+> apenas como referência histórica — não está mais em uso.
