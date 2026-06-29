@@ -24,6 +24,17 @@ export function SelectionBar({ count, statusLabels, onApply, onClear }: Selectio
           </button>
         ))}
       </div>
+      <select
+        className={styles.select}
+        value=""
+        onChange={(e) => { if (e.target.value) onApply(e.target.value); }}
+        aria-label="Alterar status"
+      >
+        <option value="" disabled>Alterar status</option>
+        {Object.entries(statusLabels).map(([status, label]) => (
+          <option key={status} value={status}>{label}</option>
+        ))}
+      </select>
     </div>
   );
 }

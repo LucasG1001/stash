@@ -178,4 +178,8 @@
     padding-left: 10px;
     padding-right: 10px;
   }
+
+  .filterWrapper .sortButton:last-child {
+    flex: 0 0 auto;
+  }
 }
