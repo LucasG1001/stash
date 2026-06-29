@@ -3,7 +3,7 @@
   left: 50%;
   bottom: var(--spacing-xl);
   transform: translateX(-50%);
-  z-index: 50;
+  z-index: 150;
   display: flex;
   align-items: center;
   gap: var(--spacing-base);
@@ -90,7 +90,7 @@
     right: var(--spacing-base);
     transform: none;
     max-width: none;
-    bottom: var(--spacing-base);
+    bottom: calc(var(--mobile-nav-height) + var(--spacing-base) + env(safe-area-inset-bottom));
   }
 
   @keyframes barUp {

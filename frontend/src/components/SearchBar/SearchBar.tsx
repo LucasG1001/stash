@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import styles from "./SearchBar.module.css";
 
 interface SearchBarProps {
@@ -8,9 +9,22 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ value, onChange, loading, placeholder = "Buscar anime..." }: SearchBarProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.matchMedia("(max-width: 768px)").matches && document.activeElement === inputRef.current) {
+        inputRef.current?.blur();
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <div className={styles.searchBar}>
       <input
+        ref={inputRef}
         type="text"
         className={styles.input}
         value={value}
