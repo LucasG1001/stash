@@ -107,6 +107,19 @@ export async function migrate(): Promise<void> {
   `);
 
   await pool.query(`
+    ALTER TABLE series_library
+    ADD COLUMN IF NOT EXISTS last_notified_episode INTEGER;
+  `);
+
+  await pool.query(`
+    UPDATE series_library
+    SET last_notified_episode = (next_airing_episode->>'episode')::int - 1
+    WHERE last_notified_episode IS NULL
+      AND next_airing_episode IS NOT NULL
+      AND (next_airing_episode->>'airingAt')::bigint <= EXTRACT(EPOCH FROM NOW());
+  `);
+
+  await pool.query(`
     DO $$
     BEGIN
       IF EXISTS (

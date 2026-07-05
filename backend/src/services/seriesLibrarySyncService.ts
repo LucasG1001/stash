@@ -1,4 +1,4 @@
-import { findStaleSeries, updateSeriesSyncData } from "../models/seriesLibraryModel.js";
+import { findStaleSeries, updateSeriesSyncData, findDueSeriesEpisodes, markSeriesEpisodeNotified } from "../models/seriesLibraryModel.js";
 import { fetchSeriesSyncData, type SeriesSyncResult } from "./tmdbSeriesService.js";
 import { notifySeriesNewEpisode, notifySeriesFinished, notifyError } from "./notifyService.js";
 import type { SeriesLibraryEntry } from "../types/seriesLibrary.js";
@@ -7,13 +7,17 @@ const ONGOING_TTL_HOURS = 12;
 const ENDED_TTL_HOURS = 24 * 7;
 const FINISHED_AIR_STATUS = ["Ended", "Canceled"];
 
-export function detectAndNotify(old: SeriesLibraryEntry, fresh: SeriesSyncResult): void {
-  const pending = old.nextAiringEpisode;
-  const aired = pending && pending.airingAt * 1000 <= Date.now();
+async function notifyDueEpisode(entry: SeriesLibraryEntry): Promise<void> {
+  const pending = entry.nextAiringEpisode;
+  if (!pending) return;
+  if (pending.airingAt * 1000 > Date.now()) return;
+  if (pending.episode <= (entry.lastNotifiedEpisode ?? 0)) return;
+  await notifySeriesNewEpisode(entry, pending.episode, entry.episodes);
+  await markSeriesEpisodeNotified(entry.tmdbId, pending.episode);
+}
 
-  if (aired) {
-    void notifySeriesNewEpisode(old, pending.episode, fresh.episodes);
-  }
+export async function detectAndNotify(old: SeriesLibraryEntry, fresh: SeriesSyncResult): Promise<void> {
+  await notifyDueEpisode(old);
 
   const finishing =
     !fresh.nextAiringEpisode && fresh.airStatus != null && FINISHED_AIR_STATUS.includes(fresh.airStatus);
@@ -40,13 +44,38 @@ async function doRefresh(): Promise<void> {
     stale.map(async (entry) => {
       try {
         const fresh = await fetchSeriesSyncData(entry.tmdbId);
-        if (entry.syncedAt) detectAndNotify(entry, fresh);
+        if (entry.syncedAt) await detectAndNotify(entry, fresh);
         await updateSeriesSyncData(entry.tmdbId, {
           episodes: fresh.episodes,
           nextAiringEpisode: fresh.nextAiringEpisode,
         });
       } catch (error) {
         await notifyError("seriesLibrarySyncService.refreshStaleSeries", error, { tmdbId: String(entry.tmdbId) });
+      }
+    })
+  );
+}
+
+let dueInFlight: Promise<void> | null = null;
+
+export function notifyDueSeriesEpisodes(): Promise<void> {
+  if (dueInFlight) return dueInFlight;
+  dueInFlight = doNotifyDue().finally(() => {
+    dueInFlight = null;
+  });
+  return dueInFlight;
+}
+
+async function doNotifyDue(): Promise<void> {
+  const due = await findDueSeriesEpisodes();
+  if (due.length === 0) return;
+
+  await Promise.all(
+    due.map(async (entry) => {
+      try {
+        await notifyDueEpisode(entry);
+      } catch (error) {
+        await notifyError("seriesLibrarySyncService.notifyDueSeriesEpisodes", error, { tmdbId: String(entry.tmdbId) });
       }
     })
   );

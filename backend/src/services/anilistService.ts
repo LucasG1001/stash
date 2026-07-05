@@ -79,7 +79,19 @@ function getNextSeason(): { season: string; year: number } {
 }
 
 async function queryAniList<T>(query: string, variables: Record<string, unknown>): Promise<T> {
-  return cachedRequest<T>({ method: "post", url: ANILIST_URL, data: { query, variables } }, CACHE_TTL_MS);
+  return cachedRequest<T>(
+    {
+      method: "post",
+      url: ANILIST_URL,
+      data: { query, variables },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "User-Agent": "StashAnimeTracker/1.0 (+contato)",
+      },
+    },
+    CACHE_TTL_MS,
+  );
 }
 
 export async function fetchSeasonAnimes(season: string, year: number, page = 1, perPage = 20): Promise<{ animes: AnimeCard[]; pageInfo: AniListResponse["data"]["Page"]["pageInfo"] }> {

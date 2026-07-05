@@ -5,7 +5,7 @@ import express from "express";
 import cors from "cors";
 import { migrate } from "./database/migrate.js";
 import { refreshStaleEntries } from "./services/librarySyncService.js";
-import { refreshStaleSeries } from "./services/seriesLibrarySyncService.js";
+import { refreshStaleSeries, notifyDueSeriesEpisodes } from "./services/seriesLibrarySyncService.js";
 import { refreshCollections } from "./services/collectionSyncService.js";
 import { notifyDueReleases } from "./services/releaseNotifyService.js";
 import { animeRoutes } from "./routes/animeRoutes.js";
@@ -64,9 +64,13 @@ async function start(): Promise<void> {
   app.listen(PORT, () => {
     process.stdout.write(`Backend rodando em http://localhost:${PORT}\n`);
   });
+  notifyDueSeriesEpisodes().catch((error) => void notifyError("Job notifyDueSeriesEpisodes", error));
+
   setInterval(() => {
     refreshStaleEntries().catch((error) => void notifyError("Job refreshStaleEntries", error));
-    refreshStaleSeries().catch((error) => void notifyError("Job refreshStaleSeries", error));
+    notifyDueSeriesEpisodes()
+      .then(() => refreshStaleSeries())
+      .catch((error) => void notifyError("Job refreshStaleSeries", error));
   }, SYNC_INTERVAL_MS);
 
   const runCollectionSync = () =>

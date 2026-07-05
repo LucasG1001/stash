@@ -22,6 +22,7 @@ export const seriesLibraryModel = createLibraryModel<SeriesLibraryEntry, CreateS
     { column: "series_status", field: "seriesStatus", default: "RELEASED" },
     { column: "next_airing_episode", field: "nextAiringEpisode", default: null, readonly: true },
     { column: "synced_at", field: "syncedAt", default: null, readonly: true },
+    { column: "last_notified_episode", field: "lastNotifiedEpisode", default: null, readonly: true },
   ],
   statusField: "status",
   completion: { column: "watched_at", field: "watchedAt", whenStatus: "watched" },
@@ -41,6 +42,7 @@ function toSeriesEntry(row: SeriesLibraryRow): SeriesLibraryEntry {
     seriesStatus: row.series_status,
     nextAiringEpisode: row.next_airing_episode,
     syncedAt: row.synced_at,
+    lastNotifiedEpisode: row.last_notified_episode,
     watchedAt: row.watched_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -62,6 +64,24 @@ export async function findStaleSeries(
     [ongoingTtlHours, endedTtlHours]
   );
   return result.rows.map(toSeriesEntry);
+}
+
+export async function findDueSeriesEpisodes(): Promise<SeriesLibraryEntry[]> {
+  const result = await pool.query<SeriesLibraryRow>(
+    `SELECT * FROM series_library
+     WHERE status != 'dropped'
+       AND next_airing_episode IS NOT NULL
+       AND (next_airing_episode->>'airingAt')::bigint <= EXTRACT(EPOCH FROM NOW())
+       AND (next_airing_episode->>'episode')::int > COALESCE(last_notified_episode, 0)`
+  );
+  return result.rows.map(toSeriesEntry);
+}
+
+export async function markSeriesEpisodeNotified(tmdbId: number, episode: number): Promise<void> {
+  await pool.query(
+    `UPDATE series_library SET last_notified_episode = $2 WHERE tmdb_id = $1`,
+    [tmdbId, episode]
+  );
 }
 
 export interface SeriesSyncData {

@@ -18,6 +18,7 @@ export interface SeriesLibraryEntry {
   seriesStatus: string;
   nextAiringEpisode: SeriesNextAiringEpisode | null;
   syncedAt: string | null;
+  lastNotifiedEpisode: number | null;
   watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -59,6 +60,7 @@ export interface SeriesLibraryRow {
   series_status: string;
   next_airing_episode: SeriesNextAiringEpisode | null;
   synced_at: string | null;
+  last_notified_episode: number | null;
   watched_at: string | null;
   created_at: string;
   updated_at: string;
