@@ -19,6 +19,7 @@ export const gameLibraryModel = createLibraryModel<GameLibraryEntry, CreateGameL
   statusField: "status",
   completion: { column: "finished_at", field: "finishedAt", whenStatus: "beaten" },
   collectionColumn: "collection_id",
+  rewatch: { column: "is_rewatching", field: "isRewatching" },
 });
 
 function toEntry(row: GameLibraryRow): GameLibraryEntry {
@@ -34,6 +35,7 @@ function toEntry(row: GameLibraryRow): GameLibraryEntry {
     gameStatus: row.game_status,
     collectionId: row.collection_id,
     isCover: row.is_cover,
+    isRewatching: row.is_rewatching,
     finishedAt: row.finished_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

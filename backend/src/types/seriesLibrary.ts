@@ -19,6 +19,7 @@ export interface SeriesLibraryEntry {
   nextAiringEpisode: SeriesNextAiringEpisode | null;
   syncedAt: string | null;
   lastNotifiedEpisode: number | null;
+  isRewatching: boolean;
   watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -45,6 +46,7 @@ export interface UpdateSeriesLibraryEntry {
   seasons?: number | null;
   episodes?: number | null;
   seriesStatus?: string;
+  isRewatching?: boolean;
 }
 
 export interface SeriesLibraryRow {
@@ -61,6 +63,7 @@ export interface SeriesLibraryRow {
   next_airing_episode: SeriesNextAiringEpisode | null;
   synced_at: string | null;
   last_notified_episode: number | null;
+  is_rewatching: boolean;
   watched_at: string | null;
   created_at: string;
   updated_at: string;

@@ -5,6 +5,7 @@ import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { GameDrawer } from "../../components/GameDrawer/GameDrawer";
 import { GameLibraryModal } from "../../components/GameLibraryModal/GameLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { ResultCount } from "../../components/ResultCount/ResultCount";
 import { gameCardConfig } from "../../config/cards";
 import { useGames } from "../../hooks/useGames";
 import { useGameLibrary } from "../../hooks/useGameLibrary";
@@ -84,10 +85,10 @@ export function GamesPage() {
     setSelectedGameForModal(game);
   }, []);
 
-  const handleModalSave = useCallback((game: GameCard, data: { status: GameLibraryStatus; score: number }) => {
+  const handleModalSave = useCallback((game: GameCard, data: { status: GameLibraryStatus; score: number; isRewatching: boolean }) => {
     const existing = findByIgdbId(game.id);
     if (existing) {
-      updateEntry(existing.id, { ...data, gameStatus: game.gameStatus });
+      updateEntry(existing.id, { status: data.status, score: data.score, isRewatching: data.isRewatching, gameStatus: game.gameStatus });
     } else {
       addEntry({
         igdbId: game.id,
@@ -96,7 +97,8 @@ export function GamesPage() {
         released: game.released,
         metacritic: game.metacritic,
         gameStatus: game.gameStatus,
-        ...data,
+        status: data.status,
+        score: data.score,
       });
     }
     setSelectedGameForModal(null);
@@ -132,7 +134,8 @@ export function GamesPage() {
   const collectionGroups = filterGroupsBySearch(
     filterGroupsByStatus(
       buildGameCollectionGroups(libraryEntries, scoreSortDir, releaseSortDir),
-      libraryFilter
+      libraryFilter,
+      (member, filter) => filter === "plan_to_play" && member.isRewatching
     ),
     librarySearch
   );
@@ -179,6 +182,13 @@ export function GamesPage() {
               </option>
             ))}
           </select>
+          {games.length > 0 && <ResultCount count={games.length} />}
+        </div>
+      )}
+
+      {activeTab === "upcoming" && games.length > 0 && (
+        <div className={styles.countBar}>
+          <ResultCount count={games.length} />
         </div>
       )}
 
@@ -190,6 +200,7 @@ export function GamesPage() {
             loading={loading && searchQuery.length > 0}
             placeholder="Buscar jogo..."
           />
+          {games.length > 0 && <ResultCount count={games.length} />}
         </div>
       )}
 
@@ -248,6 +259,7 @@ export function GamesPage() {
             )}
           </button>
           </div>
+          {collectionGroups.length > 0 && <ResultCount count={collectionGroups.length} />}
         </div>
       )}
 

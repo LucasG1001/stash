@@ -88,6 +88,11 @@ export async function migrate(): Promise<void> {
   `);
 
   await pool.query(`
+    ALTER TABLE movie_library
+    ADD COLUMN IF NOT EXISTS is_rewatching BOOLEAN NOT NULL DEFAULT FALSE;
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS series_library (
       id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       tmdb_id         INTEGER NOT NULL UNIQUE,
@@ -122,6 +127,11 @@ export async function migrate(): Promise<void> {
     WHERE last_notified_episode IS NULL
       AND next_airing_episode IS NOT NULL
       AND (next_airing_episode->>'airingAt')::bigint <= EXTRACT(EPOCH FROM NOW());
+  `);
+
+  await pool.query(`
+    ALTER TABLE series_library
+    ADD COLUMN IF NOT EXISTS is_rewatching BOOLEAN NOT NULL DEFAULT FALSE;
   `);
 
   await pool.query(`
@@ -176,6 +186,11 @@ export async function migrate(): Promise<void> {
   await pool.query(`
     ALTER TABLE game_library
     ADD COLUMN IF NOT EXISTS release_notified_at TIMESTAMPTZ;
+  `);
+
+  await pool.query(`
+    ALTER TABLE game_library
+    ADD COLUMN IF NOT EXISTS is_rewatching BOOLEAN NOT NULL DEFAULT FALSE;
   `);
 
   await pool.query(`

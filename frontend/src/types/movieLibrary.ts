@@ -12,6 +12,7 @@ export interface MovieLibraryEntry {
   movieStatus: string;
   collectionId: number | null;
   isCover: boolean;
+  isRewatching: boolean;
   watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -36,6 +37,7 @@ export interface UpdateMovieLibraryEntry {
   releaseDate?: string | null;
   runtime?: number | null;
   movieStatus?: string;
+  isRewatching?: boolean;
 }
 
 export const MOVIE_LIBRARY_STATUS_LABELS: Record<MovieLibraryStatus, string> = {

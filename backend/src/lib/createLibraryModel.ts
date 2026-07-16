@@ -15,6 +15,7 @@ export interface LibraryModelConfig {
   statusField: string;
   completion: { column: string; field: string; whenStatus: string };
   collectionColumn?: string;
+  rewatch?: { column: string; field: string };
 }
 
 export interface LibraryModel<TEntry, TCreate, TUpdate> {
@@ -34,7 +35,7 @@ type Row = Record<string, unknown>;
 export function createLibraryModel<TEntry, TCreate, TUpdate>(
   config: LibraryModelConfig
 ): LibraryModel<TEntry, TCreate, TUpdate> {
-  const { table, externalId, fields, statusField, completion, collectionColumn } = config;
+  const { table, externalId, fields, statusField, completion, collectionColumn, rewatch } = config;
 
   const toEntry = (row: Row): TEntry => {
     const entry: Row = { id: row.id };
@@ -44,6 +45,7 @@ export function createLibraryModel<TEntry, TCreate, TUpdate>(
       entry[f.field] = f.numeric ? parseFloat(value as string) : value;
     }
     entry[completion.field] = row[completion.column];
+    if (rewatch) entry[rewatch.field] = row[rewatch.column];
     entry.createdAt = row.created_at;
     entry.updatedAt = row.updated_at;
     return entry as TEntry;
@@ -109,6 +111,15 @@ export function createLibraryModel<TEntry, TCreate, TUpdate>(
       } else {
         sets.push(`${f.column} = $${index++}`);
         values.push(patch[f.field]);
+      }
+    }
+
+    if (rewatch) {
+      if (patch[statusField] !== undefined && patch[statusField] !== completion.whenStatus) {
+        sets.push(`${rewatch.column} = FALSE`);
+      } else if (patch[rewatch.field] !== undefined) {
+        sets.push(`${rewatch.column} = $${index++}`);
+        values.push(patch[rewatch.field]);
       }
     }
 

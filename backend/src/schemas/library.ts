@@ -14,7 +14,7 @@ export const movieCreateSchema = z.object({
   runtime: nullableNumber,
   movieStatus: z.string().optional(),
 });
-export const movieUpdateSchema = movieCreateSchema.partial();
+export const movieUpdateSchema = movieCreateSchema.partial().extend({ isRewatching: z.boolean().optional() });
 
 export const seriesCreateSchema = z.object({
   tmdbId: z.number(),
@@ -27,7 +27,7 @@ export const seriesCreateSchema = z.object({
   episodes: nullableNumber,
   seriesStatus: z.string().optional(),
 });
-export const seriesUpdateSchema = seriesCreateSchema.partial();
+export const seriesUpdateSchema = seriesCreateSchema.partial().extend({ isRewatching: z.boolean().optional() });
 
 export const gameCreateSchema = z.object({
   igdbId: z.number(),
@@ -39,7 +39,7 @@ export const gameCreateSchema = z.object({
   metacritic: nullableNumber,
   gameStatus: z.string().optional(),
 });
-export const gameUpdateSchema = gameCreateSchema.partial();
+export const gameUpdateSchema = gameCreateSchema.partial().extend({ isRewatching: z.boolean().optional() });
 
 export const bookCreateSchema = z.object({
   googleBooksId: z.string().min(1),

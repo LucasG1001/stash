@@ -5,6 +5,7 @@ import { seriesCardConfig } from "../../config/cards";
 import { SeriesDrawer } from "../../components/SeriesDrawer/SeriesDrawer";
 import { SeriesLibraryModal } from "../../components/SeriesLibraryModal/SeriesLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { ResultCount } from "../../components/ResultCount/ResultCount";
 import { useSeries } from "../../hooks/useSeries";
 import { useSeriesLibrary } from "../../hooks/useSeriesLibrary";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -75,10 +76,10 @@ export function SeriesPage() {
     setSelectedSeriesForModal(item);
   }, []);
 
-  const handleModalSave = useCallback((item: SeriesCard, data: { status: SeriesLibraryStatus; score: number }) => {
+  const handleModalSave = useCallback((item: SeriesCard, data: { status: SeriesLibraryStatus; score: number; isRewatching: boolean }) => {
     const existing = findByTmdbId(item.id);
     if (existing) {
-      updateEntry(existing.id, { ...data, seriesStatus: item.seriesStatus });
+      updateEntry(existing.id, { status: data.status, score: data.score, isRewatching: data.isRewatching, seriesStatus: item.seriesStatus });
     } else {
       addEntry({
         tmdbId: item.id,
@@ -86,7 +87,8 @@ export function SeriesPage() {
         posterImage: item.posterImage,
         firstAirDate: item.firstAirDate,
         seriesStatus: item.seriesStatus,
-        ...data,
+        status: data.status,
+        score: data.score,
       });
     }
     setSelectedSeriesForModal(null);
@@ -123,7 +125,7 @@ export function SeriesPage() {
 
   const statusLibraryEntries = libraryFilter === "all"
     ? libraryEntries.filter(entry => entry.status !== "dropped")
-    : libraryEntries.filter(entry => entry.status === libraryFilter);
+    : libraryEntries.filter(entry => entry.status === libraryFilter || (libraryFilter === "plan_to_watch" && entry.isRewatching));
 
   const searchTerm = librarySearch.trim().toLowerCase();
   const filteredLibraryEntries = searchTerm
@@ -194,6 +196,7 @@ export function SeriesPage() {
               </option>
             ))}
           </select>
+          {displaySeries.length > 0 && <ResultCount count={displaySeries.length} />}
         </div>
       )}
 
@@ -205,6 +208,7 @@ export function SeriesPage() {
             loading={loading && searchQuery.length > 0}
             placeholder="Buscar série..."
           />
+          {displaySeries.length > 0 && <ResultCount count={displaySeries.length} />}
         </div>
       )}
 
@@ -263,6 +267,7 @@ export function SeriesPage() {
             )}
           </button>
           </div>
+          {displaySeries.length > 0 && <ResultCount count={displaySeries.length} />}
         </div>
       )}
 

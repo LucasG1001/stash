@@ -18,6 +18,7 @@ export interface SeriesLibraryEntry {
   seriesStatus: string;
   nextAiringEpisode: SeriesNextAiringEpisode | null;
   syncedAt: string | null;
+  isRewatching: boolean;
   watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -44,6 +45,7 @@ export interface UpdateSeriesLibraryEntry {
   seasons?: number | null;
   episodes?: number | null;
   seriesStatus?: string;
+  isRewatching?: boolean;
 }
 
 export const SERIES_LIBRARY_STATUS_LABELS: Record<SeriesLibraryStatus, string> = {

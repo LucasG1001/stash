@@ -1,0 +1,8 @@
+.count {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}

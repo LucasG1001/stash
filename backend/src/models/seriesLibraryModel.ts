@@ -26,6 +26,7 @@ export const seriesLibraryModel = createLibraryModel<SeriesLibraryEntry, CreateS
   ],
   statusField: "status",
   completion: { column: "watched_at", field: "watchedAt", whenStatus: "watched" },
+  rewatch: { column: "is_rewatching", field: "isRewatching" },
 });
 
 function toSeriesEntry(row: SeriesLibraryRow): SeriesLibraryEntry {
@@ -43,6 +44,7 @@ function toSeriesEntry(row: SeriesLibraryRow): SeriesLibraryEntry {
     nextAiringEpisode: row.next_airing_episode,
     syncedAt: row.synced_at,
     lastNotifiedEpisode: row.last_notified_episode,
+    isRewatching: row.is_rewatching,
     watchedAt: row.watched_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

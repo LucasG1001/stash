@@ -5,6 +5,7 @@ import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { AnimeDrawer } from "../../components/AnimeDrawer/AnimeDrawer";
 import { LibraryModal } from "../../components/LibraryModal/LibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { ResultCount } from "../../components/ResultCount/ResultCount";
 import { animeCardConfig } from "../../config/cards";
 import { useAnime } from "../../hooks/useAnime";
 import { useLibrary } from "../../hooks/useLibrary";
@@ -176,6 +177,7 @@ export function AnimePage() {
               </option>
             ))}
           </select>
+          {animes.length > 0 && <ResultCount count={animes.length} />}
         </div>
       )}
 
@@ -193,12 +195,14 @@ export function AnimePage() {
               </option>
             ))}
           </select>
+          {animes.length > 0 && <ResultCount count={animes.length} />}
         </div>
       )}
 
       {activeTab === "search" && (
         <div className={styles.searchWrapper}>
           <SearchBar value={searchQuery} onChange={setSearchQuery} loading={loading && searchQuery.length > 0} />
+          {animes.length > 0 && <ResultCount count={animes.length} />}
         </div>
       )}
 
@@ -257,6 +261,7 @@ export function AnimePage() {
             )}
           </button>
           </div>
+          {franchiseGroups.length > 0 && <ResultCount count={franchiseGroups.length} />}
         </div>
       )}
 

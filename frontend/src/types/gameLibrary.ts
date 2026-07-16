@@ -12,6 +12,7 @@ export interface GameLibraryEntry {
   gameStatus: string;
   collectionId: number | null;
   isCover: boolean;
+  isRewatching: boolean;
   finishedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -36,6 +37,7 @@ export interface UpdateGameLibraryEntry {
   released?: string | null;
   metacritic?: number | null;
   gameStatus?: string;
+  isRewatching?: boolean;
 }
 
 export const GAME_LIBRARY_STATUS_LABELS: Record<GameLibraryStatus, string> = {

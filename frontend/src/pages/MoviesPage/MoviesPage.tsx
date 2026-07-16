@@ -5,6 +5,7 @@ import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { MovieDrawer } from "../../components/MovieDrawer/MovieDrawer";
 import { MovieLibraryModal } from "../../components/MovieLibraryModal/MovieLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { ResultCount } from "../../components/ResultCount/ResultCount";
 import { movieCardConfig } from "../../config/cards";
 import { useMovies } from "../../hooks/useMovies";
 import { useMovieLibrary } from "../../hooks/useMovieLibrary";
@@ -84,10 +85,10 @@ export function MoviesPage() {
     setSelectedMovieForModal(movie);
   }, []);
 
-  const handleModalSave = useCallback((movie: MovieCard, data: { status: MovieLibraryStatus; score: number }) => {
+  const handleModalSave = useCallback((movie: MovieCard, data: { status: MovieLibraryStatus; score: number; isRewatching: boolean }) => {
     const existing = findByTmdbId(movie.id);
     if (existing) {
-      updateEntry(existing.id, { ...data, movieStatus: movie.movieStatus });
+      updateEntry(existing.id, { status: data.status, score: data.score, isRewatching: data.isRewatching, movieStatus: movie.movieStatus });
     } else {
       addEntry({
         tmdbId: movie.id,
@@ -95,7 +96,8 @@ export function MoviesPage() {
         posterImage: movie.posterImage,
         releaseDate: movie.releaseDate,
         movieStatus: movie.movieStatus,
-        ...data,
+        status: data.status,
+        score: data.score,
       });
     }
     setSelectedMovieForModal(null);
@@ -131,7 +133,8 @@ export function MoviesPage() {
   const collectionGroups = filterGroupsBySearch(
     filterGroupsByStatus(
       buildMovieCollectionGroups(libraryEntries, scoreSortDir, releaseSortDir),
-      libraryFilter
+      libraryFilter,
+      (member, filter) => filter === "plan_to_watch" && member.isRewatching
     ),
     librarySearch
   );
@@ -178,6 +181,13 @@ export function MoviesPage() {
               </option>
             ))}
           </select>
+          {movies.length > 0 && <ResultCount count={movies.length} />}
+        </div>
+      )}
+
+      {activeTab === "now_playing" && movies.length > 0 && (
+        <div className={styles.countBar}>
+          <ResultCount count={movies.length} />
         </div>
       )}
 
@@ -189,6 +199,7 @@ export function MoviesPage() {
             loading={loading && searchQuery.length > 0}
             placeholder="Buscar filme..."
           />
+          {movies.length > 0 && <ResultCount count={movies.length} />}
         </div>
       )}
 
@@ -247,6 +258,7 @@ export function MoviesPage() {
             )}
           </button>
           </div>
+          {collectionGroups.length > 0 && <ResultCount count={collectionGroups.length} />}
         </div>
       )}
 

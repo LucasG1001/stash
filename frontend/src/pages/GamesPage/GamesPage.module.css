@@ -20,6 +20,15 @@
 
 .searchWrapper {
   margin-bottom: var(--spacing-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-base);
+}
+
+.countBar {
+  margin-bottom: var(--spacing-xl);
+  display: flex;
+  align-items: center;
 }
 
 .selectorWrapper {
@@ -152,13 +161,24 @@
   }
 
   .libraryControls {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
     gap: var(--spacing-base);
   }
 
   .libraryControls .searchWrapper {
     flex: 1 1 auto;
+    order: 1;
+  }
+
+  .libraryControls > span {
+    order: 2;
+  }
+
+  .libraryControls .filterWrapper {
+    order: 3;
+    flex: 1 1 100%;
   }
 
   .filterWrapper {
