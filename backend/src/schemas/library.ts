@@ -73,4 +73,5 @@ export const animeUpdateSchema = z.object({
   score,
   totalEpisodes: nullableNumber,
   animeStatus: z.string().optional(),
+  isRewatching: z.boolean().optional(),
 });

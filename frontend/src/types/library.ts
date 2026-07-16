@@ -13,6 +13,7 @@ export interface LibraryEntry {
   animeStatus?: string;
   franchiseId: number | null;
   isCover: boolean;
+  isRewatching: boolean;
   format?: string | null;
   seasonYear: number | null;
   nextAiringEpisode: AnimeNextAiringEpisode | null;
@@ -43,6 +44,7 @@ export interface UpdateLibraryEntry {
   score?: number;
   totalEpisodes?: number | null;
   animeStatus?: string;
+  isRewatching?: boolean;
 }
 
 export const LIBRARY_STATUS_LABELS: Record<LibraryStatus, string> = {

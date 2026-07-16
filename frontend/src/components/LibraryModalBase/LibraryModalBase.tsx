@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import styles from "./LibraryModalBase.module.css";
 
+interface RewatchConfig {
+  label: string;
+  whenStatus: string;
+  initial: boolean;
+}
+
 interface LibraryModalBaseProps {
   title: string;
   coverImage: string | null;
@@ -11,9 +17,10 @@ interface LibraryModalBaseProps {
   hasEntry: boolean;
   canSetCover?: boolean;
   isCover?: boolean;
+  rewatch?: RewatchConfig;
   onSetCover?: () => void;
   onClose: () => void;
-  onSave: (data: { status: string; score: number }) => void;
+  onSave: (data: { status: string; score: number; rewatching?: boolean }) => void;
   onRemove: () => void;
 }
 
@@ -27,6 +34,7 @@ export function LibraryModalBase({
   hasEntry,
   canSetCover = false,
   isCover = false,
+  rewatch,
   onSetCover,
   onClose,
   onSave,
@@ -34,6 +42,8 @@ export function LibraryModalBase({
 }: LibraryModalBaseProps) {
   const [status, setStatus] = useState(initialStatus);
   const [score, setScore] = useState(initialScore);
+  const [rewatching, setRewatching] = useState(rewatch?.initial ?? false);
+  const showRewatch = rewatch != null && status === rewatch.whenStatus;
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === "Escape") onClose();
@@ -89,8 +99,24 @@ export function LibraryModalBase({
             />
           </div>
 
+          {showRewatch && (
+            <button
+              type="button"
+              className={`${styles.rewatchToggle} ${rewatching ? styles.rewatchToggleOn : ""}`}
+              onClick={() => setRewatching((prev) => !prev)}
+              aria-pressed={rewatching}
+            >
+              <span className={styles.rewatchIcon} aria-hidden="true">🔁</span>
+              <span>{rewatch.label}</span>
+              <span className={styles.rewatchState}>{rewatching ? "Sim" : "Não"}</span>
+            </button>
+          )}
+
           <div className={styles.actionButtons}>
-            <button className={styles.saveButton} onClick={() => onSave({ status, score })}>
+            <button
+              className={styles.saveButton}
+              onClick={() => onSave({ status, score, rewatching: showRewatch ? rewatching : false })}
+            >
               Salvar
             </button>
             {hasEntry && (

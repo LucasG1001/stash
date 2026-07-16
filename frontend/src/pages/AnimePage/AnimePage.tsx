@@ -85,10 +85,10 @@ export function AnimePage() {
     setSelectedAnimeForModal(anime);
   }, []);
 
-  const handleModalSave = useCallback((anime: AnimeCard, data: { status: LibraryStatus; score: number }) => {
+  const handleModalSave = useCallback((anime: AnimeCard, data: { status: LibraryStatus; score: number; isRewatching: boolean }) => {
     const existing = findByAnilistId(anime.id);
     if (existing) {
-      updateEntry(existing.id, { ...data, animeStatus: anime.status });
+      updateEntry(existing.id, { status: data.status, score: data.score, isRewatching: data.isRewatching, animeStatus: anime.status });
     } else {
       addEntry({
         anilistId: anime.id,
@@ -99,7 +99,8 @@ export function AnimePage() {
         seasonYear: anime.seasonYear,
         nextAiringEpisode: anime.nextAiringEpisode,
         streamingLinks: anime.streamingLinks,
-        ...data,
+        status: data.status,
+        score: data.score,
       });
     }
     setSelectedAnimeForModal(null);
@@ -134,7 +135,8 @@ export function AnimePage() {
   const franchiseGroups = filterGroupsBySearch(
     filterGroupsByStatus(
       buildFranchiseGroups(libraryEntries, scoreSortDir, releaseSortDir),
-      libraryFilter
+      libraryFilter,
+      (member, filter) => filter === "plan_to_watch" && member.isRewatching
     ),
     librarySearch
   );

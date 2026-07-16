@@ -13,6 +13,7 @@ function toLibraryEntry(row: LibraryRow): LibraryEntry {
     animeStatus: row.anime_status,
     franchiseId: row.franchise_id,
     isCover: row.is_cover,
+    isRewatching: row.is_rewatching,
     format: row.format,
     seasonYear: row.season_year,
     nextAiringEpisode: row.next_airing_episode,
@@ -151,6 +152,12 @@ export async function update(id: string, data: UpdateLibraryEntry): Promise<Libr
   if (data.animeStatus !== undefined) {
     fields.push(`anime_status = $${paramIndex++}`);
     values.push(data.animeStatus);
+  }
+  if (data.status !== undefined && data.status !== "watched") {
+    fields.push(`is_rewatching = FALSE`);
+  } else if (data.isRewatching !== undefined) {
+    fields.push(`is_rewatching = $${paramIndex++}`);
+    values.push(data.isRewatching);
   }
 
   if (fields.length === 0) return findById(id);

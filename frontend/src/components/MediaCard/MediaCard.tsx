@@ -23,7 +23,7 @@ const TONE_CLASS: Record<StatusTone, string> = {
   orange: styles.statusOrange,
 };
 
-interface MediaCardProps<T, E extends { status: string; score: number }> {
+interface MediaCardProps<T, E extends { status: string; score: number; isRewatching?: boolean }> {
   item: T;
   config: MediaCardConfig<T>;
   libraryEntry?: E;
@@ -37,7 +37,7 @@ interface MediaCardProps<T, E extends { status: string; score: number }> {
   onToggleSelect?: () => void;
 }
 
-export function MediaCard<T, E extends { status: string; score: number }>({
+export function MediaCard<T, E extends { status: string; score: number; isRewatching?: boolean }>({
   item,
   config,
   libraryEntry,
@@ -129,6 +129,9 @@ export function MediaCard<T, E extends { status: string; score: number }>({
           </button>
           {badge && (
             <span className={`${styles.statusBadge} ${TONE_CLASS[badge.tone]}`}>{badge.label}</span>
+          )}
+          {libraryEntry?.isRewatching && (
+            <span className={styles.rewatchBadge} title="Reassistindo" aria-label="Reassistindo">🔁</span>
           )}
         </div>
 

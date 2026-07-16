@@ -72,9 +72,9 @@ export async function update(req: Request, res: Response): Promise<void> {
       res.status(400).json({ error: "Dados inválidos.", issues: parsed.error.flatten() });
       return;
     }
-    const { title, coverImage, status, score, totalEpisodes, animeStatus } = parsed.data;
+    const { title, coverImage, status, score, totalEpisodes, animeStatus, isRewatching } = parsed.data;
 
-    const entry = await libraryModel.update(id, { title, coverImage, status, score, totalEpisodes, animeStatus });
+    const entry = await libraryModel.update(id, { title, coverImage, status, score, totalEpisodes, animeStatus, isRewatching });
     if (!entry) {
       res.status(404).json({ error: "Anime não encontrado na biblioteca." });
       return;

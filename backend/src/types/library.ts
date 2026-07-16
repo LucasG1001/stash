@@ -11,6 +11,7 @@ export interface LibraryEntry {
   animeStatus: string;
   franchiseId: number | null;
   isCover: boolean;
+  isRewatching: boolean;
   format: string | null;
   seasonYear: number | null;
   nextAiringEpisode: AniListNextAiringEpisode | null;
@@ -44,6 +45,7 @@ export interface UpdateLibraryEntry {
   score?: number;
   totalEpisodes?: number | null;
   animeStatus?: string;
+  isRewatching?: boolean;
 }
 
 export interface SyncLibraryData {
@@ -65,6 +67,7 @@ export interface LibraryRow {
   anime_status: string;
   franchise_id: number | null;
   is_cover: boolean;
+  is_rewatching: boolean;
   format: string | null;
   season_year: number | null;
   next_airing_episode: AniListNextAiringEpisode | null;
