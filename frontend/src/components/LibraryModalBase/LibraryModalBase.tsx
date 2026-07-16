@@ -102,13 +102,16 @@ export function LibraryModalBase({
           {showRewatch && (
             <button
               type="button"
-              className={`${styles.rewatchToggle} ${rewatching ? styles.rewatchToggleOn : ""}`}
+              className={styles.rewatchRow}
               onClick={() => setRewatching((prev) => !prev)}
               aria-pressed={rewatching}
+              role="switch"
+              aria-checked={rewatching}
             >
-              <span className={styles.rewatchIcon} aria-hidden="true">🔁</span>
-              <span>{rewatch.label}</span>
-              <span className={styles.rewatchState}>{rewatching ? "Sim" : "Não"}</span>
+              <span className={styles.rewatchLabel}>{rewatch.label}</span>
+              <span className={`${styles.switch} ${rewatching ? styles.switchOn : ""}`}>
+                <span className={styles.switchThumb} />
+              </span>
             </button>
           )}
 
