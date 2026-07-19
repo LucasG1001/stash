@@ -1,0 +1,22 @@
+:80 {
+	root * /srv
+	encode zstd gzip
+
+	# API -> backend (mesma rede do compose). O Caddy re-resolve o hostname
+	# "server" a cada conexao, entao troca de IP do container nao quebra o proxy.
+	handle /api/* {
+		reverse_proxy server:3333
+	}
+
+	# Assets com hash no nome: cache imutavel.
+	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# SPA: qualquer rota desconhecida cai no index.html (React Router).
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
+}
