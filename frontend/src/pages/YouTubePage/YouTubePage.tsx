@@ -13,6 +13,8 @@ import { YOUTUBE_LIBRARY_STATUS_LABELS } from "../../types/youtubeLibrary";
 import { buildYoutubeCollectionGroups, type YoutubeGroup } from "../../utils/youtubeCollectionGroups";
 import { youtubeLibraryEntryToCard } from "../../utils/youtubeLibraryEntryToCard";
 import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
+import { formatDurationLong } from "../../utils/formatDuration";
+import { formatViews } from "../../utils/formatViews";
 import styles from "./YouTubePage.module.css";
 
 const STATUS_TABS = (Object.entries(YOUTUBE_LIBRARY_STATUS_LABELS) as [YoutubeLibraryStatus, string][]).map(
@@ -205,6 +207,25 @@ export function YouTubePage() {
         }
         onRenameCollection={(group, name) => {
           if (group.representative.collectionId != null) collections.rename(group.representative.collectionId, name);
+        }}
+        getCollectionExtra={(group) => {
+          const members = group.members;
+          const totalDuration = members.reduce((sum, v) => sum + (v.durationSeconds ?? 0), 0);
+          const totalViews = members.reduce((sum, v) => sum + (v.viewCount ?? 0), 0);
+          const channelCount = new Set(members.map((v) => v.channelId ?? v.channelTitle).filter(Boolean)).size;
+          const counts = { plan_to_watch: 0, liked: 0, removed: 0 };
+          members.forEach((v) => { counts[v.status] += 1; });
+          const statusParts: string[] = [];
+          if (counts.plan_to_watch) statusParts.push(`${counts.plan_to_watch} planejo`);
+          if (counts.liked) statusParts.push(`${counts.liked} gostei`);
+          if (counts.removed) statusParts.push(`${counts.removed} removido`);
+          return (
+            <div className={styles.collMeta}>
+              <span>{members.length} {members.length === 1 ? "vídeo" : "vídeos"} · {formatDurationLong(totalDuration)}</span>
+              {statusParts.length > 0 && <span>{statusParts.join(" · ")}</span>}
+              <span>{channelCount} {channelCount === 1 ? "canal" : "canais"} · {formatViews(totalViews)}</span>
+            </div>
+          );
         }}
       />
 

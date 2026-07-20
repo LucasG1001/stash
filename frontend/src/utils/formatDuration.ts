@@ -7,3 +7,13 @@ export function formatDuration(seconds: number | null | undefined): string {
   const pad = (value: number) => String(value).padStart(2, "0");
   return hours > 0 ? `${hours}:${pad(minutes)}:${pad(secs)}` : `${minutes}:${pad(secs)}`;
 }
+
+export function formatDurationLong(seconds: number | null | undefined): string {
+  if (!seconds || seconds <= 0) return "0min";
+  const total = Math.floor(seconds);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  if (hours > 0) return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
+  if (minutes > 0) return `${minutes}min`;
+  return `${total}s`;
+}

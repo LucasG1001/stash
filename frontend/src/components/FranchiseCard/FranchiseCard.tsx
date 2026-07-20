@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { MediaCard, type MediaCardConfig } from "../MediaCard/MediaCard";
 import styles from "./FranchiseCard.module.css";
 
@@ -31,6 +31,7 @@ interface FranchiseCardProps<
   onToggleSelect?: () => void;
   collectionName?: string | null;
   onRenameCollection?: (name: string) => void;
+  collectionExtra?: ReactNode;
 }
 
 export function FranchiseCard<
@@ -54,6 +55,7 @@ export function FranchiseCard<
   onToggleSelect,
   collectionName,
   onRenameCollection,
+  collectionExtra,
 }: FranchiseCardProps<E, T>) {
   const card = entryToCard(group.representative);
   const [editing, setEditing] = useState(false);
@@ -66,11 +68,68 @@ export function FranchiseCard<
     setEditing(false);
   };
 
+  const countText = `${group.count} ${group.count === 1 ? "vídeo" : "vídeos"}${
+    group.completedCount > 0 ? ` · ${group.completedCount} gostei` : ""
+  }`;
+
+  const config: MediaCardConfig<T> =
+    collectionName != null
+      ? {
+          ...cardConfig,
+          renderBelow: () => (
+            <div className={styles.collectionBelow}>
+              {editing ? (
+                <input
+                  className={styles.nameInput}
+                  value={draft}
+                  autoFocus
+                  onChange={(e) => setDraft(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  onBlur={commitName}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") commitName();
+                    else if (e.key === "Escape") {
+                      setDraft(collectionName ?? "");
+                      setEditing(false);
+                    }
+                  }}
+                />
+              ) : (
+                <div className={styles.nameRow}>
+                  <span className={styles.nameText} title={collectionName || undefined}>
+                    {collectionName || "Sem nome"}
+                  </span>
+                  {onRenameCollection && (
+                    <button
+                      type="button"
+                      className={styles.editButton}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDraft(collectionName ?? "");
+                        setEditing(true);
+                      }}
+                      title="Renomear coleção"
+                      aria-label="Renomear coleção"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
+              {collectionExtra ?? <div className={styles.countLine}>{countText}</div>}
+            </div>
+          ),
+        }
+      : cardConfig;
+
   return (
     <div className={styles.wrapper}>
       <MediaCard
         item={card}
-        config={cardConfig}
+        config={config}
         libraryEntry={libraryEntry}
         onClick={() => onCardClick(card)}
         onAdd={() => onAddToLibrary(card)}
@@ -108,51 +167,6 @@ export function FranchiseCard<
           <path d="M6 9l6 6 6-6" />
         </svg>
       </button>
-      {collectionName != null && (
-        <div className={styles.collectionName}>
-          {editing ? (
-            <input
-              className={styles.nameInput}
-              value={draft}
-              autoFocus
-              onChange={(e) => setDraft(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              onBlur={commitName}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") commitName();
-                else if (e.key === "Escape") {
-                  setDraft(collectionName ?? "");
-                  setEditing(false);
-                }
-              }}
-            />
-          ) : (
-            <>
-              <span className={styles.nameText} title={collectionName || undefined}>
-                {collectionName || "Sem nome"}
-              </span>
-              {onRenameCollection && (
-                <button
-                  type="button"
-                  className={styles.editButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDraft(collectionName ?? "");
-                    setEditing(true);
-                  }}
-                  title="Renomear coleção"
-                  aria-label="Renomear coleção"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                  </svg>
-                </button>
-              )}
-            </>
-          )}
-        </div>
-      )}
     </div>
   );
 }

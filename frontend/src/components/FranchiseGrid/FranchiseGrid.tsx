@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, type ReactNode } from "react";
 import { useGridColumns } from "../../hooks/useGridColumns";
 import { arrangeRowAwareCells, type RowAwareItem } from "../../utils/rowAwareCells";
 import { MediaCard, type MediaCardConfig } from "../MediaCard/MediaCard";
@@ -34,6 +34,7 @@ interface FranchiseGridProps<
   onAddToGroup?: (ids: string[], collectionId: number) => void | Promise<unknown>;
   getCollectionName?: (group: MediaGroup<E>) => string | null;
   onRenameCollection?: (group: MediaGroup<E>, name: string) => void;
+  getCollectionExtra?: (group: MediaGroup<E>) => ReactNode;
   gridClassName?: string;
   expansionClassName?: string;
 }
@@ -63,6 +64,7 @@ export function FranchiseGrid<
   onAddToGroup,
   getCollectionName,
   onRenameCollection,
+  getCollectionExtra,
   gridClassName,
   expansionClassName,
 }: FranchiseGridProps<E, T>) {
@@ -197,6 +199,7 @@ export function FranchiseGrid<
           onToggleSelect={selectionEnabled ? () => toggleIds(memberIds) : undefined}
           collectionName={getCollectionName ? getCollectionName(group) : undefined}
           onRenameCollection={onRenameCollection ? (name) => onRenameCollection(group, name) : undefined}
+          collectionExtra={getCollectionExtra ? getCollectionExtra(group) : undefined}
         />
       ),
       expansion: isExpanded ? (

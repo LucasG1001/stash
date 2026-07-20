@@ -2,6 +2,7 @@
   display: flex;
   gap: var(--spacing-sm);
   align-items: flex-start;
+  min-height: 4.75rem;
 }
 
 .avatar {
