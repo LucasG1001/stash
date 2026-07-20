@@ -15,6 +15,7 @@ export interface MediaCardConfig<T> {
   scoreColor?: (score: number) => string;
   libraryStatusColor: (status: string | undefined) => string;
   renderMeta: (item: T) => ReactNode;
+  renderBelow?: (item: T) => ReactNode;
 }
 
 const TONE_CLASS: Record<StatusTone, string> = {
@@ -102,10 +103,12 @@ export function MediaCard<T, E extends { status: string; score: number; isRewatc
           </span>
         )}
 
-        <div className={styles.overlay}>
-          <div className={styles.title}>{title}</div>
-          {config.renderMeta(item)}
-        </div>
+        {!config.renderBelow && (
+          <div className={styles.overlay}>
+            <div className={styles.title}>{title}</div>
+            {config.renderMeta(item)}
+          </div>
+        )}
 
         <div className={styles.topBadges}>
           <button
@@ -147,6 +150,7 @@ export function MediaCard<T, E extends { status: string; score: number; isRewatc
               </span>
             )}
       </div>
+      {config.renderBelow && <div className={styles.belowInfo}>{config.renderBelow(item)}</div>}
     </div>
   );
 }

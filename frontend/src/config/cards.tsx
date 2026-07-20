@@ -9,6 +9,7 @@ import { StoreGlyph } from "../components/MediaCard/StoreIcons";
 import { formatDuration } from "../utils/formatDuration";
 import { formatViews } from "../utils/formatViews";
 import cardStyles from "../components/MediaCard/MediaCard.module.css";
+import ytStyles from "./youtubeCard.module.css";
 
 function scoreColorFn(high: number, mid: number): (score: number) => string {
   return (score) => {
@@ -150,12 +151,17 @@ export const youtubeCardConfig: MediaCardConfig<YoutubeCard> = {
   placeholderEmoji: "▶️",
   coverAspect: "16 / 9",
   libraryStatusColor: youtubeStatusColor,
-  renderMeta: (v) => (
-    <div className={cardStyles.meta}>
-      {v.channelTitle && <span className={cardStyles.author}>{v.channelTitle}</span>}
-      <span className={cardStyles.year}>
-        {formatDuration(v.durationSeconds)} · {formatViews(v.viewCount)}
-      </span>
+  renderMeta: () => null,
+  renderBelow: (v) => (
+    <div className={ytStyles.below}>
+      {v.channelThumbnail && <img className={ytStyles.avatar} src={v.channelThumbnail} alt="" loading="lazy" decoding="async" />}
+      <div className={ytStyles.text}>
+        <div className={ytStyles.title} title={v.title}>{v.title}</div>
+        {v.channelTitle && <div className={ytStyles.channel}>{v.channelTitle}</div>}
+        <div className={ytStyles.stats}>
+          {formatDuration(v.durationSeconds)} · {formatViews(v.viewCount)}
+        </div>
+      </div>
     </div>
   ),
 };

@@ -52,6 +52,7 @@ export interface YoutubeCard {
   title: string;
   thumbnail: string | null;
   channelTitle: string | null;
+  channelThumbnail: string | null;
   durationSeconds: number | null;
   viewCount: number | null;
 }

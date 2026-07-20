@@ -6,6 +6,7 @@ export function youtubeLibraryEntryToCard(entry: YoutubeLibraryEntry): YoutubeCa
     title: entry.title,
     thumbnail: entry.thumbnail,
     channelTitle: entry.channelTitle,
+    channelThumbnail: entry.channelThumbnail,
     durationSeconds: entry.durationSeconds,
     viewCount: entry.viewCount,
   };
