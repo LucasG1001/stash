@@ -36,9 +36,9 @@ function matchesSearch(group: YoutubeGroup, query: string): boolean {
 }
 
 export function YouTubePage() {
-  const [activeStatus, setActiveStatus] = useState<YoutubeLibraryStatus>("plan_to_watch");
+  const [activeStatus, setActiveStatus] = useState<YoutubeLibraryStatus>("liked");
   const [search, setSearch] = useState("");
-  const [collectionFilter, setCollectionFilter] = useState<number | "all">("all");
+  const [collectionFilter, setCollectionFilter] = useState<number | "all" | "none">("all");
   const [order, setOrder] = useState<YoutubeOrder>("added");
   const [urlInput, setUrlInput] = useState("");
   const [adding, setAdding] = useState(false);
@@ -105,14 +105,12 @@ export function YouTubePage() {
   );
 
   let groups = buildYoutubeCollectionGroups(entries, order);
-  if (collectionFilter !== "all") {
+  if (collectionFilter === "none") {
+    groups = groups.filter((g) => g.representative.collectionId == null);
+  } else if (collectionFilter !== "all") {
     groups = groups.filter((g) => g.representative.collectionId === collectionFilter);
   }
-  groups = filterGroupsByStatus(
-    groups,
-    activeStatus,
-    (member, filter) => filter === "plan_to_watch" && member.isRewatching
-  );
+  groups = filterGroupsByStatus(groups, activeStatus);
   groups = groups.filter((g) => matchesSearch(g, search));
 
   const gridKey = `${activeStatus}-${collectionFilter}-${order}-${search}`;
@@ -154,9 +152,13 @@ export function YouTubePage() {
             <select
               className={styles.filterSelect}
               value={collectionFilter}
-              onChange={(e) => setCollectionFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
+              onChange={(e) => {
+                const v = e.target.value;
+                setCollectionFilter(v === "all" || v === "none" ? v : Number(v));
+              }}
             >
               <option value="all">Todas as coleções</option>
+              <option value="none">Sem coleção</option>
               {collections.collections.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}

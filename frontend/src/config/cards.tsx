@@ -139,7 +139,6 @@ function youtubeStatusColor(status: string | undefined): string {
       return "var(--color-success)";
     case "removed":
       return "var(--color-error)";
-    case "plan_to_watch":
     default:
       return "var(--color-text-secondary)";
   }

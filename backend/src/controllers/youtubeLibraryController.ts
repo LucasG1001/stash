@@ -71,7 +71,7 @@ export async function createFromUrl(req: Request, res: Response): Promise<void> 
     }
 
     const video = await fetchVideo(videoId);
-    const entry = await youtubeLibraryModel.create({ ...video, status: "plan_to_watch", score: 0 });
+    const entry = await youtubeLibraryModel.create({ ...video, status: "liked", score: 0 });
     res.status(201).json(entry);
   } catch (error) {
     if (error instanceof YoutubeServiceError) {

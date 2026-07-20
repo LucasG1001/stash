@@ -255,4 +255,14 @@ export async function migrate(): Promise<void> {
     ADD COLUMN IF NOT EXISTS channel_id TEXT,
     ADD COLUMN IF NOT EXISTS channel_thumbnail TEXT;
   `);
+
+  await pool.query(`
+    UPDATE youtube_library
+    SET status = 'liked', liked_at = COALESCE(liked_at, created_at)
+    WHERE status = 'plan_to_watch';
+  `);
+
+  await pool.query(`
+    ALTER TABLE youtube_library ALTER COLUMN status SET DEFAULT 'liked';
+  `);
 }

@@ -155,7 +155,8 @@ export function FranchiseGrid<
   }
 
   const items: RowAwareItem[] = groups.map((group, index) => {
-    if (group.count === 1) {
+    const isCollection = getCollectionKey ? getCollectionKey(group.representative) != null : false;
+    if (group.count === 1 && !isCollection) {
       const card = entryToCard(group.representative);
       const repId = group.representative.id;
       return {

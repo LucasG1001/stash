@@ -24,7 +24,7 @@ export const youtubeLibraryModel = createLibraryModel<
     { column: "view_count", field: "viewCount", default: 0, numeric: true },
     { column: "published_at", field: "publishedAt", default: null },
     { column: "description", field: "description", default: null },
-    { column: "status", field: "status", default: "plan_to_watch" },
+    { column: "status", field: "status", default: "liked" },
     { column: "score", field: "score", default: 0, numeric: true },
     { column: "collection_id", field: "collectionId", default: null },
     { column: "is_cover", field: "isCover", default: false, readonly: true },

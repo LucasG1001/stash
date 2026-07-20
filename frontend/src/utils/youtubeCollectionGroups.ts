@@ -46,8 +46,9 @@ export function buildYoutubeCollectionGroups(
   });
 
   const groupViews = (g: YoutubeGroup) => g.members.reduce((max, m) => Math.max(max, m.viewCount ?? 0), 0);
+  const isCollection = (g: YoutubeGroup) => g.representative.collectionId != null;
 
-  return groups.sort((a, b) => {
+  const byOrder = (a: YoutubeGroup, b: YoutubeGroup) => {
     switch (order) {
       case "views":
         return groupViews(b) - groupViews(a);
@@ -57,5 +58,10 @@ export function buildYoutubeCollectionGroups(
       default:
         return addedTime(b.representative) - addedTime(a.representative);
     }
+  };
+
+  return groups.sort((a, b) => {
+    const collDiff = Number(isCollection(b)) - Number(isCollection(a));
+    return collDiff !== 0 ? collDiff : byOrder(a, b);
   });
 }

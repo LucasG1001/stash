@@ -1,4 +1,4 @@
-export type YoutubeLibraryStatus = "plan_to_watch" | "liked" | "removed";
+export type YoutubeLibraryStatus = "liked" | "removed";
 
 export interface YoutubeLibraryEntry {
   id: string;
@@ -58,7 +58,6 @@ export interface YoutubeCard {
 }
 
 export const YOUTUBE_LIBRARY_STATUS_LABELS: Record<YoutubeLibraryStatus, string> = {
-  plan_to_watch: "Planejo Assistir",
   liked: "Gostei",
   removed: "Removido",
 };

@@ -76,7 +76,7 @@ export const animeUpdateSchema = z.object({
   isRewatching: z.boolean().optional(),
 });
 
-const youtubeStatus = z.enum(["plan_to_watch", "liked", "removed"]);
+const youtubeStatus = z.enum(["liked", "removed"]);
 
 export const youtubeCreateSchema = z.object({
   videoId: z.string().min(1),
