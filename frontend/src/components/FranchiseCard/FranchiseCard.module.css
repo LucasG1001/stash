@@ -68,3 +68,54 @@
   background: var(--color-error);
   border-color: var(--color-error);
 }
+
+.collectionName {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 0 2px;
+  min-height: 18px;
+}
+
+.nameText {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.wrapper:hover .editButton {
+  opacity: 0.6;
+}
+
+.editButton:hover {
+  opacity: 1;
+  color: var(--color-accent);
+}
+
+.nameInput {
+  width: 100%;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-accent);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xs);
+  outline: none;
+}

@@ -5,9 +5,22 @@ interface SelectionBarProps {
   statusLabels: Record<string, string>;
   onApply: (status: string) => void;
   onClear: () => void;
+  onFormGroup?: () => void;
+  onAddToGroup?: () => void;
+  formGroupLabel?: string;
+  addToGroupLabel?: string;
 }
 
-export function SelectionBar({ count, statusLabels, onApply, onClear }: SelectionBarProps) {
+export function SelectionBar({
+  count,
+  statusLabels,
+  onApply,
+  onClear,
+  onFormGroup,
+  onAddToGroup,
+  formGroupLabel = "Formar grupo",
+  addToGroupLabel = "Adicionar ao grupo",
+}: SelectionBarProps) {
   if (count === 0) return null;
   return (
     <div className={styles.bar} role="toolbar" aria-label="Ações de seleção">
@@ -23,17 +36,34 @@ export function SelectionBar({ count, statusLabels, onApply, onClear }: Selectio
             {label}
           </button>
         ))}
+        {onFormGroup && (
+          <button type="button" className={styles.groupButton} onClick={onFormGroup}>
+            {formGroupLabel}
+          </button>
+        )}
+        {onAddToGroup && (
+          <button type="button" className={styles.groupButton} onClick={onAddToGroup}>
+            {addToGroupLabel}
+          </button>
+        )}
       </div>
       <select
         className={styles.select}
         value=""
-        onChange={(e) => { if (e.target.value) onApply(e.target.value); }}
-        aria-label="Alterar status"
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v === "__form_group__") onFormGroup?.();
+          else if (v === "__add_to_group__") onAddToGroup?.();
+          else if (v) onApply(v);
+        }}
+        aria-label="Ações"
       >
-        <option value="" disabled>Alterar status</option>
+        <option value="" disabled>Ações</option>
         {Object.entries(statusLabels).map(([status, label]) => (
           <option key={status} value={status}>{label}</option>
         ))}
+        {onFormGroup && <option value="__form_group__">{formGroupLabel}</option>}
+        {onAddToGroup && <option value="__add_to_group__">{addToGroupLabel}</option>}
       </select>
     </div>
   );

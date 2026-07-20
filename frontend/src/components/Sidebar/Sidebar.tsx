@@ -13,6 +13,7 @@ import {
   MovieIcon,
   SeriesIcon,
   SettingsIcon,
+  YoutubeIcon,
 } from "./Sidebar.icons";
 
 interface NavItem {
@@ -28,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: "/series", label: "Séries", icon: SeriesIcon },
   { path: "/livros", label: "Livros", icon: BookIcon },
   { path: "/jogos", label: "Jogos", icon: GameIcon },
+  { path: "/youtube", label: "YouTube", icon: YoutubeIcon },
 ];
 
 interface SidebarProps {

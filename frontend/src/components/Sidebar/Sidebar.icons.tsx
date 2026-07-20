@@ -65,6 +65,15 @@ export function GameIcon({ className }: IconProps) {
   );
 }
 
+export function YoutubeIcon({ className }: IconProps) {
+  return (
+    <Icon className={className}>
+      <path d="M22 8.2a3 3 0 0 0-2.1-2.1C18 5.5 12 5.5 12 5.5s-6 0-7.9.6A3 3 0 0 0 2 8.2 31 31 0 0 0 1.5 12 31 31 0 0 0 2 15.8a3 3 0 0 0 2.1 2.1c1.9.6 7.9.6 7.9.6s6 0 7.9-.6a3 3 0 0 0 2.1-2.1c.4-1.9.5-3.8.5-3.8s0-1.9-.5-3.8Z" />
+      <path d="m10 15 5-3-5-3v6Z" />
+    </Icon>
+  );
+}
+
 export function LogoIcon({ className }: IconProps) {
   return (
     <Icon className={className}>

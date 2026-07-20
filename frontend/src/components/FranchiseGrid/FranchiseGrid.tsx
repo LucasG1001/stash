@@ -1,10 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useGridColumns } from "../../hooks/useGridColumns";
 import { arrangeRowAwareCells, type RowAwareItem } from "../../utils/rowAwareCells";
 import { MediaCard, type MediaCardConfig } from "../MediaCard/MediaCard";
 import { FranchiseCard, type MediaGroup } from "../FranchiseCard/FranchiseCard";
 import { LoadingSkeleton } from "../LoadingSkeleton/LoadingSkeleton";
 import { SelectionBar } from "../SelectionBar/SelectionBar";
+import { NameModal } from "../NameModal/NameModal";
 import gridStyles from "../MediaGrid/MediaGrid.module.css";
 import styles from "./FranchiseGrid.module.css";
 
@@ -28,6 +29,11 @@ interface FranchiseGridProps<
   emptyHint?: string;
   expandTitle: string;
   animationKey?: string;
+  getCollectionKey?: (entry: E) => number | null | undefined;
+  onFormGroup?: (ids: string[], name: string) => void | Promise<unknown>;
+  onAddToGroup?: (ids: string[], collectionId: number) => void | Promise<unknown>;
+  getCollectionName?: (group: MediaGroup<E>) => string | null;
+  onRenameCollection?: (group: MediaGroup<E>, name: string) => void;
 }
 
 export function FranchiseGrid<
@@ -50,13 +56,40 @@ export function FranchiseGrid<
   emptyHint = "Adicione itens para começar!",
   expandTitle,
   animationKey,
+  getCollectionKey,
+  onFormGroup,
+  onAddToGroup,
+  getCollectionName,
+  onRenameCollection,
 }: FranchiseGridProps<E, T>) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [cols, setGridRef] = useGridColumns();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [naming, setNaming] = useState(false);
 
   const selectionEnabled = !!(statusLabels && onBulkSetStatus);
   const selectionActive = selectionEnabled && selectedIds.size > 0;
+  const groupingEnabled = !!getCollectionKey && (!!onFormGroup || !!onAddToGroup);
+
+  const entryById = useMemo(() => {
+    const map = new Map<string, E>();
+    for (const group of groups) for (const member of group.members) map.set(member.id, member);
+    return map;
+  }, [groups]);
+
+  const selectedCollections = useMemo(() => {
+    if (!getCollectionKey) return [] as number[];
+    const set = new Set<number>();
+    selectedIds.forEach((id) => {
+      const entry = entryById.get(id);
+      const key = entry ? getCollectionKey(entry) : null;
+      if (key != null) set.add(key);
+    });
+    return [...set];
+  }, [selectedIds, entryById, getCollectionKey]);
+
+  const canAddToGroup = groupingEnabled && !!onAddToGroup && selectedCollections.length === 1;
+  const canFormGroup = groupingEnabled && !!onFormGroup && selectedCollections.length !== 1;
 
   const [prevAnimationKey, setPrevAnimationKey] = useState(animationKey);
   if (prevAnimationKey !== animationKey) {
@@ -158,6 +191,8 @@ export function FranchiseGrid<
           selected={memberIds.length > 0 && memberIds.every((id) => selectedIds.has(id))}
           onLongPress={selectionEnabled ? () => toggleIds(memberIds) : undefined}
           onToggleSelect={selectionEnabled ? () => toggleIds(memberIds) : undefined}
+          collectionName={getCollectionName ? getCollectionName(group) : undefined}
+          onRenameCollection={onRenameCollection ? (name) => onRenameCollection(group, name) : undefined}
         />
       ),
       expansion: isExpanded ? (
@@ -197,6 +232,28 @@ export function FranchiseGrid<
           statusLabels={statusLabels}
           onApply={applyStatus}
           onClear={() => setSelectedIds(new Set())}
+          onFormGroup={canFormGroup ? () => setNaming(true) : undefined}
+          onAddToGroup={
+            canAddToGroup
+              ? () => {
+                  onAddToGroup?.([...selectedIds], selectedCollections[0]);
+                  setSelectedIds(new Set());
+                }
+              : undefined
+          }
+        />
+      )}
+      {naming && (
+        <NameModal
+          title="Nome da coleção"
+          placeholder="Ex: Curso de React"
+          confirmLabel="Criar grupo"
+          onClose={() => setNaming(false)}
+          onSubmit={(name) => {
+            onFormGroup?.([...selectedIds], name);
+            setNaming(false);
+            setSelectedIds(new Set());
+          }}
         />
       )}
     </>

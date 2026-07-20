@@ -18,6 +18,7 @@ import { gameRoutes } from "./routes/gameRoutes.js";
 import { gameLibraryRoutes } from "./routes/gameLibraryRoutes.js";
 import { bookRoutes } from "./routes/bookRoutes.js";
 import { bookLibraryRoutes } from "./routes/bookLibraryRoutes.js";
+import { youtubeLibraryRoutes } from "./routes/youtubeLibraryRoutes.js";
 import { backupRoutes } from "./routes/backupRoutes.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 import { notifyError } from "./services/notifyService.js";
@@ -54,6 +55,7 @@ app.use("/api/game", gameRoutes);
 app.use("/api/game-library", gameLibraryRoutes);
 app.use("/api/book", bookRoutes);
 app.use("/api/book-library", bookLibraryRoutes);
+app.use("/api/youtube-library", youtubeLibraryRoutes);
 app.use("/api/backup", backupRoutes);
 
 app.use(notFoundHandler);

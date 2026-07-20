@@ -3,8 +3,11 @@ import type { MovieCard } from "../types/movie";
 import type { SeriesCard } from "../types/series";
 import type { BookCard } from "../types/book";
 import type { GameCard } from "../types/game";
+import type { YoutubeCard } from "../types/youtubeLibrary";
 import type { MediaCardConfig } from "../components/MediaCard/MediaCard";
 import { StoreGlyph } from "../components/MediaCard/StoreIcons";
+import { formatDuration } from "../utils/formatDuration";
+import { formatViews } from "../utils/formatViews";
 import cardStyles from "../components/MediaCard/MediaCard.module.css";
 
 function scoreColorFn(high: number, mid: number): (score: number) => string {
@@ -125,6 +128,34 @@ export const bookCardConfig: MediaCardConfig<BookCard> = {
     <div className={cardStyles.meta}>
       <span className={cardStyles.author}>{b.authors.length > 0 ? b.authors.join(", ") : "—"}</span>
       <span className={cardStyles.year}>{b.publishedDate ? b.publishedDate.slice(0, 4) : "—"}</span>
+    </div>
+  ),
+};
+
+function youtubeStatusColor(status: string | undefined): string {
+  switch (status) {
+    case "liked":
+      return "var(--color-success)";
+    case "removed":
+      return "var(--color-error)";
+    case "plan_to_watch":
+    default:
+      return "var(--color-text-secondary)";
+  }
+}
+
+export const youtubeCardConfig: MediaCardConfig<YoutubeCard> = {
+  getTitle: (v) => v.title,
+  getImage: (v) => v.thumbnail,
+  placeholderEmoji: "▶️",
+  coverAspect: "16 / 9",
+  libraryStatusColor: youtubeStatusColor,
+  renderMeta: (v) => (
+    <div className={cardStyles.meta}>
+      {v.channelTitle && <span className={cardStyles.author}>{v.channelTitle}</span>}
+      <span className={cardStyles.year}>
+        {formatDuration(v.durationSeconds)} · {formatViews(v.viewCount)}
+      </span>
     </div>
   ),
 };

@@ -75,3 +75,30 @@ export const animeUpdateSchema = z.object({
   animeStatus: z.string().optional(),
   isRewatching: z.boolean().optional(),
 });
+
+const youtubeStatus = z.enum(["plan_to_watch", "liked", "removed"]);
+
+export const youtubeCreateSchema = z.object({
+  videoId: z.string().min(1),
+  title: z.string().min(1),
+  channelTitle: nullableString,
+  thumbnail: nullableString,
+  durationSeconds: nullableNumber,
+  viewCount: nullableNumber,
+  publishedAt: nullableString,
+  description: nullableString,
+  status: youtubeStatus.optional(),
+  score,
+});
+export const youtubeUpdateSchema = youtubeCreateSchema.partial().extend({ isRewatching: z.boolean().optional() });
+
+export const youtubeFromUrlSchema = z.object({ url: z.string().min(1) });
+export const youtubeFormGroupSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1),
+  name: z.string().min(1),
+});
+export const youtubeAddToGroupSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1),
+  collectionId: z.number(),
+});
+export const youtubeRenameSchema = z.object({ name: z.string().min(1) });

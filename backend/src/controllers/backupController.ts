@@ -7,6 +7,7 @@ import { movieLibraryModel } from "../models/movieLibraryModel.js";
 import { seriesLibraryModel } from "../models/seriesLibraryModel.js";
 import { gameLibraryModel } from "../models/gameLibraryModel.js";
 import { bookLibraryModel } from "../models/bookLibraryModel.js";
+import { youtubeLibraryModel } from "../models/youtubeLibraryModel.js";
 import { notifyError } from "../services/notifyService.js";
 
 interface ColumnSpec {
@@ -113,16 +114,48 @@ const TABLES: TableSpec[] = [
       { column: "read_at", get: (e) => e.readAt ?? null },
     ],
   },
+  {
+    key: "youtubeCollections",
+    table: "youtube_collection",
+    conflict: "id",
+    columns: [
+      { column: "id", get: (e) => e.id },
+      { column: "name", get: (e) => e.name },
+    ],
+  },
+  {
+    key: "youtube",
+    table: "youtube_library",
+    conflict: "video_id",
+    columns: [
+      { column: "video_id", get: (e) => e.videoId },
+      { column: "title", get: (e) => e.title },
+      { column: "channel_title", get: (e) => e.channelTitle ?? null },
+      { column: "thumbnail", get: (e) => e.thumbnail ?? null },
+      { column: "duration_seconds", get: (e) => e.durationSeconds ?? null },
+      { column: "view_count", get: (e) => e.viewCount ?? null },
+      { column: "published_at", get: (e) => e.publishedAt ?? null },
+      { column: "description", get: (e) => e.description ?? null },
+      { column: "status", get: (e) => e.status ?? "plan_to_watch" },
+      { column: "score", get: (e) => e.score ?? 0 },
+      { column: "collection_id", get: (e) => e.collectionId ?? null },
+      { column: "is_cover", get: (e) => e.isCover ?? false },
+      { column: "is_rewatching", get: (e) => e.isRewatching ?? false },
+      { column: "liked_at", get: (e) => e.likedAt ?? null },
+    ],
+  },
 ];
 
 export async function exportAll(_req: Request, res: Response): Promise<void> {
   try {
-    const [anime, movies, series, games, books] = await Promise.all([
+    const [anime, movies, series, games, books, youtube, youtubeCollectionsResult] = await Promise.all([
       libraryModel.findAll(),
       movieLibraryModel.findAll(),
       seriesLibraryModel.findAll(),
       gameLibraryModel.findAll(),
       bookLibraryModel.findAll(),
+      youtubeLibraryModel.findAll(),
+      pool.query("SELECT id, name FROM youtube_collection ORDER BY id"),
     ]);
     res.json({
       version: 1,
@@ -132,6 +165,8 @@ export async function exportAll(_req: Request, res: Response): Promise<void> {
       series,
       games,
       books,
+      youtubeCollections: youtubeCollectionsResult.rows,
+      youtube,
     });
   } catch (error) {
     void notifyError("API backup/export", error);
@@ -217,6 +252,11 @@ export async function importAll(req: Request, res: Response): Promise<void> {
       const rows = body[spec.key];
       if (!Array.isArray(rows)) continue;
       imported[spec.key] = await upsertRows(client, spec, rows as Record<string, unknown>[]);
+    }
+    if (Array.isArray(body.youtubeCollections) && body.youtubeCollections.length > 0) {
+      await client.query(
+        "SELECT setval(pg_get_serial_sequence('youtube_collection', 'id'), (SELECT COALESCE(MAX(id), 1) FROM youtube_collection))"
+      );
     }
     await client.query("COMMIT");
     res.json({ imported });

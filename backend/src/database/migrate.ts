@@ -214,4 +214,39 @@ export async function migrate(): Promise<void> {
     ALTER TABLE books_library
     ADD COLUMN IF NOT EXISTS is_cover BOOLEAN NOT NULL DEFAULT FALSE;
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS youtube_collection (
+      id          SERIAL PRIMARY KEY,
+      name        TEXT NOT NULL,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS youtube_library (
+      id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      video_id          TEXT NOT NULL UNIQUE,
+      title             TEXT NOT NULL,
+      channel_title     TEXT,
+      thumbnail         TEXT,
+      duration_seconds  INTEGER,
+      view_count        BIGINT,
+      published_at      TEXT,
+      description       TEXT,
+      status            TEXT NOT NULL DEFAULT 'plan_to_watch',
+      score             NUMERIC(3,1) DEFAULT 0,
+      liked_at          TIMESTAMPTZ,
+      is_rewatching     BOOLEAN NOT NULL DEFAULT FALSE,
+      collection_id     INTEGER REFERENCES youtube_collection(id) ON DELETE SET NULL,
+      is_cover          BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_youtube_library_collection_id ON youtube_library (collection_id);
+  `);
 }

@@ -8,6 +8,7 @@ import { MoviesPage } from "./pages/MoviesPage/MoviesPage";
 import { SeriesPage } from "./pages/SeriesPage/SeriesPage";
 import { BooksPage } from "./pages/BooksPage/BooksPage";
 import { GamesPage } from "./pages/GamesPage/GamesPage";
+import { YouTubePage } from "./pages/YouTubePage/YouTubePage";
 import { SettingsPage } from "./pages/SettingsPage/SettingsPage";
 import styles from "./App.module.css";
 
@@ -41,6 +42,7 @@ function App() {
             <Route path="/series" element={<SeriesPage />} />
             <Route path="/livros" element={<BooksPage />} />
             <Route path="/jogos" element={<GamesPage />} />
+            <Route path="/youtube" element={<YouTubePage />} />
             <Route path="/config" element={<SettingsPage />} />
             </Routes>
           </main>
