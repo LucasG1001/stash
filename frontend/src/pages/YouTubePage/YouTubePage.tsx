@@ -191,6 +191,8 @@ export function YouTubePage() {
         onBulkSetStatus={(ids, status) => updateManyEntries(ids, status)}
         expandTitle="Ver vídeos da coleção"
         animationKey={gridKey}
+        gridClassName={styles.youtubeGrid}
+        expansionClassName={styles.youtubeExpansion}
         emptyMessage="Nada por aqui ainda."
         emptyHint="Cole o link de um vídeo do YouTube para começar!"
         getCollectionKey={(e) => e.collectionId}

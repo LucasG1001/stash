@@ -81,7 +81,9 @@ const youtubeStatus = z.enum(["plan_to_watch", "liked", "removed"]);
 export const youtubeCreateSchema = z.object({
   videoId: z.string().min(1),
   title: z.string().min(1),
+  channelId: nullableString,
   channelTitle: nullableString,
+  channelThumbnail: nullableString,
   thumbnail: nullableString,
   durationSeconds: nullableNumber,
   viewCount: nullableNumber,

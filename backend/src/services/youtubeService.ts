@@ -1,6 +1,7 @@
 import { cachedRequest } from "../lib/httpClient.js";
 
 const YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/videos";
+const YOUTUBE_CHANNELS_URL = "https://www.googleapis.com/youtube/v3/channels";
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
 export type YoutubeServiceErrorCode = "missing_key" | "invalid_url" | "not_found";
@@ -17,7 +18,9 @@ export class YoutubeServiceError extends Error {
 export interface YoutubeVideoData {
   videoId: string;
   title: string;
+  channelId: string | null;
   channelTitle: string | null;
+  channelThumbnail: string | null;
   thumbnail: string | null;
   durationSeconds: number;
   viewCount: number;
@@ -33,6 +36,7 @@ interface YoutubeApiItem {
   id: string;
   snippet?: {
     title?: string;
+    channelId?: string;
     channelTitle?: string;
     description?: string;
     publishedAt?: string;
@@ -87,6 +91,18 @@ function pickThumbnail(thumbnails: Record<string, YoutubeApiThumbnail | undefine
   return null;
 }
 
+async function fetchChannelThumbnail(channelId: string, key: string): Promise<string | null> {
+  try {
+    const data = await cachedRequest<YoutubeApiResponse>(
+      { url: YOUTUBE_CHANNELS_URL, method: "get", params: { id: channelId, part: "snippet", key } },
+      CACHE_TTL_MS
+    );
+    return pickThumbnail(data.items?.[0]?.snippet?.thumbnails);
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchVideo(videoId: string): Promise<YoutubeVideoData> {
   const key = process.env.YOUTUBE_API_KEY;
   if (!key) {
@@ -107,10 +123,15 @@ export async function fetchVideo(videoId: string): Promise<YoutubeVideoData> {
     throw new YoutubeServiceError("not_found", "Vídeo não encontrado no YouTube.");
   }
 
+  const channelId = item.snippet?.channelId ?? null;
+  const channelThumbnail = channelId ? await fetchChannelThumbnail(channelId, key) : null;
+
   return {
     videoId: item.id,
     title: item.snippet?.title ?? "Vídeo sem título",
+    channelId,
     channelTitle: item.snippet?.channelTitle ?? null,
+    channelThumbnail,
     thumbnail: pickThumbnail(item.snippet?.thumbnails),
     durationSeconds: parseIso8601Duration(item.contentDetails?.duration),
     viewCount: item.statistics?.viewCount ? Number(item.statistics.viewCount) : 0,

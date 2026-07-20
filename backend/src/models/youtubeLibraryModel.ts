@@ -16,7 +16,9 @@ export const youtubeLibraryModel = createLibraryModel<
   externalId: { column: "video_id", field: "videoId" },
   fields: [
     { column: "title", field: "title" },
+    { column: "channel_id", field: "channelId", default: null },
     { column: "channel_title", field: "channelTitle", default: null },
+    { column: "channel_thumbnail", field: "channelThumbnail", default: null },
     { column: "thumbnail", field: "thumbnail", default: null },
     { column: "duration_seconds", field: "durationSeconds", default: 0, numeric: true },
     { column: "view_count", field: "viewCount", default: 0, numeric: true },

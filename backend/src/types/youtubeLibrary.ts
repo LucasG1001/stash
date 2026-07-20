@@ -4,7 +4,9 @@ export interface YoutubeLibraryEntry {
   id: string;
   videoId: string;
   title: string;
+  channelId: string | null;
   channelTitle: string | null;
+  channelThumbnail: string | null;
   thumbnail: string | null;
   durationSeconds: number | null;
   viewCount: number | null;
@@ -23,7 +25,9 @@ export interface YoutubeLibraryEntry {
 export interface CreateYoutubeLibraryEntry {
   videoId: string;
   title: string;
+  channelId?: string | null;
   channelTitle?: string | null;
+  channelThumbnail?: string | null;
   thumbnail?: string | null;
   durationSeconds?: number | null;
   viewCount?: number | null;

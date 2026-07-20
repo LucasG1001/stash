@@ -249,4 +249,10 @@ export async function migrate(): Promise<void> {
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_youtube_library_collection_id ON youtube_library (collection_id);
   `);
+
+  await pool.query(`
+    ALTER TABLE youtube_library
+    ADD COLUMN IF NOT EXISTS channel_id TEXT,
+    ADD COLUMN IF NOT EXISTS channel_thumbnail TEXT;
+  `);
 }

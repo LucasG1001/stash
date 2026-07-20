@@ -48,8 +48,15 @@ export function YoutubeDrawer({ entry, onClose }: YoutubeDrawerProps) {
         )}
 
         <div className={styles.header}>
-          <div className={styles.title}>{entry.title}</div>
-          {entry.channelTitle && <div className={styles.channel}>{entry.channelTitle}</div>}
+          {entry.channelThumbnail ? (
+            <img className={styles.channelAvatar} src={entry.channelThumbnail} alt={entry.channelTitle ?? ""} />
+          ) : (
+            <div className={styles.channelAvatarPlaceholder}>▶️</div>
+          )}
+          <div className={styles.headerText}>
+            <div className={styles.title}>{entry.title}</div>
+            {entry.channelTitle && <div className={styles.channel}>{entry.channelTitle}</div>}
+          </div>
         </div>
 
         <div className={styles.content}>

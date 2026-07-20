@@ -130,7 +130,9 @@ const TABLES: TableSpec[] = [
     columns: [
       { column: "video_id", get: (e) => e.videoId },
       { column: "title", get: (e) => e.title },
+      { column: "channel_id", get: (e) => e.channelId ?? null },
       { column: "channel_title", get: (e) => e.channelTitle ?? null },
+      { column: "channel_thumbnail", get: (e) => e.channelThumbnail ?? null },
       { column: "thumbnail", get: (e) => e.thumbnail ?? null },
       { column: "duration_seconds", get: (e) => e.durationSeconds ?? null },
       { column: "view_count", get: (e) => e.viewCount ?? null },

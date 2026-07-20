@@ -34,6 +34,8 @@ interface FranchiseGridProps<
   onAddToGroup?: (ids: string[], collectionId: number) => void | Promise<unknown>;
   getCollectionName?: (group: MediaGroup<E>) => string | null;
   onRenameCollection?: (group: MediaGroup<E>, name: string) => void;
+  gridClassName?: string;
+  expansionClassName?: string;
 }
 
 export function FranchiseGrid<
@@ -61,6 +63,8 @@ export function FranchiseGrid<
   onAddToGroup,
   getCollectionName,
   onRenameCollection,
+  gridClassName,
+  expansionClassName,
 }: FranchiseGridProps<E, T>) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [cols, setGridRef] = useGridColumns();
@@ -196,7 +200,7 @@ export function FranchiseGrid<
         />
       ),
       expansion: isExpanded ? (
-        <div className={styles.expansion} key={`exp-${group.key}`}>
+        <div className={`${styles.expansion} ${expansionClassName ?? ""}`} key={`exp-${group.key}`}>
           {group.members.map((member, memberIndex) => {
             const card = entryToCard(member);
             return (
@@ -223,7 +227,7 @@ export function FranchiseGrid<
 
   return (
     <>
-      <div className={gridStyles.grid} key={animationKey} ref={setGridRef}>
+      <div className={`${gridStyles.grid} ${gridClassName ?? ""}`} key={animationKey} ref={setGridRef}>
         {arrangeRowAwareCells(items, cols)}
       </div>
       {selectionActive && statusLabels && (
