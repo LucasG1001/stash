@@ -16,8 +16,14 @@ export async function addToLibrary(entry: CreateYoutubeLibraryEntry): Promise<Yo
   return response.data;
 }
 
-export async function addFromUrl(url: string): Promise<YoutubeLibraryEntry> {
-  const response = await api.post<YoutubeLibraryEntry>("/api/youtube-library/from-url", { url });
+export interface PlaylistImportResult {
+  playlist: { name: string; imported: number; collectionId: number };
+}
+
+export type AddFromUrlResult = YoutubeLibraryEntry | PlaylistImportResult;
+
+export async function addFromUrl(url: string): Promise<AddFromUrlResult> {
+  const response = await api.post<AddFromUrlResult>("/api/youtube-library/from-url", { url });
   return response.data;
 }
 

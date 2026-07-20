@@ -100,6 +100,12 @@
   font-size: var(--font-size-sm);
 }
 
+.addNotice {
+  margin-bottom: var(--spacing-base);
+  color: var(--color-success);
+  font-size: var(--font-size-sm);
+}
+
 .tabWrapper {
   margin-bottom: var(--spacing-xl);
   margin-top: var(--spacing-base);

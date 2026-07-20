@@ -18,10 +18,10 @@ export function useYoutubeLibrary() {
   const { load } = store;
 
   const addFromUrl = useCallback(
-    async (url: string): Promise<YoutubeLibraryEntry> => {
-      const entry = await youtubeLibraryService.addFromUrl(url);
+    async (url: string) => {
+      const result = await youtubeLibraryService.addFromUrl(url);
       await load();
-      return entry;
+      return result;
     },
     [load]
   );

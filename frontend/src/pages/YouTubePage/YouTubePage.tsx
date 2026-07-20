@@ -10,9 +10,8 @@ import { useYoutubeLibrary } from "../../hooks/useYoutubeLibrary";
 import { useYoutubeCollections } from "../../hooks/useYoutubeCollections";
 import type { YoutubeCard, YoutubeLibraryStatus, YoutubeOrder } from "../../types/youtubeLibrary";
 import { YOUTUBE_LIBRARY_STATUS_LABELS } from "../../types/youtubeLibrary";
-import { buildYoutubeCollectionGroups, type YoutubeGroup } from "../../utils/youtubeCollectionGroups";
+import { buildYoutubeCollectionGroups, applyStatusView, type YoutubeGroup } from "../../utils/youtubeCollectionGroups";
 import { youtubeLibraryEntryToCard } from "../../utils/youtubeLibraryEntryToCard";
-import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
 import { formatDurationLong } from "../../utils/formatDuration";
 import { formatViews } from "../../utils/formatViews";
 import styles from "./YouTubePage.module.css";
@@ -43,6 +42,7 @@ export function YouTubePage() {
   const [urlInput, setUrlInput] = useState("");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [addNotice, setAddNotice] = useState<string | null>(null);
   const [drawerVideoId, setDrawerVideoId] = useState<string | null>(null);
   const [modalVideoId, setModalVideoId] = useState<string | null>(null);
 
@@ -69,16 +69,21 @@ export function YouTubePage() {
     if (!url || adding) return;
     setAdding(true);
     setAddError(null);
+    setAddNotice(null);
     try {
-      await addFromUrl(url);
+      const result = await addFromUrl(url);
       setUrlInput("");
+      if (result && "playlist" in result) {
+        setAddNotice(`Playlist "${result.playlist.name}" adicionada — ${result.playlist.imported} vídeos`);
+        collections.reload();
+      }
     } catch (e) {
       const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
       setAddError(msg ?? "Erro ao adicionar vídeo.");
     } finally {
       setAdding(false);
     }
-  }, [urlInput, adding, addFromUrl]);
+  }, [urlInput, adding, addFromUrl, collections]);
 
   const handleCardClick = useCallback((card: YoutubeCard) => {
     setDrawerVideoId(card.id);
@@ -110,7 +115,7 @@ export function YouTubePage() {
   } else if (collectionFilter !== "all") {
     groups = groups.filter((g) => g.representative.collectionId === collectionFilter);
   }
-  groups = filterGroupsByStatus(groups, activeStatus);
+  groups = applyStatusView(groups, activeStatus);
   groups = groups.filter((g) => matchesSearch(g, search));
 
   const gridKey = `${activeStatus}-${collectionFilter}-${order}-${search}`;
@@ -127,7 +132,7 @@ export function YouTubePage() {
           className={styles.addInput}
           type="text"
           value={urlInput}
-          placeholder="Cole o link do vídeo do YouTube..."
+          placeholder="Cole o link de um vídeo ou playlist do YouTube..."
           onChange={(e) => setUrlInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") handleAdd();
@@ -138,6 +143,7 @@ export function YouTubePage() {
         </button>
       </div>
       {addError && <div className={styles.addError}>{addError}</div>}
+      {addNotice && <div className={styles.addNotice}>{addNotice}</div>}
 
       <div className={styles.tabWrapper}>
         <TabNav tabs={STATUS_TABS} activeTab={activeStatus} onTabChange={(id) => setActiveStatus(id as YoutubeLibraryStatus)} />

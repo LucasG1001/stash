@@ -6,6 +6,7 @@ import {
   renameCollection as renameCollectionModel,
   assignCollection,
   removeFromCollection,
+  bulkUpsertVideos,
   listCollections as listCollectionsModel,
   pruneEmptyCollections,
 } from "../models/youtubeLibraryModel.js";
@@ -18,7 +19,7 @@ import {
   youtubeRemoveFromGroupSchema,
   youtubeRenameSchema,
 } from "../schemas/library.js";
-import { extractVideoId, fetchVideo, YoutubeServiceError } from "../services/youtubeService.js";
+import { extractVideoId, extractPlaylistId, fetchVideo, fetchPlaylist, YoutubeServiceError } from "../services/youtubeService.js";
 import { notifyError } from "../services/notifyService.js";
 
 const base = createLibraryController({
@@ -59,20 +60,33 @@ export async function createFromUrl(req: Request, res: Response): Promise<void> 
     }
 
     const videoId = extractVideoId(parsed.data.url);
-    if (!videoId) {
-      res.status(400).json({ error: "URL do YouTube inválida." });
+
+    if (videoId) {
+      const existing = await youtubeLibraryModel.findByExternalId(videoId);
+      if (existing) {
+        res.status(409).json({ error: "Vídeo já está na biblioteca.", entry: existing });
+        return;
+      }
+      const video = await fetchVideo(videoId);
+      const entry = await youtubeLibraryModel.create({ ...video, status: "liked", score: 0 });
+      res.status(201).json(entry);
       return;
     }
 
-    const existing = await youtubeLibraryModel.findByExternalId(videoId);
-    if (existing) {
-      res.status(409).json({ error: "Vídeo já está na biblioteca.", entry: existing });
+    const playlistId = extractPlaylistId(parsed.data.url);
+    if (playlistId) {
+      const { title, videos } = await fetchPlaylist(playlistId);
+      if (videos.length === 0) {
+        res.status(404).json({ error: "Playlist vazia ou indisponível." });
+        return;
+      }
+      const collection = await createCollection(title);
+      await bulkUpsertVideos(videos, collection.id);
+      res.status(201).json({ playlist: { name: title, imported: videos.length, collectionId: collection.id } });
       return;
     }
 
-    const video = await fetchVideo(videoId);
-    const entry = await youtubeLibraryModel.create({ ...video, status: "liked", score: 0 });
-    res.status(201).json(entry);
+    res.status(400).json({ error: "URL do YouTube inválida." });
   } catch (error) {
     if (error instanceof YoutubeServiceError) {
       if (error.code === "not_found") {

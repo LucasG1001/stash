@@ -35,6 +35,57 @@ export const youtubeLibraryModel = createLibraryModel<
   rewatch: { column: "is_rewatching", field: "isRewatching" },
 });
 
+export async function bulkUpsertVideos(
+  videos: CreateYoutubeLibraryEntry[],
+  collectionId: number
+): Promise<number> {
+  if (videos.length === 0) return 0;
+
+  const CHUNK = 300;
+  let count = 0;
+
+  for (let start = 0; start < videos.length; start += CHUNK) {
+    const slice = videos.slice(start, start + CHUNK);
+    const values: unknown[] = [];
+    const rows: string[] = [];
+    let i = 1;
+
+    for (const v of slice) {
+      rows.push(
+        `($${i}, $${i + 1}, $${i + 2}, $${i + 3}, $${i + 4}, $${i + 5}, $${i + 6}, $${i + 7}, $${i + 8}, $${i + 9}, 'liked', 0, $${i + 10}, NOW())`
+      );
+      values.push(
+        v.videoId,
+        v.title,
+        v.channelId ?? null,
+        v.channelTitle ?? null,
+        v.channelThumbnail ?? null,
+        v.thumbnail ?? null,
+        v.durationSeconds ?? 0,
+        v.viewCount ?? 0,
+        v.publishedAt ?? null,
+        v.description ?? null,
+        collectionId
+      );
+      i += 11;
+    }
+
+    const result = await pool.query(
+      `INSERT INTO youtube_library
+         (video_id, title, channel_id, channel_title, channel_thumbnail, thumbnail,
+          duration_seconds, view_count, published_at, description, status, score, collection_id, liked_at)
+       VALUES ${rows.join(", ")}
+       ON CONFLICT (video_id) DO UPDATE SET
+         collection_id = COALESCE(youtube_library.collection_id, EXCLUDED.collection_id),
+         updated_at = NOW()`,
+      values
+    );
+    count += result.rowCount ?? 0;
+  }
+
+  return count;
+}
+
 export async function createCollection(name: string): Promise<YoutubeCollection> {
   const result = await pool.query<YoutubeCollection>(
     `INSERT INTO youtube_collection (name) VALUES ($1) RETURNING id, name`,
