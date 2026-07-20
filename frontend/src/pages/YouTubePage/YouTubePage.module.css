@@ -49,19 +49,71 @@
   border: 0;
 }
 
+/* Um único background contínuo (o header): abas num canto e o grupo de adicionar
+   no outro (space-between). O input mantém seu próprio quadro delimitando a área do link. */
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-base);
+  margin-top: var(--spacing-base);
+  margin-bottom: var(--spacing-xl);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xs);
+}
+
+.topRow .tabWrapper {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.topRow .addBar {
+  margin: 0;
+  flex: 0 1 auto;
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  /* No celular quebra em blocos separados de novo. */
+  .topRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-base);
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+
+  .topRow .addBar {
+    flex: none;
+    margin-left: 0;
+    order: -1;
+  }
+
+  /* Mais específico que o `.addInput` base pra vencer a ordem do arquivo,
+     e permite encolher (não estoura o container no celular). */
+  .topRow .addInput {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
 .addBar {
   display: flex;
+  align-items: center;
   gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-sm);
 }
 
 .addInput {
-  flex: 1;
+  flex: 0 0 480px;
   min-width: 0;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
   outline: none;
@@ -73,8 +125,8 @@
 }
 
 .addButton {
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
   background: var(--color-accent);
   border: 1px solid var(--color-accent);
   color: #fff;
@@ -82,6 +134,7 @@
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: opacity var(--transition-fast);
 }
 

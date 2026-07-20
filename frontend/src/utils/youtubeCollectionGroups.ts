@@ -1,4 +1,4 @@
-import type { YoutubeLibraryEntry, YoutubeLibraryStatus, YoutubeOrder } from "../types/youtubeLibrary";
+import type { YoutubeLibraryEntry, YoutubeLibraryStatus } from "../types/youtubeLibrary";
 
 export interface YoutubeGroup {
   key: string;
@@ -25,10 +25,7 @@ function pickRepresentative(ordered: YoutubeLibraryEntry[]): YoutubeLibraryEntry
   return ordered.find((m) => m.isCover) ?? ordered[0];
 }
 
-export function buildYoutubeCollectionGroups(
-  entries: YoutubeLibraryEntry[],
-  order: YoutubeOrder
-): YoutubeGroup[] {
+export function buildYoutubeCollectionGroups(entries: YoutubeLibraryEntry[]): YoutubeGroup[] {
   const map = new Map<string, YoutubeLibraryEntry[]>();
   for (const entry of entries) {
     const key = entry.collectionId != null ? `collection-${entry.collectionId}` : `single-${entry.videoId}`;
@@ -45,24 +42,13 @@ export function buildYoutubeCollectionGroups(
     groups.push({ key, representative, members: [...ordered].reverse(), count: ordered.length, completedCount });
   });
 
-  const groupViews = (g: YoutubeGroup) => g.members.reduce((max, m) => Math.max(max, m.viewCount ?? 0), 0);
   const isCollection = (g: YoutubeGroup) => g.representative.collectionId != null;
 
-  const byOrder = (a: YoutubeGroup, b: YoutubeGroup) => {
-    switch (order) {
-      case "views":
-        return groupViews(b) - groupViews(a);
-      case "published":
-        return publishedTime(b.representative) - publishedTime(a.representative);
-      case "added":
-      default:
-        return addedTime(b.representative) - addedTime(a.representative);
-    }
-  };
-
+  // Coleções primeiro; avulsos depois (mais recentes primeiro). A ordenação
+  // alfabética das coleções (por nome) é aplicada na página, que conhece os nomes.
   return groups.sort((a, b) => {
     const collDiff = Number(isCollection(b)) - Number(isCollection(a));
-    return collDiff !== 0 ? collDiff : byOrder(a, b);
+    return collDiff !== 0 ? collDiff : addedTime(b.representative) - addedTime(a.representative);
   });
 }
 

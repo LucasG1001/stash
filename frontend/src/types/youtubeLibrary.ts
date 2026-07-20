@@ -61,5 +61,3 @@ export const YOUTUBE_LIBRARY_STATUS_LABELS: Record<YoutubeLibraryStatus, string>
   liked: "Gostei",
   removed: "Removido",
 };
-
-export type YoutubeOrder = "added" | "views" | "published";

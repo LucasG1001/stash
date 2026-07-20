@@ -9,12 +9,13 @@ interface TabNavProps {
   tabs: Tab[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
+  plain?: boolean;
 }
 
-export function TabNav({ tabs, activeTab, onTabChange }: TabNavProps) {
+export function TabNav({ tabs, activeTab, onTabChange, plain = false }: TabNavProps) {
   return (
     <>
-      <div className={styles.tabNav}>
+      <div className={`${styles.tabNav} ${plain ? styles.tabNavPlain : ""}`}>
         {tabs.map((tab) => (
           <button
             key={tab.id}

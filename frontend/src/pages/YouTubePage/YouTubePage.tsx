@@ -8,7 +8,7 @@ import { ResultCount } from "../../components/ResultCount/ResultCount";
 import { youtubeCardConfig } from "../../config/cards";
 import { useYoutubeLibrary } from "../../hooks/useYoutubeLibrary";
 import { useYoutubeCollections } from "../../hooks/useYoutubeCollections";
-import type { YoutubeCard, YoutubeLibraryStatus, YoutubeOrder } from "../../types/youtubeLibrary";
+import type { YoutubeCard, YoutubeLibraryStatus } from "../../types/youtubeLibrary";
 import { YOUTUBE_LIBRARY_STATUS_LABELS } from "../../types/youtubeLibrary";
 import { buildYoutubeCollectionGroups, applyStatusView, type YoutubeGroup } from "../../utils/youtubeCollectionGroups";
 import { youtubeLibraryEntryToCard } from "../../utils/youtubeLibraryEntryToCard";
@@ -19,12 +19,6 @@ import styles from "./YouTubePage.module.css";
 const STATUS_TABS = (Object.entries(YOUTUBE_LIBRARY_STATUS_LABELS) as [YoutubeLibraryStatus, string][]).map(
   ([id, label]) => ({ id, label })
 );
-
-const ORDER_LABELS: Record<YoutubeOrder, string> = {
-  added: "Recentes",
-  views: "Mais vistos",
-  published: "Publicação",
-};
 
 function matchesSearch(group: YoutubeGroup, query: string): boolean {
   const q = query.trim().toLowerCase();
@@ -38,7 +32,6 @@ export function YouTubePage() {
   const [activeStatus, setActiveStatus] = useState<YoutubeLibraryStatus>("liked");
   const [search, setSearch] = useState("");
   const [collectionFilter, setCollectionFilter] = useState<number | "all" | "none">("all");
-  const [order, setOrder] = useState<YoutubeOrder>("added");
   const [urlInput, setUrlInput] = useState("");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
@@ -109,7 +102,7 @@ export function YouTubePage() {
     [removeEntry, collections]
   );
 
-  let groups = buildYoutubeCollectionGroups(entries, order);
+  let groups = buildYoutubeCollectionGroups(entries);
   if (collectionFilter === "none") {
     groups = groups.filter((g) => g.representative.collectionId == null);
   } else if (collectionFilter !== "all") {
@@ -117,8 +110,20 @@ export function YouTubePage() {
   }
   groups = applyStatusView(groups, activeStatus);
   groups = groups.filter((g) => matchesSearch(g, search));
+  // Coleções em ordem alfabética (por nome); avulsos mantêm a ordem (depois das coleções).
+  groups = [...groups].sort((a, b) => {
+    const aColl = a.representative.collectionId;
+    const bColl = b.representative.collectionId;
+    if ((aColl != null) !== (bColl != null)) return aColl != null ? -1 : 1;
+    if (aColl != null && bColl != null) {
+      const an = (collections.byId.get(aColl) ?? "").toLowerCase();
+      const bn = (collections.byId.get(bColl) ?? "").toLowerCase();
+      return an.localeCompare(bn, "pt");
+    }
+    return 0;
+  });
 
-  const gridKey = `${activeStatus}-${collectionFilter}-${order}-${search}`;
+  const gridKey = `${activeStatus}-${collectionFilter}-${search}`;
 
   const drawerEntry = drawerVideoId ? findByVideoId(drawerVideoId) : undefined;
   const modalEntry = modalVideoId ? findByVideoId(modalVideoId) : undefined;
@@ -127,27 +132,28 @@ export function YouTubePage() {
     <div className={styles.page}>
       <h1 className={styles.srOnly}>YouTube</h1>
 
-      <div className={styles.addBar}>
-        <input
-          className={styles.addInput}
-          type="text"
-          value={urlInput}
-          placeholder="Cole o link de um vídeo ou playlist do YouTube..."
-          onChange={(e) => setUrlInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleAdd();
-          }}
-        />
-        <button className={styles.addButton} onClick={handleAdd} disabled={adding || !urlInput.trim()}>
-          {adding ? "Adicionando..." : "Adicionar"}
-        </button>
+      <div className={styles.topRow}>
+        <div className={styles.tabWrapper}>
+          <TabNav plain tabs={STATUS_TABS} activeTab={activeStatus} onTabChange={(id) => setActiveStatus(id as YoutubeLibraryStatus)} />
+        </div>
+        <div className={styles.addBar}>
+          <input
+            className={styles.addInput}
+            type="text"
+            value={urlInput}
+            placeholder="Cole o link de um vídeo ou playlist do YouTube..."
+            onChange={(e) => setUrlInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAdd();
+            }}
+          />
+          <button className={styles.addButton} onClick={handleAdd} disabled={adding || !urlInput.trim()}>
+            {adding ? "Adicionando..." : "Adicionar"}
+          </button>
+        </div>
       </div>
       {addError && <div className={styles.addError}>{addError}</div>}
       {addNotice && <div className={styles.addNotice}>{addNotice}</div>}
-
-      <div className={styles.tabWrapper}>
-        <TabNav tabs={STATUS_TABS} activeTab={activeStatus} onTabChange={(id) => setActiveStatus(id as YoutubeLibraryStatus)} />
-      </div>
 
       <div className={styles.libraryControls}>
         <div className={styles.searchWrapper}>
@@ -172,17 +178,6 @@ export function YouTubePage() {
               ))}
             </select>
           )}
-          <select
-            className={styles.filterSelect}
-            value={order}
-            onChange={(e) => setOrder(e.target.value as YoutubeOrder)}
-          >
-            {(Object.keys(ORDER_LABELS) as YoutubeOrder[]).map((key) => (
-              <option key={key} value={key}>
-                {ORDER_LABELS[key]}
-              </option>
-            ))}
-          </select>
         </div>
         {groups.length > 0 && <ResultCount count={groups.length} />}
       </div>
