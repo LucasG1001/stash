@@ -58,6 +58,10 @@ export async function addToGroup(ids: string[], collectionId: number): Promise<v
   await api.post("/api/youtube-library/collections/add", { ids, collectionId });
 }
 
+export async function removeFromGroup(ids: string[]): Promise<void> {
+  await api.post("/api/youtube-library/collections/remove", { ids });
+}
+
 export async function renameCollection(id: number, name: string): Promise<YoutubeCollection> {
   const response = await api.put<{ collection: YoutubeCollection }>(`/api/youtube-library/collections/${id}`, { name });
   return response.data.collection;

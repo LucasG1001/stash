@@ -10,6 +10,7 @@ import {
   removeMany,
   formGroup,
   addToGroup,
+  removeFromGroup,
   renameCollection,
   listCollections,
 } from "../controllers/youtubeLibraryController.js";
@@ -22,6 +23,7 @@ router.post("/from-url", createFromUrl);
 router.get("/collections", listCollections);
 router.post("/collections", formGroup);
 router.post("/collections/add", addToGroup);
+router.post("/collections/remove", removeFromGroup);
 router.put("/collections/:id", renameCollection);
 router.post("/bulk-delete", removeMany);
 router.post("/bulk-update-status", updateManyStatus);

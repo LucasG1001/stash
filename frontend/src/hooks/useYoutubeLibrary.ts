@@ -43,5 +43,13 @@ export function useYoutubeLibrary() {
     [load]
   );
 
-  return { ...store, findByVideoId: store.findByExternalId, addFromUrl, formGroup, addToGroup };
+  const removeFromGroup = useCallback(
+    async (ids: string[]) => {
+      await youtubeLibraryService.removeFromGroup(ids);
+      await load();
+    },
+    [load]
+  );
+
+  return { ...store, findByVideoId: store.findByExternalId, addFromUrl, formGroup, addToGroup, removeFromGroup };
 }

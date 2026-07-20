@@ -32,6 +32,7 @@ interface FranchiseGridProps<
   getCollectionKey?: (entry: E) => number | null | undefined;
   onFormGroup?: (ids: string[], name: string) => void | Promise<unknown>;
   onAddToGroup?: (ids: string[], collectionId: number) => void | Promise<unknown>;
+  onRemoveFromGroup?: (ids: string[]) => void | Promise<unknown>;
   getCollectionName?: (group: MediaGroup<E>) => string | null;
   onRenameCollection?: (group: MediaGroup<E>, name: string) => void;
   getCollectionExtra?: (group: MediaGroup<E>) => ReactNode;
@@ -62,6 +63,7 @@ export function FranchiseGrid<
   getCollectionKey,
   onFormGroup,
   onAddToGroup,
+  onRemoveFromGroup,
   getCollectionName,
   onRenameCollection,
   getCollectionExtra,
@@ -75,7 +77,7 @@ export function FranchiseGrid<
 
   const selectionEnabled = !!(statusLabels && onBulkSetStatus);
   const selectionActive = selectionEnabled && selectedIds.size > 0;
-  const groupingEnabled = !!getCollectionKey && (!!onFormGroup || !!onAddToGroup);
+  const groupingEnabled = !!getCollectionKey && (!!onFormGroup || !!onAddToGroup || !!onRemoveFromGroup);
 
   const entryById = useMemo(() => {
     const map = new Map<string, E>();
@@ -94,8 +96,9 @@ export function FranchiseGrid<
     return [...set];
   }, [selectedIds, entryById, getCollectionKey]);
 
+  const canFormGroup = groupingEnabled && !!onFormGroup && selectedCollections.length === 0;
   const canAddToGroup = groupingEnabled && !!onAddToGroup && selectedCollections.length === 1;
-  const canFormGroup = groupingEnabled && !!onFormGroup && selectedCollections.length !== 1;
+  const canRemoveFromGroup = groupingEnabled && !!onRemoveFromGroup && selectedCollections.length >= 1;
 
   const [prevAnimationKey, setPrevAnimationKey] = useState(animationKey);
   if (prevAnimationKey !== animationKey) {
@@ -244,6 +247,14 @@ export function FranchiseGrid<
             canAddToGroup
               ? () => {
                   onAddToGroup?.([...selectedIds], selectedCollections[0]);
+                  setSelectedIds(new Set());
+                }
+              : undefined
+          }
+          onRemoveFromGroup={
+            canRemoveFromGroup
+              ? () => {
+                  onRemoveFromGroup?.([...selectedIds]);
                   setSelectedIds(new Set());
                 }
               : undefined

@@ -59,6 +59,7 @@ export function YouTubePage() {
     addFromUrl,
     formGroup,
     addToGroup,
+    removeFromGroup,
   } = useYoutubeLibrary();
 
   const collections = useYoutubeCollections();
@@ -200,6 +201,7 @@ export function YouTubePage() {
         getCollectionKey={(e) => e.collectionId}
         onFormGroup={(ids, name) => formGroup(ids, name).then(() => collections.reload())}
         onAddToGroup={(ids, collectionId) => addToGroup(ids, collectionId).then(() => collections.reload())}
+        onRemoveFromGroup={(ids) => removeFromGroup(ids).then(() => collections.reload())}
         getCollectionName={(group) =>
           group.representative.collectionId != null
             ? collections.byId.get(group.representative.collectionId) ?? null
@@ -209,21 +211,11 @@ export function YouTubePage() {
           if (group.representative.collectionId != null) collections.rename(group.representative.collectionId, name);
         }}
         getCollectionExtra={(group) => {
-          const members = group.members;
-          const totalDuration = members.reduce((sum, v) => sum + (v.durationSeconds ?? 0), 0);
-          const totalViews = members.reduce((sum, v) => sum + (v.viewCount ?? 0), 0);
-          const channelCount = new Set(members.map((v) => v.channelId ?? v.channelTitle).filter(Boolean)).size;
-          const counts = { plan_to_watch: 0, liked: 0, removed: 0 };
-          members.forEach((v) => { counts[v.status] += 1; });
-          const statusParts: string[] = [];
-          if (counts.plan_to_watch) statusParts.push(`${counts.plan_to_watch} planejo`);
-          if (counts.liked) statusParts.push(`${counts.liked} gostei`);
-          if (counts.removed) statusParts.push(`${counts.removed} removido`);
+          const totalDuration = group.members.reduce((sum, v) => sum + (v.durationSeconds ?? 0), 0);
+          const totalViews = group.members.reduce((sum, v) => sum + (v.viewCount ?? 0), 0);
           return (
             <div className={styles.collMeta}>
-              <span>{members.length} {members.length === 1 ? "vídeo" : "vídeos"} · {formatDurationLong(totalDuration)}</span>
-              {statusParts.length > 0 && <span>{statusParts.join(" · ")}</span>}
-              <span>{channelCount} {channelCount === 1 ? "canal" : "canais"} · {formatViews(totalViews)}</span>
+              {formatDurationLong(totalDuration)} · {formatViews(totalViews)}
             </div>
           );
         }}

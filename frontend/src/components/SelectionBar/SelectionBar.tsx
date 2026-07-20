@@ -7,8 +7,10 @@ interface SelectionBarProps {
   onClear: () => void;
   onFormGroup?: () => void;
   onAddToGroup?: () => void;
+  onRemoveFromGroup?: () => void;
   formGroupLabel?: string;
   addToGroupLabel?: string;
+  removeFromGroupLabel?: string;
 }
 
 export function SelectionBar({
@@ -18,8 +20,10 @@ export function SelectionBar({
   onClear,
   onFormGroup,
   onAddToGroup,
+  onRemoveFromGroup,
   formGroupLabel = "Formar grupo",
   addToGroupLabel = "Adicionar ao grupo",
+  removeFromGroupLabel = "Remover do grupo",
 }: SelectionBarProps) {
   if (count === 0) return null;
   return (
@@ -46,6 +50,11 @@ export function SelectionBar({
             {addToGroupLabel}
           </button>
         )}
+        {onRemoveFromGroup && (
+          <button type="button" className={styles.groupButtonDanger} onClick={onRemoveFromGroup}>
+            {removeFromGroupLabel}
+          </button>
+        )}
       </div>
       <select
         className={styles.select}
@@ -54,6 +63,7 @@ export function SelectionBar({
           const v = e.target.value;
           if (v === "__form_group__") onFormGroup?.();
           else if (v === "__add_to_group__") onAddToGroup?.();
+          else if (v === "__remove_from_group__") onRemoveFromGroup?.();
           else if (v) onApply(v);
         }}
         aria-label="Ações"
@@ -64,6 +74,7 @@ export function SelectionBar({
         ))}
         {onFormGroup && <option value="__form_group__">{formGroupLabel}</option>}
         {onAddToGroup && <option value="__add_to_group__">{addToGroupLabel}</option>}
+        {onRemoveFromGroup && <option value="__remove_from_group__">{removeFromGroupLabel}</option>}
       </select>
     </div>
   );

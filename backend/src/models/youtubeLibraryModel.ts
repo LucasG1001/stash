@@ -60,6 +60,15 @@ export async function assignCollection(ids: string[], collectionId: number): Pro
   return result.rowCount ?? 0;
 }
 
+export async function removeFromCollection(ids: string[]): Promise<number> {
+  if (ids.length === 0) return 0;
+  const result = await pool.query(
+    `UPDATE youtube_library SET collection_id = NULL, is_cover = FALSE, updated_at = NOW() WHERE id = ANY($1::uuid[])`,
+    [ids]
+  );
+  return result.rowCount ?? 0;
+}
+
 export async function listCollections(): Promise<YoutubeCollection[]> {
   const result = await pool.query<YoutubeCollection>(
     `SELECT c.id, c.name

@@ -5,6 +5,7 @@ import {
   createCollection,
   renameCollection as renameCollectionModel,
   assignCollection,
+  removeFromCollection,
   listCollections as listCollectionsModel,
   pruneEmptyCollections,
 } from "../models/youtubeLibraryModel.js";
@@ -14,6 +15,7 @@ import {
   youtubeFromUrlSchema,
   youtubeFormGroupSchema,
   youtubeAddToGroupSchema,
+  youtubeRemoveFromGroupSchema,
   youtubeRenameSchema,
 } from "../schemas/library.js";
 import { extractVideoId, fetchVideo, YoutubeServiceError } from "../services/youtubeService.js";
@@ -119,6 +121,22 @@ export async function addToGroup(req: Request, res: Response): Promise<void> {
   } catch (error) {
     void notifyError("API POST /api/youtube-library/collections/add", error);
     res.status(500).json({ error: "Erro ao adicionar à coleção." });
+  }
+}
+
+export async function removeFromGroup(req: Request, res: Response): Promise<void> {
+  try {
+    const parsed = youtubeRemoveFromGroupSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Dados inválidos." });
+      return;
+    }
+    await removeFromCollection(parsed.data.ids);
+    await pruneEmptyCollections().catch(() => undefined);
+    res.json({ ok: true });
+  } catch (error) {
+    void notifyError("API POST /api/youtube-library/collections/remove", error);
+    res.status(500).json({ error: "Erro ao remover da coleção." });
   }
 }
 
