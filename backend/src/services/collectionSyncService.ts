@@ -1,4 +1,5 @@
 import * as libraryModel from "../models/libraryModel.js";
+import { singleFlight } from "../lib/singleFlight.js";
 import { movieLibraryModel, bulkUpsertMovies } from "../models/movieLibraryModel.js";
 import { gameLibraryModel, bulkUpsertGames } from "../models/gameLibraryModel.js";
 import { discoverFranchise } from "./anilistService.js";
@@ -171,15 +172,7 @@ const gameAdapter: CollectionSyncAdapter<GameLibraryEntry, GameCard, CreateGameL
     }),
 };
 
-let inFlight: Promise<void> | null = null;
-
-export function refreshCollections(): Promise<void> {
-  if (inFlight) return inFlight;
-  inFlight = doRefresh().finally(() => {
-    inFlight = null;
-  });
-  return inFlight;
-}
+export const refreshCollections = singleFlight(doRefresh);
 
 async function doRefresh(): Promise<void> {
   await syncOne(animeAdapter);

@@ -20,6 +20,8 @@ export const EMPTY_SLICE: Slice = { entries: [], loading: true, error: null, loa
 
 const inFlight = new Set<string>();
 
+let tempSeq = 0;
+
 function mergeServerEntries<T extends { id: string }>(server: T[], local: T[]): T[] {
   const serverIds = new Set(server.map((e) => e.id));
   return [...local.filter((e) => !serverIds.has(e.id)), ...server];
@@ -82,7 +84,7 @@ export function useLibraryStore<TEntry extends { id: string }, TCreate, TUpdate>
   }, [media, slice.loaded, service, setSlice]);
 
   const add = useCallback(async (entry: TCreate): Promise<TEntry | null> => {
-    const tempId = `temp-${Date.now()}`;
+    const tempId = `temp-${++tempSeq}`;
     const optimistic = { id: tempId, ...entry } as unknown as TEntry;
     setSlice(media, (p) => ({ ...p, entries: [optimistic, ...(p.entries as TEntry[])], error: null }));
     try {

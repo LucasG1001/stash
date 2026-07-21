@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { SeriesDetail } from "../../types/series";
 import { fetchSeriesById } from "../../services/seriesService";
 import { TrailerEmbed } from "../TrailerEmbed/TrailerEmbed";
@@ -33,6 +33,12 @@ function formatAirDate(date: string | null): string {
 export function SeriesDrawer({ seriesId, onClose, onSeriesLoad }: SeriesDrawerProps) {
   const [series, setSeries] = useState<SeriesDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const onSeriesLoadRef = useRef(onSeriesLoad);
+  useEffect(() => {
+    onSeriesLoadRef.current = onSeriesLoad;
+  });
 
   useEffect(() => {
     let active = true;
@@ -40,7 +46,10 @@ export function SeriesDrawer({ seriesId, onClose, onSeriesLoad }: SeriesDrawerPr
       .then((data) => {
         if (!active) return;
         setSeries(data);
-        onSeriesLoad?.(data);
+        onSeriesLoadRef.current?.(data);
+      })
+      .catch(() => {
+        if (active) setError(true);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -49,7 +58,6 @@ export function SeriesDrawer({ seriesId, onClose, onSeriesLoad }: SeriesDrawerPr
     return () => {
       active = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seriesId]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -153,7 +161,9 @@ export function SeriesDrawer({ seriesId, onClose, onSeriesLoad }: SeriesDrawerPr
               )}
             </div>
           </>
-        ) : null}
+        ) : (
+          <div className={styles.loading}>{error ? "Erro ao carregar detalhes." : ""}</div>
+        )}
       </div>
     </>
   );

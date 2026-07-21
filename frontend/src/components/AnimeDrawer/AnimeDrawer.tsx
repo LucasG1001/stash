@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { AnimeDetail } from "../../types/anime";
 import { fetchAnimeById } from "../../services/animeService";
 import { TrailerEmbed } from "../TrailerEmbed/TrailerEmbed";
@@ -32,6 +32,12 @@ function formatDate(timestamp: number): string {
 export function AnimeDrawer({ animeId, onClose, onAnimeLoad }: AnimeDrawerProps) {
   const [anime, setAnime] = useState<AnimeDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const onAnimeLoadRef = useRef(onAnimeLoad);
+  useEffect(() => {
+    onAnimeLoadRef.current = onAnimeLoad;
+  });
 
   useEffect(() => {
     let active = true;
@@ -39,16 +45,18 @@ export function AnimeDrawer({ animeId, onClose, onAnimeLoad }: AnimeDrawerProps)
       .then((data) => {
         if (!active) return;
         setAnime(data);
-        onAnimeLoad?.(data);
+        onAnimeLoadRef.current?.(data);
+      })
+      .catch(() => {
+        if (active) setError(true);
       })
       .finally(() => {
         if (active) setLoading(false);
       });
-      
+
     return () => {
       active = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animeId]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -176,7 +184,9 @@ export function AnimeDrawer({ animeId, onClose, onAnimeLoad }: AnimeDrawerProps)
 
             </div>
           </>
-        ) : null}
+        ) : (
+          <div className={styles.loading}>{error ? "Erro ao carregar detalhes." : ""}</div>
+        )}
       </div>
     </>
   );

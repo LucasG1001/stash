@@ -1,5 +1,6 @@
 import { pool } from "../database/connection.js";
 import { createLibraryModel } from "../lib/createLibraryModel.js";
+import { chunk } from "../lib/chunk.js";
 import type {
   YoutubeLibraryEntry,
   CreateYoutubeLibraryEntry,
@@ -44,8 +45,7 @@ export async function bulkUpsertVideos(
   const CHUNK = 300;
   let count = 0;
 
-  for (let start = 0; start < videos.length; start += CHUNK) {
-    const slice = videos.slice(start, start + CHUNK);
+  for (const slice of chunk(videos, CHUNK)) {
     const values: unknown[] = [];
     const rows: string[] = [];
     let i = 1;
