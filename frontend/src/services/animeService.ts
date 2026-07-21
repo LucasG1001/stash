@@ -1,23 +1,23 @@
 import { api } from "./api";
 import type { AnimeListResponse, AnimeDetail } from "../types/anime";
 
-export async function fetchSeason(season?: string, year?: number, page = 1): Promise<AnimeListResponse> {
+export async function fetchSeason(season?: string, year?: number, page = 1, signal?: AbortSignal): Promise<AnimeListResponse> {
   const params: Record<string, string | number> = { page };
   if (season) params.season = season;
   if (year) params.year = year;
-  const response = await api.get<AnimeListResponse>("/api/anime/season", { params });
+  const response = await api.get<AnimeListResponse>("/api/anime/season", { params, signal });
   return response.data;
 }
 
-export async function fetchPopular(year?: number, page = 1): Promise<AnimeListResponse> {
+export async function fetchPopular(year?: number, page = 1, signal?: AbortSignal): Promise<AnimeListResponse> {
   const params: Record<string, number> = { page };
   if (year) params.year = year;
-  const response = await api.get<AnimeListResponse>("/api/anime/popular", { params });
+  const response = await api.get<AnimeListResponse>("/api/anime/popular", { params, signal });
   return response.data;
 }
 
-export async function searchAnimes(query: string, page = 1): Promise<AnimeListResponse> {
-  const response = await api.get<AnimeListResponse>("/api/anime/search", { params: { q: query, page } });
+export async function searchAnimes(query: string, page = 1, signal?: AbortSignal): Promise<AnimeListResponse> {
+  const response = await api.get<AnimeListResponse>("/api/anime/search", { params: { q: query, page }, signal });
   return response.data;
 }
 

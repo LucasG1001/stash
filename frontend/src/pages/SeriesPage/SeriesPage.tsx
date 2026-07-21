@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
 import { MediaGrid } from "../../components/MediaGrid/MediaGrid";
 import { seriesCardConfig } from "../../config/cards";
@@ -38,7 +38,7 @@ export function SeriesPage() {
   const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
 
-  const { series, loading, error, hasNextPage, loadPopular, search, loadMore } = useSeries();
+  const { series, loading, error, hasNextPage, loadPopular, search, loadMore, reset } = useSeries();
   const {
     entries: libraryEntries,
     loading: libraryLoading,
@@ -57,10 +57,10 @@ export function SeriesPage() {
   }, [activeTab, selectedYear, selectedMonth, loadPopular]);
 
   useEffect(() => {
-    if (activeTab === "search" && debouncedSearch.length >= 2) {
-      search(debouncedSearch);
-    }
-  }, [debouncedSearch, activeTab, search]);
+    if (activeTab !== "search") return;
+    if (debouncedSearch.length >= 2) search(debouncedSearch);
+    else reset();
+  }, [debouncedSearch, activeTab, search, reset]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -123,34 +123,36 @@ export function SeriesPage() {
     }
   }, [findByTmdbId, updateEntry]);
 
-  const statusLibraryEntries = libraryFilter === "all"
-    ? libraryEntries.filter(entry => entry.status !== "dropped")
-    : libraryEntries.filter(entry => entry.status === libraryFilter || (libraryFilter === "plan_to_watch" && entry.isRewatching));
+  const librarySeriesCards = useMemo<SeriesCard[]>(() => {
+    const statusLibraryEntries = libraryFilter === "all"
+      ? libraryEntries.filter(entry => entry.status !== "dropped")
+      : libraryEntries.filter(entry => entry.status === libraryFilter || (libraryFilter === "plan_to_watch" && entry.isRewatching));
 
-  const searchTerm = librarySearch.trim().toLowerCase();
-  const filteredLibraryEntries = searchTerm
-    ? statusLibraryEntries.filter(entry => entry.title.toLowerCase().includes(searchTerm))
-    : statusLibraryEntries;
+    const searchTerm = librarySearch.trim().toLowerCase();
+    const filteredLibraryEntries = searchTerm
+      ? statusLibraryEntries.filter(entry => entry.title.toLowerCase().includes(searchTerm))
+      : statusLibraryEntries;
 
-  const sortedLibraryEntries = scoreSortDir !== "off"
-    ? [...filteredLibraryEntries].sort((a, b) => compareByScore(a, b, scoreSortDir))
-    : [...filteredLibraryEntries].sort((a, b) => {
-        const ta = a.firstAirDate ? new Date(a.firstAirDate).getTime() : 0;
-        const tb = b.firstAirDate ? new Date(b.firstAirDate).getTime() : 0;
-        const diff = ta - tb;
-        return releaseSortDir === "desc" ? -diff : diff;
-      });
+    const sortedLibraryEntries = scoreSortDir !== "off"
+      ? [...filteredLibraryEntries].sort((a, b) => compareByScore(a, b, scoreSortDir))
+      : [...filteredLibraryEntries].sort((a, b) => {
+          const ta = a.firstAirDate ? new Date(a.firstAirDate).getTime() : 0;
+          const tb = b.firstAirDate ? new Date(b.firstAirDate).getTime() : 0;
+          const diff = ta - tb;
+          return releaseSortDir === "desc" ? -diff : diff;
+        });
 
-  const librarySeriesCards: SeriesCard[] = sortedLibraryEntries.map((entry) => ({
-    id: entry.tmdbId,
-    title: entry.title,
-    posterImage: entry.posterImage ?? "",
-    backdropImage: null,
-    firstAirDate: entry.firstAirDate,
-    voteAverage: null,
-    overview: null,
-    seriesStatus: entry.seriesStatus || "RELEASED",
-  }));
+    return sortedLibraryEntries.map((entry) => ({
+      id: entry.tmdbId,
+      title: entry.title,
+      posterImage: entry.posterImage ?? "",
+      backdropImage: null,
+      firstAirDate: entry.firstAirDate,
+      voteAverage: null,
+      overview: null,
+      seriesStatus: entry.seriesStatus || "RELEASED",
+    }));
+  }, [libraryEntries, libraryFilter, librarySearch, scoreSortDir, releaseSortDir]);
 
   const displaySeries = activeTab === "library" ? librarySeriesCards : series;
   const displayLoading = activeTab === "library" ? libraryLoading : loading;

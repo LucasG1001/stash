@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
 import { MediaGrid } from "../../components/MediaGrid/MediaGrid";
 import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
@@ -51,7 +51,7 @@ export function AnimePage() {
   const [selectedPopularYear, setSelectedPopularYear] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
 
-  const { animes, loading, error, hasNextPage, loadSeason, loadPopular, search, loadMore } = useAnime();
+  const { animes, loading, error, hasNextPage, loadSeason, loadPopular, search, loadMore, reset } = useAnime();
   const {
     entries: libraryEntries,
     loading: libraryLoading,
@@ -73,10 +73,10 @@ export function AnimePage() {
   }, [activeTab, selectedSeasonObj, selectedPopularYear, loadSeason, loadPopular]);
 
   useEffect(() => {
-    if (activeTab === "search" && debouncedSearch.length >= 2) {
-      search(debouncedSearch);
-    }
-  }, [debouncedSearch, activeTab, search]);
+    if (activeTab !== "search") return;
+    if (debouncedSearch.length >= 2) search(debouncedSearch);
+    else reset();
+  }, [debouncedSearch, activeTab, search, reset]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -139,7 +139,7 @@ export function AnimePage() {
     }
   }, [findByAnilistId, updateEntry]);
 
-  const franchiseGroups = filterGroupsBySearch(
+  const franchiseGroups = useMemo(() => filterGroupsBySearch(
     filterGroupsByAiringStatus(
       filterGroupsByStatus(
         buildFranchiseGroups(libraryEntries, releaseSortDir),
@@ -149,7 +149,7 @@ export function AnimePage() {
       airingFilter
     ),
     librarySearch
-  );
+  ), [libraryEntries, releaseSortDir, libraryFilter, airingFilter, librarySearch]);
 
   const gridKey =
     activeTab === "library"

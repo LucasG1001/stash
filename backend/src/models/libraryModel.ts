@@ -1,5 +1,40 @@
 import { pool } from "../database/connection.js";
+import { createLibraryModel } from "../lib/createLibraryModel.js";
 import type { LibraryEntry, LibraryRow, CreateLibraryEntry, UpdateLibraryEntry, SyncLibraryData } from "../types/library.js";
+
+export const animeLibraryModel = createLibraryModel<LibraryEntry, CreateLibraryEntry, UpdateLibraryEntry>({
+  table: "anime_library",
+  externalId: { column: "anilist_id", field: "anilistId" },
+  fields: [
+    { column: "title", field: "title" },
+    { column: "cover_image", field: "coverImage", default: null },
+    { column: "status", field: "status", default: "plan_to_watch" },
+    { column: "score", field: "score", default: 0, numeric: true },
+    { column: "total_episodes", field: "totalEpisodes", default: null },
+    { column: "anime_status", field: "animeStatus", default: "FINISHED" },
+    { column: "franchise_id", field: "franchiseId", default: null },
+    { column: "format", field: "format", default: null },
+    { column: "season_year", field: "seasonYear", default: null },
+    { column: "next_airing_episode", field: "nextAiringEpisode", default: null },
+    { column: "streaming_links", field: "streamingLinks", default: [] },
+    { column: "synced_at", field: "syncedAt", default: null },
+    { column: "is_cover", field: "isCover", default: false, readonly: true },
+  ],
+  statusField: "status",
+  completion: { column: "watched_at", field: "watchedAt", whenStatus: "watched" },
+  collectionColumn: "franchise_id",
+  rewatch: { column: "is_rewatching", field: "isRewatching" },
+});
+
+// CRUD padrão vem da factory; funções específicas de anime (JSONB, sync, franquia) ficam abaixo.
+export const findAll = animeLibraryModel.findAll;
+export const findById = animeLibraryModel.findById;
+export const findByAnilistId = animeLibraryModel.findByExternalId;
+export const update = animeLibraryModel.update;
+export const updateManyStatus = animeLibraryModel.updateManyStatus;
+export const remove = animeLibraryModel.remove;
+export const removeMany = animeLibraryModel.removeMany;
+export const setCover = animeLibraryModel.setCover!;
 
 function toLibraryEntry(row: LibraryRow): LibraryEntry {
   return {
@@ -23,21 +58,6 @@ function toLibraryEntry(row: LibraryRow): LibraryEntry {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
-}
-
-export async function findAll(): Promise<LibraryEntry[]> {
-  const result = await pool.query<LibraryRow>("SELECT * FROM anime_library ORDER BY updated_at DESC");
-  return result.rows.map(toLibraryEntry);
-}
-
-export async function findById(id: string): Promise<LibraryEntry | null> {
-  const result = await pool.query<LibraryRow>("SELECT * FROM anime_library WHERE id = $1", [id]);
-  return result.rows[0] ? toLibraryEntry(result.rows[0]) : null;
-}
-
-export async function findByAnilistId(anilistId: number): Promise<LibraryEntry | null> {
-  const result = await pool.query<LibraryRow>("SELECT * FROM anime_library WHERE anilist_id = $1", [anilistId]);
-  return result.rows[0] ? toLibraryEntry(result.rows[0]) : null;
 }
 
 export async function findStale(nonFinishedTtlHours: number, finishedTtlHours: number): Promise<LibraryEntry[]> {
@@ -116,62 +136,6 @@ export async function bulkUpsert(entries: CreateLibraryEntry[], franchiseId: num
   return result.rows.map(toLibraryEntry);
 }
 
-export async function update(id: string, data: UpdateLibraryEntry): Promise<LibraryEntry | null> {
-  const fields: string[] = [];
-  const values: unknown[] = [];
-  let paramIndex = 1;
-
-  if (data.title !== undefined) {
-    fields.push(`title = $${paramIndex++}`);
-    values.push(data.title);
-  }
-  if (data.coverImage !== undefined) {
-    fields.push(`cover_image = $${paramIndex++}`);
-    values.push(data.coverImage);
-  }
-  if (data.status !== undefined) {
-    const statusParam = paramIndex++;
-    fields.push(`status = $${statusParam}`);
-    values.push(data.status);
-    fields.push(
-      `watched_at = CASE
-         WHEN $${statusParam} = 'watched' AND status != 'watched' THEN NOW()
-         WHEN $${statusParam} != 'watched' THEN NULL
-         ELSE watched_at
-       END`
-    );
-  }
-  if (data.score !== undefined) {
-    fields.push(`score = $${paramIndex++}`);
-    values.push(data.score);
-  }
-  if (data.totalEpisodes !== undefined) {
-    fields.push(`total_episodes = $${paramIndex++}`);
-    values.push(data.totalEpisodes);
-  }
-  if (data.animeStatus !== undefined) {
-    fields.push(`anime_status = $${paramIndex++}`);
-    values.push(data.animeStatus);
-  }
-  if (data.status !== undefined && data.status !== "watched") {
-    fields.push(`is_rewatching = FALSE`);
-  } else if (data.isRewatching !== undefined) {
-    fields.push(`is_rewatching = $${paramIndex++}`);
-    values.push(data.isRewatching);
-  }
-
-  if (fields.length === 0) return findById(id);
-
-  fields.push(`updated_at = NOW()`);
-  values.push(id);
-
-  const result = await pool.query<LibraryRow>(
-    `UPDATE anime_library SET ${fields.join(", ")} WHERE id = $${paramIndex} RETURNING *`,
-    values
-  );
-  return result.rows[0] ? toLibraryEntry(result.rows[0]) : null;
-}
-
 export async function updateSyncData(anilistId: number, data: SyncLibraryData): Promise<void> {
   await pool.query(
     `UPDATE anime_library
@@ -191,56 +155,4 @@ export async function updateSyncData(anilistId: number, data: SyncLibraryData): 
       data.seasonYear ?? null,
     ]
   );
-}
-
-export async function updateManyStatus(ids: string[], status: string): Promise<LibraryEntry[]> {
-  if (ids.length === 0) return [];
-  const result = await pool.query<LibraryRow>(
-    `UPDATE anime_library
-        SET status = $2,
-            watched_at = CASE
-              WHEN $2 = 'watched' AND status != 'watched' THEN NOW()
-              WHEN $2 != 'watched' THEN NULL
-              ELSE watched_at
-            END,
-            updated_at = NOW()
-      WHERE id = ANY($1::uuid[])
-     RETURNING *`,
-    [ids, status]
-  );
-  return result.rows.map(toLibraryEntry);
-}
-
-export async function setCover(id: string): Promise<LibraryEntry | null> {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query(
-      `UPDATE anime_library SET is_cover = FALSE
-       WHERE franchise_id = (SELECT franchise_id FROM anime_library WHERE id = $1) AND franchise_id IS NOT NULL`,
-      [id]
-    );
-    const result = await client.query<LibraryRow>(
-      `UPDATE anime_library SET is_cover = TRUE WHERE id = $1 RETURNING *`,
-      [id]
-    );
-    await client.query("COMMIT");
-    return result.rows[0] ? toLibraryEntry(result.rows[0]) : null;
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
-}
-
-export async function remove(id: string): Promise<boolean> {
-  const result = await pool.query("DELETE FROM anime_library WHERE id = $1", [id]);
-  return (result.rowCount ?? 0) > 0;
-}
-
-export async function removeMany(ids: string[]): Promise<number> {
-  if (ids.length === 0) return 0;
-  const result = await pool.query("DELETE FROM anime_library WHERE id = ANY($1::uuid[])", [ids]);
-  return result.rowCount ?? 0;
 }

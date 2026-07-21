@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
 import { MediaGrid } from "../../components/MediaGrid/MediaGrid";
 import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
@@ -44,7 +44,7 @@ export function MoviesPage() {
   const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
 
-  const { movies, loading, error, hasNextPage, loadPopular, loadNowPlaying, search, loadMore } = useMovies();
+  const { movies, loading, error, hasNextPage, loadPopular, loadNowPlaying, search, loadMore, reset } = useMovies();
   const {
     entries: libraryEntries,
     loading: libraryLoading,
@@ -66,10 +66,10 @@ export function MoviesPage() {
   }, [activeTab, selectedYear, selectedMonth, loadPopular, loadNowPlaying]);
 
   useEffect(() => {
-    if (activeTab === "search" && debouncedSearch.length >= 2) {
-      search(debouncedSearch);
-    }
-  }, [debouncedSearch, activeTab, search]);
+    if (activeTab !== "search") return;
+    if (debouncedSearch.length >= 2) search(debouncedSearch);
+    else reset();
+  }, [debouncedSearch, activeTab, search, reset]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -130,14 +130,14 @@ export function MoviesPage() {
     }
   }, [findByTmdbId, updateEntry]);
 
-  const collectionGroups = filterGroupsBySearch(
+  const collectionGroups = useMemo(() => filterGroupsBySearch(
     filterGroupsByStatus(
       buildMovieCollectionGroups(libraryEntries, scoreSortDir, releaseSortDir),
       libraryFilter,
       (member, filter) => filter === "plan_to_watch" && member.isRewatching
     ),
     librarySearch
-  );
+  ), [libraryEntries, scoreSortDir, releaseSortDir, libraryFilter, librarySearch]);
 
   const gridKey =
     activeTab === "library"

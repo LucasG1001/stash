@@ -1,73 +1,58 @@
-import type { Request, Response } from "express";
 import { fetchSeasonAnimes, fetchPopularAnimes, searchAnimes, fetchAnimeById, getCurrentSeason } from "../services/anilistService.js";
-import { notifyError } from "../services/notifyService.js";
+import { asyncHandler } from "../lib/asyncHandler.js";
 
-export async function getSeason(req: Request, res: Response): Promise<void> {
-  try {
-    const reqSeason = req.query.season as string;
-    const reqYear = req.query.year ? parseInt(String(req.query.year)) : NaN;
-    
-    let season: string;
-    let year: number;
-    
-    if (reqSeason && !isNaN(reqYear)) {
-      season = reqSeason.toUpperCase();
-      year = reqYear;
-    } else {
-      const current = getCurrentSeason();
-      season = current.season;
-      year = current.year;
-    }
+const VALID_SEASONS = new Set(["WINTER", "SPRING", "SUMMER", "FALL"]);
 
-    const page = parseInt(String(req.query.page || "1")) || 1;
-    const result = await fetchSeasonAnimes(season, year, page);
-    res.json(result);
-  } catch (error) {
-    void notifyError("API anime/season", error);
-    res.status(500).json({ error: "Erro ao buscar animes da temporada." });
-  }
-}
+export const getSeason = asyncHandler("API anime/season", "Erro ao buscar animes da temporada.", async (req, res) => {
+  const reqSeason = req.query.season as string | undefined;
+  const reqYear = req.query.year ? parseInt(String(req.query.year)) : NaN;
 
-export async function getPopular(req: Request, res: Response): Promise<void> {
-  try {
-    const reqYear = parseInt(String(req.query.year));
-    const year = !isNaN(reqYear) ? reqYear : undefined;
-    const page = parseInt(String(req.query.page || "1")) || 1;
-    const result = await fetchPopularAnimes(page, year);
-    res.json(result);
-  } catch (error) {
-    void notifyError("API anime/popular", error);
-    res.status(500).json({ error: "Erro ao buscar animes populares." });
-  }
-}
+  let season: string;
+  let year: number;
 
-export async function search(req: Request, res: Response): Promise<void> {
-  try {
-    const query = String(req.query.q || "");
-    if (!query) {
-      res.status(400).json({ error: "Parâmetro de busca é obrigatório." });
+  if (reqSeason && !isNaN(reqYear)) {
+    season = reqSeason.toUpperCase();
+    if (!VALID_SEASONS.has(season)) {
+      res.status(400).json({ error: "Temporada inválida." });
       return;
     }
-    const page = parseInt(String(req.query.page || "1")) || 1;
-    const result = await searchAnimes(query, page);
-    res.json(result);
-  } catch (error) {
-    void notifyError("API anime/search", error);
-    res.status(500).json({ error: "Erro ao buscar animes." });
+    year = reqYear;
+  } else {
+    const current = getCurrentSeason();
+    season = current.season;
+    year = current.year;
   }
-}
 
-export async function getById(req: Request, res: Response): Promise<void> {
-  try {
-    const id = parseInt(String(req.params.id));
-    if (isNaN(id)) {
-      res.status(400).json({ error: "ID inválido." });
-      return;
-    }
-    const anime = await fetchAnimeById(id);
-    res.json(anime);
-  } catch (error) {
-    void notifyError("API anime/:id", error);
-    res.status(500).json({ error: "Erro ao buscar detalhes do anime." });
+  const page = parseInt(String(req.query.page || "1")) || 1;
+  const result = await fetchSeasonAnimes(season, year, page);
+  res.json(result);
+});
+
+export const getPopular = asyncHandler("API anime/popular", "Erro ao buscar animes populares.", async (req, res) => {
+  const reqYear = parseInt(String(req.query.year));
+  const year = !isNaN(reqYear) ? reqYear : undefined;
+  const page = parseInt(String(req.query.page || "1")) || 1;
+  const result = await fetchPopularAnimes(page, year);
+  res.json(result);
+});
+
+export const search = asyncHandler("API anime/search", "Erro ao buscar animes.", async (req, res) => {
+  const query = String(req.query.q || "");
+  if (!query) {
+    res.status(400).json({ error: "Parâmetro de busca é obrigatório." });
+    return;
   }
-}
+  const page = parseInt(String(req.query.page || "1")) || 1;
+  const result = await searchAnimes(query, page);
+  res.json(result);
+});
+
+export const getById = asyncHandler("API anime/:id", "Erro ao buscar detalhes do anime.", async (req, res) => {
+  const id = parseInt(String(req.params.id));
+  if (isNaN(id)) {
+    res.status(400).json({ error: "ID inválido." });
+    return;
+  }
+  const anime = await fetchAnimeById(id);
+  res.json(anime);
+});

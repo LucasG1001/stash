@@ -1,10 +1,31 @@
 import type { Request, Response } from "express";
+import { createLibraryController } from "../lib/createLibraryController.js";
 import * as libraryModel from "../models/libraryModel.js";
+import { animeLibraryModel } from "../models/libraryModel.js";
 import { discoverFranchise } from "../services/anilistService.js";
 import { refreshStaleEntries } from "../services/librarySyncService.js";
 import { animeCreateSchema, animeUpdateSchema } from "../schemas/library.js";
 import type { CreateLibraryEntry } from "../types/library.js";
 import { notifyError } from "../services/notifyService.js";
+
+const base = createLibraryController({
+  model: animeLibraryModel,
+  externalIdField: "anilistId",
+  createSchema: animeCreateSchema,
+  updateSchema: animeUpdateSchema,
+  messages: {
+    required: "anilistId e title são obrigatórios.",
+    invalid: "Dados inválidos.",
+    duplicate: "Anime já está na biblioteca.",
+    notFound: "Anime não encontrado na biblioteca.",
+    errorGetAll: "Erro ao buscar biblioteca.",
+    errorCreate: "Erro ao adicionar anime à biblioteca.",
+    errorUpdate: "Erro ao atualizar anime na biblioteca.",
+    errorRemove: "Erro ao remover anime da biblioteca.",
+  },
+});
+
+export const { update, updateManyStatus, setCover, remove, removeMany } = base;
 
 export async function getAll(_req: Request, res: Response): Promise<void> {
   try {
@@ -61,94 +82,5 @@ export async function create(req: Request, res: Response): Promise<void> {
   } catch (error) {
     void notifyError("API POST /api/library", error);
     res.status(500).json({ error: "Erro ao adicionar anime à biblioteca." });
-  }
-}
-
-export async function update(req: Request, res: Response): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const parsed = animeUpdateSchema.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: "Dados inválidos.", issues: parsed.error.flatten() });
-      return;
-    }
-    const { title, coverImage, status, score, totalEpisodes, animeStatus, isRewatching } = parsed.data;
-
-    const entry = await libraryModel.update(id, { title, coverImage, status, score, totalEpisodes, animeStatus, isRewatching });
-    if (!entry) {
-      res.status(404).json({ error: "Anime não encontrado na biblioteca." });
-      return;
-    }
-
-    res.json(entry);
-  } catch (error) {
-    void notifyError("API PUT /api/library/:id", error);
-    res.status(500).json({ error: "Erro ao atualizar anime na biblioteca." });
-  }
-}
-
-export async function setCover(req: Request, res: Response): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const entry = await libraryModel.setCover(id);
-    if (!entry) {
-      res.status(404).json({ error: "Anime não encontrado na biblioteca." });
-      return;
-    }
-    res.json(entry);
-  } catch (error) {
-    void notifyError("API PUT /api/library/:id/cover", error);
-    res.status(500).json({ error: "Erro ao definir capa da coleção." });
-  }
-}
-
-export async function remove(req: Request, res: Response): Promise<void> {
-  try {
-    const id = String(req.params.id);
-    const deleted = await libraryModel.remove(id);
-    if (!deleted) {
-      res.status(404).json({ error: "Anime não encontrado na biblioteca." });
-      return;
-    }
-    res.status(204).send();
-  } catch (error) {
-    void notifyError("API DELETE /api/library/:id", error);
-    res.status(500).json({ error: "Erro ao remover anime da biblioteca." });
-  }
-}
-
-export async function removeMany(req: Request, res: Response): Promise<void> {
-  try {
-    const ids = (req.body as { ids?: unknown }).ids;
-    if (!Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === "string")) {
-      res.status(400).json({ error: "Dados inválidos." });
-      return;
-    }
-    const deleted = await libraryModel.removeMany(ids as string[]);
-    res.json({ deleted });
-  } catch (error) {
-    void notifyError("API POST /api/library/bulk-delete", error);
-    res.status(500).json({ error: "Erro ao remover anime da biblioteca." });
-  }
-}
-
-export async function updateManyStatus(req: Request, res: Response): Promise<void> {
-  try {
-    const { ids, status } = req.body as { ids?: unknown; status?: unknown };
-    if (
-      !Array.isArray(ids) ||
-      ids.length === 0 ||
-      !ids.every((id) => typeof id === "string") ||
-      typeof status !== "string" ||
-      status.length === 0
-    ) {
-      res.status(400).json({ error: "Dados inválidos." });
-      return;
-    }
-    const entries = await libraryModel.updateManyStatus(ids as string[], status);
-    res.json({ entries });
-  } catch (error) {
-    void notifyError("API POST /api/library/bulk-update-status", error);
-    res.status(500).json({ error: "Erro ao atualizar anime na biblioteca." });
   }
 }

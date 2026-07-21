@@ -32,6 +32,7 @@ export interface AnimeCard {
   title: string;
   coverImage: string;
   status: string;
+  format?: string | null;
   episodes: number | null;
   averageScore: number | null;
   season: string | null;

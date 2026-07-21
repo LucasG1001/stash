@@ -1,4 +1,4 @@
-export type YoutubeLibraryStatus = "plan_to_watch" | "liked" | "removed";
+export type YoutubeLibraryStatus = "liked" | "removed";
 
 export interface YoutubeLibraryEntry {
   id: string;

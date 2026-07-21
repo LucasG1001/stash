@@ -1,6 +1,20 @@
+import axios from "axios";
 import { cachedRequest } from "../lib/httpClient.js";
 import { createRateLimiter } from "../lib/rateLimiter.js";
+import { chunk } from "../lib/chunk.js";
 import type { AniListAnime, AniListResponse, AniListSingleResponse, AnimeCard, AnimeDetail, AniListExternalLink, AniListFranchiseNode, AniListFranchiseResponse } from "../types/anime.js";
+
+export class AniListError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = "AniListError";
+  }
+}
+
+interface GraphQLEnvelope {
+  data: unknown;
+  errors?: Array<{ message?: string; status?: number }>;
+}
 
 const ANILIST_URL = "https://graphql.anilist.co";
 const CACHE_TTL_MS = 60 * 60 * 1000;
@@ -87,20 +101,40 @@ function getNextSeason(): { season: string; year: number } {
 }
 
 async function queryAniList<T>(query: string, variables: Record<string, unknown>): Promise<T> {
-  return cachedRequest<T>(
-    {
-      method: "post",
-      url: ANILIST_URL,
-      data: { query, variables },
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "User-Agent": "StashAnimeTracker/1.0 (+contato)",
+  let result: T;
+  try {
+    result = await cachedRequest<T>(
+      {
+        method: "post",
+        url: ANILIST_URL,
+        data: { query, variables },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "User-Agent": "StashAnimeTracker/1.0 (+contato)",
+        },
       },
-    },
-    CACHE_TTL_MS,
-    { limiter: anilistLimiter, maxRetries: ANILIST_MAX_RETRIES },
-  );
+      CACHE_TTL_MS,
+      { limiter: anilistLimiter, maxRetries: ANILIST_MAX_RETRIES },
+    );
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      if (status === 404) throw new AniListError("Anime não encontrado na AniList.", 404);
+      if (status === 400) throw new AniListError("Requisição inválida à AniList.", 400);
+      throw new AniListError("Falha ao consultar a AniList.", 502);
+    }
+    throw error;
+  }
+
+  const envelope = result as GraphQLEnvelope;
+  if (envelope.errors?.length) {
+    const notFound = envelope.errors.some((e) => e.status === 404);
+    throw new AniListError(notFound ? "Anime não encontrado na AniList." : "Requisição inválida à AniList.", notFound ? 404 : 400);
+  }
+  if (envelope.data == null) throw new AniListError("Requisição inválida à AniList.", 400);
+
+  return result;
 }
 
 export async function fetchSeasonAnimes(season: string, year: number, page = 1, perPage = 20): Promise<{ animes: AnimeCard[]; pageInfo: AniListResponse["data"]["Page"]["pageInfo"] }> {
@@ -175,12 +209,10 @@ export async function fetchAnimesByIds(ids: number[]): Promise<AnimeCard[]> {
     }
   `;
 
-  const chunkSize = 50;
   const results: AnimeCard[] = [];
 
-  for (let i = 0; i < ids.length; i += chunkSize) {
-    const chunk = ids.slice(i, i + chunkSize);
-    const data = await queryAniList<AniListResponse>(query, { ids: chunk, page: 1, perPage: chunkSize });
+  for (const batch of chunk(ids, 50)) {
+    const data = await queryAniList<AniListResponse>(query, { ids: batch, page: 1, perPage: batch.length });
     results.push(...data.data.Page.media.map(toAnimeCard));
   }
 
@@ -203,6 +235,7 @@ export async function fetchAnimeById(id: number): Promise<AnimeDetail> {
 
   const data = await queryAniList<AniListSingleResponse>(query, { id });
   const anime = data.data.Media;
+  if (!anime) throw new AniListError("Anime não encontrado na AniList.", 404);
   const total = anime.stats?.scoreDistribution?.reduce((acc, curr) => acc + curr.amount, 0);
   const ratingCount = total !== undefined && total > 0 ? total : undefined;
 
@@ -250,13 +283,12 @@ export async function discoverFranchise(seedId: number): Promise<AnimeCard[]> {
   `;
 
   const visited = new Map<number, AniListFranchiseNode>();
-  let frontier: number[] = [seedId];
+  let frontier = new Set<number>([seedId]);
 
-  while (frontier.length > 0 && visited.size < FRANCHISE_NODE_CAP) {
+  while (frontier.size > 0 && visited.size < FRANCHISE_NODE_CAP) {
     const next = new Set<number>();
 
-    for (let i = 0; i < frontier.length; i += 50) {
-      const batch = frontier.slice(i, i + 50);
+    for (const batch of chunk([...frontier].sort((a, b) => a - b), 50)) {
       const data = await queryAniList<AniListFranchiseResponse>(query, { ids: batch, perPage: batch.length });
 
       for (const node of data.data.Page.media) {
@@ -269,7 +301,7 @@ export async function discoverFranchise(seedId: number): Promise<AnimeCard[]> {
             FRANCHISE_RELATIONS.has(edge.relationType) &&
             edge.node.type === "ANIME" &&
             !visited.has(edge.node.id) &&
-            !frontier.includes(edge.node.id)
+            !frontier.has(edge.node.id)
           ) {
             next.add(edge.node.id);
           }
@@ -277,7 +309,7 @@ export async function discoverFranchise(seedId: number): Promise<AnimeCard[]> {
       }
     }
 
-    frontier = [...next].sort((a, b) => a - b);
+    frontier = next;
   }
 
   return [...visited.values()].sort((a, b) => a.id - b.id).map(franchiseNodeToCard);

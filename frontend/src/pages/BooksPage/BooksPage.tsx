@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
 import { MediaGrid } from "../../components/MediaGrid/MediaGrid";
 import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
@@ -41,7 +41,7 @@ export function BooksPage() {
   const [selectedGenre, setSelectedGenre] = useState(BOOK_GENRES[0].value);
   const debouncedSearch = useDebounce(searchQuery, 400);
 
-  const { books, loading, error, hasNextPage, loadByGenre, search, loadMore } = useBooks();
+  const { books, loading, error, hasNextPage, loadByGenre, search, loadMore, reset } = useBooks();
   const {
     entries: libraryEntries,
     loading: libraryLoading,
@@ -62,10 +62,10 @@ export function BooksPage() {
   }, [activeTab, selectedGenre, loadByGenre]);
 
   useEffect(() => {
-    if (activeTab === "search" && debouncedSearch.length >= 2) {
-      search(debouncedSearch);
-    }
-  }, [debouncedSearch, activeTab, search]);
+    if (activeTab !== "search") return;
+    if (debouncedSearch.length >= 2) search(debouncedSearch);
+    else reset();
+  }, [debouncedSearch, activeTab, search, reset]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -128,13 +128,13 @@ export function BooksPage() {
 
   const showReadSort = libraryFilter === "read";
 
-  const collectionGroups = filterGroupsBySearch(
+  const collectionGroups = useMemo(() => filterGroupsBySearch(
     filterGroupsByStatus(
       buildBookCollectionGroups(libraryEntries, scoreSortDir, readSortDir, showReadSort),
       libraryFilter
     ),
     librarySearch
-  );
+  ), [libraryEntries, scoreSortDir, readSortDir, showReadSort, libraryFilter, librarySearch]);
 
   const gridKey =
     activeTab === "library"
