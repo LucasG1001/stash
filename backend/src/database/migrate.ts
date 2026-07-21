@@ -265,4 +265,9 @@ export async function migrate(): Promise<void> {
   await pool.query(`
     ALTER TABLE youtube_library ALTER COLUMN status SET DEFAULT 'liked';
   `);
+
+  await pool.query(`UPDATE anime_library  SET status = 'plan_to_watch' WHERE status = 'watching';`);
+  await pool.query(`UPDATE series_library SET status = 'plan_to_watch' WHERE status = 'watching';`);
+  await pool.query(`UPDATE game_library   SET status = 'plan_to_play'  WHERE status = 'playing';`);
+  await pool.query(`UPDATE books_library  SET status = 'plan_to_read'  WHERE status = 'reading';`);
 }

@@ -22,7 +22,7 @@ describe("library schemas", () => {
     const result = animeCreateSchema.safeParse({
       anilistId: 1,
       title: "X",
-      status: "watching",
+      status: "watched",
       nextAiringEpisode: { episode: 5, airingAt: 123 },
       streamingLinks: [{ url: "u" }],
     });

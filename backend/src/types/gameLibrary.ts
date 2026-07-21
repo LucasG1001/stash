@@ -1,4 +1,4 @@
-export type GameLibraryStatus = "plan_to_play" | "playing" | "beaten" | "dropped";
+export type GameLibraryStatus = "plan_to_play" | "beaten" | "dropped";
 
 export interface GameLibraryEntry {
   id: string;

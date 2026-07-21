@@ -25,10 +25,6 @@ function catalogStatusColor(status: string | undefined): string {
     case "plan_to_read":
     case "plan_to_play":
       return "var(--color-text-secondary)";
-    case "watching":
-    case "reading":
-    case "playing":
-      return "var(--color-info)";
     case "watched":
     case "read":
     case "beaten":

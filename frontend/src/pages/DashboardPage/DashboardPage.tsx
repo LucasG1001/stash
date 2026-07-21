@@ -66,7 +66,7 @@ export function DashboardPage() {
     {
       label: "Anime", path: "/anime", icon: AnimeIcon, color: "var(--color-media-anime)",
       completed: countByStatus(animes, "watched"),
-      inProgress: countByStatus(animes, "watching"),
+      inProgress: null,
       backlog: countByStatus(animes, "plan_to_watch"),
       thisYear: countThisYear(animes, (e) => e.watchedAt),
     },
@@ -80,21 +80,21 @@ export function DashboardPage() {
     {
       label: "Séries", path: "/series", icon: SeriesIcon, color: "var(--color-media-series)",
       completed: countByStatus(series, "watched"),
-      inProgress: countByStatus(series, "watching"),
+      inProgress: null,
       backlog: countByStatus(series, "plan_to_watch"),
       thisYear: countThisYear(series, (e) => e.watchedAt),
     },
     {
       label: "Livros", path: "/livros", icon: BookIcon, color: "var(--color-media-book)",
       completed: countByStatus(books, "read"),
-      inProgress: countByStatus(books, "reading"),
+      inProgress: null,
       backlog: countByStatus(books, "plan_to_read"),
       thisYear: countThisYear(books, (e) => e.readAt),
     },
     {
       label: "Jogos", path: "/jogos", icon: GameIcon, color: "var(--color-media-game)",
       completed: countByStatus(games, "beaten"),
-      inProgress: countByStatus(games, "playing"),
+      inProgress: null,
       backlog: countByStatus(games, "plan_to_play"),
       thisYear: countThisYear(games, (e) => e.finishedAt),
     },

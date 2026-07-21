@@ -22,7 +22,7 @@ export interface LibraryEntry {
   updatedAt: string;
 }
 
-export type LibraryStatus = "plan_to_watch" | "watching" | "watched" | "dropped";
+export type LibraryStatus = "plan_to_watch" | "watched" | "dropped";
 
 export interface CreateLibraryEntry {
   anilistId: number;

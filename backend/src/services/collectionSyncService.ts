@@ -18,6 +18,23 @@ function igdbAbsoluteImage(proxyPath: string | null): string | undefined {
   return proxyPath.replace(/^\/api\/game\/image/, "https://images.igdb.com/igdb/image/upload");
 }
 
+function formatReleaseDate(date: Date): string {
+  const dd = String(date.getUTCDate()).padStart(2, "0");
+  const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
+  return `${dd}/${mm}/${date.getUTCFullYear()}`;
+}
+
+function animeReleaseLabel(member: AnimeCard): string | undefined {
+  if (member.status !== "NOT_YET_RELEASED") return undefined;
+  if (member.nextAiringEpisode) return formatReleaseDate(new Date(member.nextAiringEpisode.airingAt * 1000));
+  return member.seasonYear ? String(member.seasonYear) : undefined;
+}
+
+function isoReleaseLabel(iso: string | null, upcoming: boolean): string | undefined {
+  if (!upcoming || !iso) return undefined;
+  return formatReleaseDate(new Date(`${iso}T00:00:00Z`));
+}
+
 interface CollectionSyncAdapter<E, C, Cr> {
   label: string;
   findAll(): Promise<E[]>;
@@ -115,6 +132,7 @@ const animeAdapter: CollectionSyncAdapter<LibraryEntry, AnimeCard, CreateLibrary
       title: member.title,
       image: member.coverImage ?? undefined,
       url: `https://anilist.co/anime/${member.id}`,
+      releaseLabel: animeReleaseLabel(member),
     }),
 };
 
@@ -142,6 +160,7 @@ const movieAdapter: CollectionSyncAdapter<MovieLibraryEntry, MovieCard, CreateMo
       title: member.title,
       image: member.posterImage ?? undefined,
       url: `https://www.themoviedb.org/movie/${member.id}`,
+      releaseLabel: isoReleaseLabel(member.releaseDate, member.movieStatus === "UPCOMING"),
     }),
 };
 
@@ -169,6 +188,7 @@ const gameAdapter: CollectionSyncAdapter<GameLibraryEntry, GameCard, CreateGameL
       mediaType: "jogo",
       title: member.title,
       image: igdbAbsoluteImage(member.backgroundImage),
+      releaseLabel: isoReleaseLabel(member.released, member.gameStatus === "UPCOMING"),
     }),
 };
 

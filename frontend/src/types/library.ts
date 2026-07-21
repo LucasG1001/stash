@@ -1,6 +1,6 @@
 import type { AnimeNextAiringEpisode, AnimeExternalLink } from "./anime";
 
-export type LibraryStatus = "plan_to_watch" | "watching" | "watched" | "dropped";
+export type LibraryStatus = "plan_to_watch" | "watched" | "dropped";
 
 export interface LibraryEntry {
   id: string;
@@ -49,7 +49,6 @@ export interface UpdateLibraryEntry {
 
 export const LIBRARY_STATUS_LABELS: Record<LibraryStatus, string> = {
   plan_to_watch: "Planejo Assistir",
-  watching: "Assistindo",
   watched: "Assistido",
   dropped: "Abandonado",
 };

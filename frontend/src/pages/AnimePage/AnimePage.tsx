@@ -16,10 +16,10 @@ import type { LibraryStatus } from "../../types/library";
 import { LIBRARY_STATUS_LABELS } from "../../types/library";
 import { SEASON_PT, getCurrentRealSeason, getSurroundingSeasons } from "../../utils/season";
 import { getRecentYears } from "../../utils/year";
-import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildFranchiseGroups } from "../../utils/franchiseGroups";
 import { libraryEntryToCard } from "../../utils/libraryEntryToCard";
 import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
+import { filterGroupsByAiringStatus } from "../../utils/filterGroupsByAiringStatus";
 import { filterGroupsBySearch } from "../../utils/filterGroupsBySearch";
 import styles from "./AnimePage.module.css";
 
@@ -32,6 +32,12 @@ const TABS = [
 
 const STATUS_OPTIONS = Object.entries(LIBRARY_STATUS_LABELS) as [LibraryStatus, string][];
 
+const AIRING_OPTIONS: [string, string][] = [
+  ["RELEASING", "Em exibição"],
+  ["FINISHED", "Finalizado"],
+  ["NOT_YET_RELEASED", "Em breve"],
+];
+
 export function AnimePage() {
   const [activeTab, setActiveTab] = useState("seasons");
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,8 +45,8 @@ export function AnimePage() {
   const [selectedAnimeId, setSelectedAnimeId] = useState<number | null>(null);
   const [selectedAnimeForModal, setSelectedAnimeForModal] = useState<AnimeCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<LibraryStatus | "all">("all");
+  const [airingFilter, setAiringFilter] = useState<string>("all");
   const [releaseSortDir, setReleaseSortDir] = useState<"desc" | "asc">("desc");
-  const [scoreSortDir, setScoreSortDir] = useState<ScoreSortDir>("off");
   const [selectedSeasonObj, setSelectedSeasonObj] = useState(getCurrentRealSeason());
   const [selectedPopularYear, setSelectedPopularYear] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -134,17 +140,20 @@ export function AnimePage() {
   }, [findByAnilistId, updateEntry]);
 
   const franchiseGroups = filterGroupsBySearch(
-    filterGroupsByStatus(
-      buildFranchiseGroups(libraryEntries, scoreSortDir, releaseSortDir),
-      libraryFilter,
-      (member, filter) => filter === "plan_to_watch" && member.isRewatching
+    filterGroupsByAiringStatus(
+      filterGroupsByStatus(
+        buildFranchiseGroups(libraryEntries, releaseSortDir),
+        libraryFilter,
+        (member, filter) => filter === "plan_to_watch" && member.isRewatching
+      ),
+      airingFilter
     ),
     librarySearch
   );
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${releaseSortDir}-${scoreSortDir}-${librarySearch}`
+      ? `library-${libraryFilter}-${airingFilter}-${releaseSortDir}-${librarySearch}`
       : activeTab === "seasons"
       ? `seasons-${selectedSeasonObj.season}-${selectedSeasonObj.year}`
       : activeTab === "search"
@@ -228,6 +237,18 @@ export function AnimePage() {
               </option>
             ))}
           </select>
+          <select
+            className={styles.seasonSelect}
+            value={airingFilter}
+            onChange={(e) => setAiringFilter(e.target.value)}
+          >
+            <option value="all">Toda exibição</option>
+            {AIRING_OPTIONS.map(([status, label]) => (
+              <option key={status} value={status}>
+                {label}
+              </option>
+            ))}
+          </select>
           <button
             className={styles.sortButton}
             onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
@@ -239,26 +260,6 @@ export function AnimePage() {
                 <path d="M12 5v14M5 12l7 7 7-7" />
               </svg>
             </span>
-          </button>
-          <button
-            className={`${styles.sortButton} ${scoreSortDir !== "off" ? styles.sortButtonActive : ""}`}
-            onClick={() => setScoreSortDir(nextScoreSortDir(scoreSortDir))}
-            title={
-              scoreSortDir === "off"
-                ? "Ordenar por nota"
-                : scoreSortDir === "desc"
-                ? "Maior nota primeiro"
-                : "Menor nota primeiro"
-            }
-          >
-            <span>Nota</span>
-            {scoreSortDir !== "off" && (
-              <span className={`${styles.sortIcon} ${scoreSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
-              </span>
-            )}
           </button>
           </div>
           {franchiseGroups.length > 0 && <ResultCount count={franchiseGroups.length} />}

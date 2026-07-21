@@ -16,7 +16,7 @@ function makeEntry(overrides: Partial<LibraryEntry> = {}): LibraryEntry {
     anilistId: 100,
     title: "Test",
     coverImage: null,
-    status: "watching",
+    status: "watched",
     score: 0,
     totalEpisodes: 12,
     animeStatus: "RELEASING",

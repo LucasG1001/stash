@@ -1,4 +1,4 @@
-export type GameLibraryStatus = "plan_to_play" | "playing" | "beaten" | "dropped";
+export type GameLibraryStatus = "plan_to_play" | "beaten" | "dropped";
 
 export interface GameLibraryEntry {
   id: string;
@@ -42,7 +42,6 @@ export interface UpdateGameLibraryEntry {
 
 export const GAME_LIBRARY_STATUS_LABELS: Record<GameLibraryStatus, string> = {
   plan_to_play: "Pretendo Jogar",
-  playing: "Jogando",
   beaten: "Zerado",
   dropped: "Abandonado",
 };

@@ -241,15 +241,18 @@ export async function notifyNewCollectionItem(args: {
   title: string;
   image?: string;
   url?: string;
+  releaseLabel?: string;
 }): Promise<void> {
   const planLabel = args.mediaType === "jogo" ? "Planejo Jogar" : "Planejo Assistir";
   const image = args.image?.startsWith("http") ? args.image : undefined;
+  const fields: NotifyField[] = [{ name: "Tipo", value: MEDIA_TYPE_LABEL[args.mediaType], inline: true }];
+  if (args.releaseLabel) fields.push({ name: "Estreia", value: args.releaseLabel, inline: true });
   await send("colecao-novo-item", {
     title: `📦 ${args.title}`,
     description: `Novo lançamento adicionado à sua coleção (${planLabel})`,
     image,
     url: args.url,
-    fields: [{ name: "Tipo", value: MEDIA_TYPE_LABEL[args.mediaType], inline: true }],
+    fields,
     buttons: args.url ? [{ text: "🔗 Ver", url: args.url }] : undefined,
   });
 }
