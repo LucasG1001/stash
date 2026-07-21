@@ -1,10 +1,16 @@
 import axios from "axios";
 import type { AxiosError, AxiosRequestConfig } from "axios";
 import { cacheGet, cacheSet } from "./cache.js";
+import type { RateLimiter } from "./rateLimiter.js";
 
 const DEFAULT_TIMEOUT_MS = 10000;
 const MAX_RETRIES = 2;
 const BASE_BACKOFF_MS = 300;
+
+export interface RequestOptions {
+  limiter?: RateLimiter;
+  maxRetries?: number;
+}
 
 function isRetriable(error: unknown): boolean {
   const axiosError = error as AxiosError;
@@ -27,15 +33,22 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function httpRequest<T>(config: AxiosRequestConfig): Promise<T> {
+export async function httpRequest<T>(config: AxiosRequestConfig, options?: RequestOptions): Promise<T> {
+  const limiter = options?.limiter;
+  const maxRetries = options?.maxRetries ?? MAX_RETRIES;
   let attempt = 0;
   for (;;) {
     try {
+      if (limiter) await limiter.acquire();
       const response = await axios.request<T>({ timeout: DEFAULT_TIMEOUT_MS, ...config });
+      limiter?.observe(response.headers as Record<string, unknown>);
       return response.data;
     } catch (error) {
-      if (attempt >= MAX_RETRIES || !isRetriable(error)) throw error;
-      await delay(retryDelayMs(error, attempt));
+      if (attempt >= maxRetries || !isRetriable(error)) throw error;
+      const wait = retryDelayMs(error, attempt);
+      const status = (error as AxiosError).response?.status;
+      if (limiter && status === 429) limiter.note429(wait);
+      await delay(wait);
       attempt++;
     }
   }
@@ -50,11 +63,11 @@ function cacheKey(config: AxiosRequestConfig): string {
   });
 }
 
-export async function cachedRequest<T>(config: AxiosRequestConfig, ttlMs: number): Promise<T> {
+export async function cachedRequest<T>(config: AxiosRequestConfig, ttlMs: number, options?: RequestOptions): Promise<T> {
   const key = cacheKey(config);
   const hit = cacheGet<T>(key);
   if (hit !== undefined) return hit;
-  const data = await httpRequest<T>(config);
+  const data = await httpRequest<T>(config, options);
   cacheSet(key, data, ttlMs);
   return data;
 }

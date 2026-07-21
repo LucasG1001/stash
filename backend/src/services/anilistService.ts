@@ -1,8 +1,16 @@
 import { cachedRequest } from "../lib/httpClient.js";
+import { createRateLimiter } from "../lib/rateLimiter.js";
 import type { AniListAnime, AniListResponse, AniListSingleResponse, AnimeCard, AnimeDetail, AniListExternalLink, AniListFranchiseNode, AniListFranchiseResponse } from "../types/anime.js";
 
 const ANILIST_URL = "https://graphql.anilist.co";
 const CACHE_TTL_MS = 60 * 60 * 1000;
+const ANILIST_MAX_RETRIES = 4;
+
+const anilistLimiter = createRateLimiter({
+  minIntervalMs: 2000,
+  lowRemainingThreshold: 5,
+  bufferMs: 500,
+});
 
 const FRANCHISE_RELATIONS = new Set(["SEQUEL", "PREQUEL", "PARENT", "SIDE_STORY"]);
 const FRANCHISE_NODE_CAP = 50;
@@ -91,6 +99,7 @@ async function queryAniList<T>(query: string, variables: Record<string, unknown>
       },
     },
     CACHE_TTL_MS,
+    { limiter: anilistLimiter, maxRetries: ANILIST_MAX_RETRIES },
   );
 }
 
