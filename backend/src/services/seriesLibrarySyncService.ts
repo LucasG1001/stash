@@ -1,4 +1,5 @@
 import { findStaleSeries, updateSeriesSyncData, findDueSeriesEpisodes, markSeriesEpisodeNotified } from "../models/seriesLibraryModel.js";
+import { singleFlight } from "../lib/singleFlight.js";
 import { fetchSeriesSyncData, type SeriesSyncResult } from "./tmdbSeriesService.js";
 import { notifySeriesNewEpisode, notifySeriesFinished, notifyError } from "./notifyService.js";
 import type { SeriesLibraryEntry } from "../types/seriesLibrary.js";
@@ -26,15 +27,7 @@ export async function detectAndNotify(old: SeriesLibraryEntry, fresh: SeriesSync
   }
 }
 
-let inFlight: Promise<void> | null = null;
-
-export function refreshStaleSeries(): Promise<void> {
-  if (inFlight) return inFlight;
-  inFlight = doRefresh().finally(() => {
-    inFlight = null;
-  });
-  return inFlight;
-}
+export const refreshStaleSeries = singleFlight(doRefresh);
 
 async function doRefresh(): Promise<void> {
   const stale = await findStaleSeries(ONGOING_TTL_HOURS, ENDED_TTL_HOURS);
@@ -56,15 +49,7 @@ async function doRefresh(): Promise<void> {
   );
 }
 
-let dueInFlight: Promise<void> | null = null;
-
-export function notifyDueSeriesEpisodes(): Promise<void> {
-  if (dueInFlight) return dueInFlight;
-  dueInFlight = doNotifyDue().finally(() => {
-    dueInFlight = null;
-  });
-  return dueInFlight;
-}
+export const notifyDueSeriesEpisodes = singleFlight(doNotifyDue);
 
 async function doNotifyDue(): Promise<void> {
   const due = await findDueSeriesEpisodes();

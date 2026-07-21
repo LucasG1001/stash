@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { MovieDetail } from "../../types/movie";
 import { fetchMovieById } from "../../services/movieService";
 import { TrailerEmbed } from "../TrailerEmbed/TrailerEmbed";
@@ -38,6 +38,12 @@ function formatReleaseDate(date: string | null): string {
 export function MovieDrawer({ movieId, onClose, onMovieLoad }: MovieDrawerProps) {
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const onMovieLoadRef = useRef(onMovieLoad);
+  useEffect(() => {
+    onMovieLoadRef.current = onMovieLoad;
+  });
 
   useEffect(() => {
     let active = true;
@@ -45,7 +51,10 @@ export function MovieDrawer({ movieId, onClose, onMovieLoad }: MovieDrawerProps)
       .then((data) => {
         if (!active) return;
         setMovie(data);
-        onMovieLoad?.(data);
+        onMovieLoadRef.current?.(data);
+      })
+      .catch(() => {
+        if (active) setError(true);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -54,7 +63,6 @@ export function MovieDrawer({ movieId, onClose, onMovieLoad }: MovieDrawerProps)
     return () => {
       active = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [movieId]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -154,7 +162,9 @@ export function MovieDrawer({ movieId, onClose, onMovieLoad }: MovieDrawerProps)
               )}
             </div>
           </>
-        ) : null}
+        ) : (
+          <div className={styles.loading}>{error ? "Erro ao carregar detalhes." : ""}</div>
+        )}
       </div>
     </>
   );

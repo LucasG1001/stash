@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { GameDetail } from "../../types/game";
 import { fetchGameById } from "../../services/gameService";
 import { TrailerEmbed } from "../TrailerEmbed/TrailerEmbed";
@@ -30,6 +30,12 @@ function formatReleased(date: string | null): string {
 export function GameDrawer({ gameId, onClose, onGameLoad }: GameDrawerProps) {
   const [game, setGame] = useState<GameDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const onGameLoadRef = useRef(onGameLoad);
+  useEffect(() => {
+    onGameLoadRef.current = onGameLoad;
+  });
 
   useEffect(() => {
     let active = true;
@@ -37,7 +43,10 @@ export function GameDrawer({ gameId, onClose, onGameLoad }: GameDrawerProps) {
       .then((data) => {
         if (!active) return;
         setGame(data);
-        onGameLoad?.(data);
+        onGameLoadRef.current?.(data);
+      })
+      .catch(() => {
+        if (active) setError(true);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -46,7 +55,6 @@ export function GameDrawer({ gameId, onClose, onGameLoad }: GameDrawerProps) {
     return () => {
       active = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -166,7 +174,9 @@ export function GameDrawer({ gameId, onClose, onGameLoad }: GameDrawerProps) {
               )}
             </div>
           </>
-        ) : null}
+        ) : (
+          <div className={styles.loading}>{error ? "Erro ao carregar detalhes." : ""}</div>
+        )}
       </div>
     </>
   );

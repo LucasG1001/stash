@@ -1,22 +1,13 @@
-import { compareByScore, type ScoreSortDir } from "./librarySort";
+import { buildCollectionGroups, sortGroupsByScore, type CollectionGroup } from "./buildCollectionGroups";
+import { type ScoreSortDir } from "./librarySort";
 import type { BookLibraryEntry } from "../types/bookLibrary";
 
-export interface BookGroup {
-  key: string;
-  representative: BookLibraryEntry;
-  members: BookLibraryEntry[];
-  count: number;
-  completedCount: number;
-}
+export type BookGroup = CollectionGroup<BookLibraryEntry>;
 
 export function authorKey(entry: BookLibraryEntry): string | null {
   if (!entry.authors) return null;
   const first = entry.authors.split(",")[0]?.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   return first || null;
-}
-
-function pickRepresentative(ordered: BookLibraryEntry[]): BookLibraryEntry {
-  return ordered.find((b) => b.isCover) ?? ordered[0];
 }
 
 function pubTime(entry: BookLibraryEntry): number {
@@ -44,26 +35,17 @@ export function buildBookCollectionGroups(
   readSortDir: "desc" | "asc",
   readSort: boolean
 ): BookGroup[] {
-  const map = new Map<string, BookLibraryEntry[]>();
-  for (const entry of entries) {
-    const author = authorKey(entry);
-    const key = author ? `author-${author}` : `single-${entry.googleBooksId}`;
-    const list = map.get(key);
-    if (list) list.push(entry);
-    else map.set(key, [entry]);
-  }
-
-  const groups: BookGroup[] = [];
-  map.forEach((members, key) => {
-    const ordered = [...members].sort(byChronology);
-    const completedCount = ordered.filter((m) => m.status === "read").length;
-    groups.push({ key, representative: pickRepresentative(ordered), members: ordered, count: ordered.length, completedCount });
+  const groups = buildCollectionGroups(entries, {
+    getKey: (e) => {
+      const author = authorKey(e);
+      return author ? `author-${author}` : `single-${e.googleBooksId}`;
+    },
+    compareMembers: byChronology,
+    isCompleted: (m) => m.status === "read",
+    reverseMembers: false,
   });
 
-  if (scoreSortDir !== "off") {
-    const groupScore = (g: BookGroup) => g.members.reduce((max, m) => Math.max(max, m.score), 0);
-    return groups.sort((a, b) => compareByScore({ score: groupScore(a) }, { score: groupScore(b) }, scoreSortDir));
-  }
+  if (scoreSortDir !== "off") return sortGroupsByScore(groups, scoreSortDir);
 
   if (readSort) {
     return groups.sort((a, b) => {

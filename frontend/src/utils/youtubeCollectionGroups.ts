@@ -1,12 +1,7 @@
+import { buildCollectionGroups, pickRepresentative, type CollectionGroup } from "./buildCollectionGroups";
 import type { YoutubeLibraryEntry, YoutubeLibraryStatus } from "../types/youtubeLibrary";
 
-export interface YoutubeGroup {
-  key: string;
-  representative: YoutubeLibraryEntry;
-  members: YoutubeLibraryEntry[];
-  count: number;
-  completedCount: number;
-}
+export type YoutubeGroup = CollectionGroup<YoutubeLibraryEntry>;
 
 function addedTime(entry: YoutubeLibraryEntry): number {
   return entry.createdAt ? new Date(entry.createdAt).getTime() : 0;
@@ -21,25 +16,11 @@ function byPublishedAsc(a: YoutubeLibraryEntry, b: YoutubeLibraryEntry): number 
   return diff !== 0 ? diff : a.videoId.localeCompare(b.videoId);
 }
 
-function pickRepresentative(ordered: YoutubeLibraryEntry[]): YoutubeLibraryEntry {
-  return ordered.find((m) => m.isCover) ?? ordered[0];
-}
-
 export function buildYoutubeCollectionGroups(entries: YoutubeLibraryEntry[]): YoutubeGroup[] {
-  const map = new Map<string, YoutubeLibraryEntry[]>();
-  for (const entry of entries) {
-    const key = entry.collectionId != null ? `collection-${entry.collectionId}` : `single-${entry.videoId}`;
-    const list = map.get(key);
-    if (list) list.push(entry);
-    else map.set(key, [entry]);
-  }
-
-  const groups: YoutubeGroup[] = [];
-  map.forEach((members, key) => {
-    const ordered = [...members].sort(byPublishedAsc);
-    const completedCount = ordered.filter((m) => m.status === "liked").length;
-    const representative = pickRepresentative(ordered);
-    groups.push({ key, representative, members: [...ordered].reverse(), count: ordered.length, completedCount });
+  const groups = buildCollectionGroups(entries, {
+    getKey: (e) => (e.collectionId != null ? `collection-${e.collectionId}` : `single-${e.videoId}`),
+    compareMembers: byPublishedAsc,
+    isCompleted: (m) => m.status === "liked",
   });
 
   const isCollection = (g: YoutubeGroup) => g.representative.collectionId != null;

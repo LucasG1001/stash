@@ -1,4 +1,5 @@
 import { cachedRequest } from "../lib/httpClient.js";
+import { chunk } from "../lib/chunk.js";
 
 const YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/videos";
 const YOUTUBE_CHANNELS_URL = "https://www.googleapis.com/youtube/v3/channels";
@@ -141,12 +142,6 @@ async function fetchChannelThumbnail(channelId: string, key: string): Promise<st
   } catch {
     return null;
   }
-}
-
-function chunk<T>(items: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
-  return out;
 }
 
 export async function fetchVideo(videoId: string): Promise<YoutubeVideoData> {

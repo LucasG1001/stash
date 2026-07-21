@@ -1,4 +1,5 @@
 import * as libraryModel from "../models/libraryModel.js";
+import { singleFlight } from "../lib/singleFlight.js";
 import { fetchAnimesByIds } from "./anilistService.js";
 import { notifyNewEpisode, notifyAnimeFinished, notifyError } from "./notifyService.js";
 import type { AniListNextAiringEpisode } from "../types/anime.js";
@@ -33,15 +34,7 @@ export function detectAndNotify(old: LibraryEntry, anime: AnimeCard): void {
   }
 }
 
-let inFlight: Promise<void> | null = null;
-
-export function refreshStaleEntries(): Promise<void> {
-  if (inFlight) return inFlight;
-  inFlight = doRefresh().finally(() => {
-    inFlight = null;
-  });
-  return inFlight;
-}
+export const refreshStaleEntries = singleFlight(doRefresh);
 
 async function doRefresh(): Promise<void> {
   const stale = await libraryModel.findStale(NON_FINISHED_TTL_HOURS, FINISHED_TTL_HOURS);

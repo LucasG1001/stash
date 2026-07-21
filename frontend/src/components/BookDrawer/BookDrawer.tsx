@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { BookDetail } from "../../types/book";
 import { fetchBookById } from "../../services/bookService";
 import styles from "./BookDrawer.module.css";
@@ -25,6 +25,12 @@ function formatPublishedDate(date: string | null): string {
 export function BookDrawer({ bookId, onClose, onBookLoad }: BookDrawerProps) {
   const [book, setBook] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const onBookLoadRef = useRef(onBookLoad);
+  useEffect(() => {
+    onBookLoadRef.current = onBookLoad;
+  });
 
   useEffect(() => {
     let active = true;
@@ -32,7 +38,10 @@ export function BookDrawer({ bookId, onClose, onBookLoad }: BookDrawerProps) {
       .then((data) => {
         if (!active) return;
         setBook(data);
-        onBookLoad?.(data);
+        onBookLoadRef.current?.(data);
+      })
+      .catch(() => {
+        if (active) setError(true);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -41,7 +50,6 @@ export function BookDrawer({ bookId, onClose, onBookLoad }: BookDrawerProps) {
     return () => {
       active = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookId]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -135,7 +143,9 @@ export function BookDrawer({ bookId, onClose, onBookLoad }: BookDrawerProps) {
               )}
             </div>
           </>
-        ) : null}
+        ) : (
+          <div className={styles.loading}>{error ? "Erro ao carregar detalhes." : ""}</div>
+        )}
       </div>
     </>
   );

@@ -1,13 +1,8 @@
-import { compareByScore, type ScoreSortDir } from "./librarySort";
+import { buildCollectionGroups, sortGroupsByScore, type CollectionGroup } from "./buildCollectionGroups";
+import { type ScoreSortDir } from "./librarySort";
 import type { LibraryEntry } from "../types/library";
 
-export interface FranchiseGroup {
-  key: string;
-  representative: LibraryEntry;
-  members: LibraryEntry[];
-  count: number;
-  completedCount: number;
-}
+export type FranchiseGroup = CollectionGroup<LibraryEntry>;
 
 function byChronology(a: LibraryEntry, b: LibraryEntry): number {
   const ya = a.seasonYear ?? Number.POSITIVE_INFINITY;
@@ -16,35 +11,18 @@ function byChronology(a: LibraryEntry, b: LibraryEntry): number {
   return a.anilistId - b.anilistId;
 }
 
-function pickRepresentative(ordered: LibraryEntry[]): LibraryEntry {
-  return ordered.find((m) => m.isCover) ?? ordered[0];
-}
-
 export function buildFranchiseGroups(
   entries: LibraryEntry[],
   scoreSortDir: ScoreSortDir,
   releaseSortDir: "desc" | "asc"
 ): FranchiseGroup[] {
-  const map = new Map<string, LibraryEntry[]>();
-  for (const entry of entries) {
-    const key = entry.franchiseId != null ? `franchise-${entry.franchiseId}` : `single-${entry.anilistId}`;
-    const list = map.get(key);
-    if (list) list.push(entry);
-    else map.set(key, [entry]);
-  }
-
-  const groups: FranchiseGroup[] = [];
-  map.forEach((members, key) => {
-    const ordered = [...members].sort(byChronology);
-    const completedCount = ordered.filter((m) => m.status === "watched").length;
-    const representative = pickRepresentative(ordered);
-    groups.push({ key, representative, members: [...ordered].reverse(), count: ordered.length, completedCount });
+  const groups = buildCollectionGroups(entries, {
+    getKey: (e) => (e.franchiseId != null ? `franchise-${e.franchiseId}` : `single-${e.anilistId}`),
+    compareMembers: byChronology,
+    isCompleted: (m) => m.status === "watched",
   });
 
-  if (scoreSortDir !== "off") {
-    const groupScore = (g: FranchiseGroup) => g.members.reduce((max, m) => Math.max(max, m.score), 0);
-    return groups.sort((a, b) => compareByScore({ score: groupScore(a) }, { score: groupScore(b) }, scoreSortDir));
-  }
+  if (scoreSortDir !== "off") return sortGroupsByScore(groups, scoreSortDir);
 
   return groups.sort((a, b) => {
     const diff = (a.representative.seasonYear ?? 0) - (b.representative.seasonYear ?? 0);
