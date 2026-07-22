@@ -9,6 +9,8 @@ import { animeCardConfig } from "../../config/cards";
 import { useAnime } from "../../hooks/useAnime";
 import { useLibrary } from "../../hooks/useLibrary";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useSingleSort } from "../../hooks/useSingleSort";
+import { LibraryControls } from "../../components/LibraryControls/LibraryControls";
 import type { AnimeCard } from "../../types/anime";
 import type { AnimeDetail } from "../../types/anime";
 import type { LibraryStatus } from "../../types/library";
@@ -45,9 +47,9 @@ export function AnimePage() {
   const [selectedAnimeForModal, setSelectedAnimeForModal] = useState<AnimeCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<LibraryStatus[]>([]);
   const [airingFilter, setAiringFilter] = useState<string[]>([]);
-  const [releaseSortDir, setReleaseSortDir] = useState<"desc" | "asc">("desc");
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [sortOpen, setSortOpen] = useState(false);
+  const sort = useSingleSort("release");
+  const releaseSortDir = sort.field === "release" ? sort.dir : "desc";
+  const scoreSortDir = sort.field === "score" ? sort.dir : "off";
   const [selectedSeasonObj, setSelectedSeasonObj] = useState(getCurrentRealSeason());
   const [selectedPopularYear, setSelectedPopularYear] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -78,22 +80,6 @@ export function AnimePage() {
     if (debouncedSearch.length >= 2) search(debouncedSearch);
     else reset();
   }, [debouncedSearch, activeTab, search, reset]);
-
-  useEffect(() => {
-    if (!filtersOpen && !sortOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setFiltersOpen(false);
-        setSortOpen(false);
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [filtersOpen, sortOpen]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -167,34 +153,19 @@ export function AnimePage() {
     );
 
   const franchiseGroups = useMemo(() => {
-    const base = buildFranchiseGroups(libraryEntries, releaseSortDir);
-    const byStatus =
-      libraryFilter.length === 0
-        ? filterGroupsByStatus(
-            base,
-            "all",
-            (member, filter) => filter === "plan_to_watch" && member.isRewatching
-          )
-        : base.filter((g) =>
-            libraryFilter.some(
-              (s) =>
-                filterGroupsByStatus(
-                  [g],
-                  s,
-                  (member, filter) => filter === "plan_to_watch" && member.isRewatching
-                ).length > 0
-            )
-          );
-    const byAiring =
-      airingFilter.length === 0
-        ? byStatus
-        : byStatus.filter((g) => airingFilter.some((a) => filterGroupsByAiringStatus([g], a).length > 0));
+    const base = buildFranchiseGroups(libraryEntries, releaseSortDir, scoreSortDir);
+    const byStatus = filterGroupsByStatus(
+      base,
+      libraryFilter,
+      (member, filter) => filter === "plan_to_watch" && member.isRewatching
+    );
+    const byAiring = filterGroupsByAiringStatus(byStatus, airingFilter);
     return filterGroupsBySearch(byAiring, librarySearch);
-  }, [libraryEntries, releaseSortDir, libraryFilter, airingFilter, librarySearch]);
+  }, [libraryEntries, releaseSortDir, scoreSortDir, libraryFilter, airingFilter, librarySearch]);
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter.join(",")}-${airingFilter.join(",")}-${releaseSortDir}-${librarySearch}`
+      ? `library-${libraryFilter.join(",")}-${airingFilter.join(",")}-${sort.field}-${sort.dir}-${librarySearch}`
       : activeTab === "seasons"
       ? `seasons-${selectedSeasonObj.season}-${selectedSeasonObj.year}`
       : activeTab === "search"
@@ -254,173 +225,40 @@ export function AnimePage() {
       )}
 
       {activeTab === "library" && (
-        <div className={styles.libraryControls}>
-          <div className={styles.searchWrapper}>
-            <SearchBar
-              value={librarySearch}
-              onChange={setLibrarySearch}
-              placeholder="Buscar na biblioteca..."
-            />
-          </div>
-          <button
-            type="button"
-            className={styles.filterToggle}
-            onClick={() => setFiltersOpen(true)}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 6h16M7 12h10M10 18h4" />
-            </svg>
-            <span>Filtros</span>
-          </button>
-          <button
-            type="button"
-            className={styles.sortToggle}
-            onClick={() => setSortOpen(true)}
-          >
-            <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 6h11M3 12h7M3 18h4M18 8v11m0 0l-3-3m3 3l3-3" />
-              </svg>
-            </span>
-            <span>Lançamento</span>
-          </button>
-          {franchiseGroups.length > 0 && (
-            <span className={styles.libraryCount}>
-              <span className={styles.libraryCountNum}>{franchiseGroups.length}</span>
-              <span className={styles.libraryCountWord}>
-                {franchiseGroups.length === 1 ? " resultado" : " resultados"}
-              </span>
-            </span>
-          )}
-          {(filtersOpen || sortOpen) && (
-            <div
-              className={styles.filterOverlay}
-              onClick={() => {
-                setFiltersOpen(false);
-                setSortOpen(false);
-              }}
-            />
-          )}
-          <div className={`${styles.filterWrapper} ${filtersOpen ? styles.filterWrapperOpen : ""}`}>
-            <div className={styles.filterSheetHeader}>
-              <button
-                type="button"
-                className={styles.clearButton}
-                onClick={() => {
-                  setLibraryFilter([]);
-                  setAiringFilter([]);
-                }}
-                disabled={libraryFilter.length === 0 && airingFilter.length === 0}
-              >
-                Limpar tudo
-              </button>
-              <button type="button" className={styles.filterSheetClose} onClick={() => setFiltersOpen(false)}>
-                ✕
-              </button>
-            </div>
-            <div className={styles.inlineFilters}>
-              <select
-                className={styles.seasonSelect}
-                value={libraryFilter.length === 1 ? libraryFilter[0] : "all"}
-                onChange={(e) =>
-                  setLibraryFilter(e.target.value === "all" ? [] : [e.target.value as LibraryStatus])
-                }
-              >
-                <option value="all">Todos</option>
-                {STATUS_OPTIONS.map(([status, label]) => (
-                  <option key={status} value={status}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-              <select
-                className={styles.seasonSelect}
-                value={airingFilter.length === 1 ? airingFilter[0] : "all"}
-                onChange={(e) => setAiringFilter(e.target.value === "all" ? [] : [e.target.value])}
-              >
-                <option value="all">Toda exibição</option>
-                {AIRING_OPTIONS.map(([status, label]) => (
-                  <option key={status} value={status}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.checkboxFilters}>
-              <div className={styles.filterGroup}>
-                <span className={styles.filterGroupTitle}>Status</span>
-                <div className={styles.checkboxRow}>
-                  {STATUS_OPTIONS.map(([status, label]) => (
-                    <label key={status} className={styles.checkbox}>
-                      <input
-                        type="checkbox"
-                        checked={libraryFilter.includes(status)}
-                        onChange={() => toggleLibraryFilter(status)}
-                      />
-                      <span>{label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className={styles.filterGroup}>
-                <span className={styles.filterGroupTitle}>Exibição</span>
-                <div className={styles.checkboxRow}>
-                  {AIRING_OPTIONS.map(([status, label]) => (
-                    <label key={status} className={styles.checkbox}>
-                      <input
-                        type="checkbox"
-                        checked={airingFilter.includes(status)}
-                        onChange={() => toggleAiringFilter(status)}
-                      />
-                      <span>{label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className={`${styles.sortWrapper} ${sortOpen ? styles.sortWrapperOpen : ""}`}>
-            <div className={styles.filterSheetHeader}>
-              <span className={styles.filterGroupTitle}>Ordenação</span>
-              <button type="button" className={styles.filterSheetClose} onClick={() => setSortOpen(false)}>
-                ✕
-              </button>
-            </div>
-            <div className={styles.inlineFilters}>
-              <button
-                className={styles.sortButton}
-                onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
-                title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
-              >
-                <span>Lançamento</span>
-                <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 5v14M5 12l7 7 7-7" />
-                  </svg>
-                </span>
-              </button>
-            </div>
-            <div className={styles.checkboxFilters}>
-              <div className={styles.filterGroup}>
-                <div className={styles.checkboxRow}>
-                  <button
-                    type="button"
-                    className={`${styles.sortOption} ${styles.sortOptionActive}`}
-                    onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
-                    title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
-                  >
-                    <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 6h11M3 12h7M3 18h4M18 8v11m0 0l-3-3m3 3l3-3" />
-                      </svg>
-                    </span>
-                    <span>Lançamento</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <LibraryControls
+          searchValue={librarySearch}
+          onSearchChange={setLibrarySearch}
+          count={franchiseGroups.length}
+          filterGroups={[
+            {
+              key: "status",
+              title: "Status",
+              options: STATUS_OPTIONS.map(([value, label]) => ({ value, label })),
+              selected: libraryFilter,
+              onToggle: (v) => toggleLibraryFilter(v as LibraryStatus),
+            },
+            {
+              key: "airing",
+              title: "Exibição",
+              options: AIRING_OPTIONS.map(([value, label]) => ({ value, label })),
+              selected: airingFilter,
+              onToggle: toggleAiringFilter,
+            },
+          ]}
+          onClearFilters={() => {
+            setLibraryFilter([]);
+            setAiringFilter([]);
+          }}
+          sort={{
+            active: sort.field,
+            dir: sort.dir,
+            options: [
+              { field: "release", label: "Lançamento" },
+              { field: "score", label: "Nota" },
+            ],
+            onSelect: sort.select,
+          }}
+        />
       )}
 
       {activeTab === "library" ? (

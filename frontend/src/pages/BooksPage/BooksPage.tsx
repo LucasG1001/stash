@@ -9,11 +9,12 @@ import { SearchBar } from "../../components/SearchBar/SearchBar";
 import { useBooks } from "../../hooks/useBooks";
 import { useBookLibrary } from "../../hooks/useBookLibrary";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useSingleSort } from "../../hooks/useSingleSort";
+import { LibraryControls } from "../../components/LibraryControls/LibraryControls";
 import type { BookCard, BookDetail } from "../../types/book";
 import type { BookLibraryStatus } from "../../types/bookLibrary";
 import { BOOK_LIBRARY_STATUS_LABELS } from "../../types/bookLibrary";
 import { BOOK_GENRES } from "../../utils/bookGenres";
-import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildBookCollectionGroups, authorKey } from "../../utils/bookCollectionGroups";
 import { bookLibraryEntryToCard } from "../../utils/bookLibraryEntryToCard";
 import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
@@ -34,10 +35,11 @@ export function BooksPage() {
   const [librarySearch, setLibrarySearch] = useState("");
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [selectedBookForModal, setSelectedBookForModal] = useState<BookCard | null>(null);
-  const [libraryFilter, setLibraryFilter] = useState<BookLibraryStatus | "all">("all");
-  const [readSortDir, setReadSortDir] = useState<"desc" | "asc">("desc");
-  const [scoreSortDir, setScoreSortDir] = useState<ScoreSortDir>("off");
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [libraryFilter, setLibraryFilter] = useState<BookLibraryStatus[]>([]);
+  const sort = useSingleSort("published");
+  const scoreSortDir = sort.field === "score" ? sort.dir : "off";
+  const readSortDir = sort.field === "read" ? sort.dir : "desc";
+  const publishedSortDir = sort.field === "published" ? sort.dir : "desc";
   const [selectedGenre, setSelectedGenre] = useState(BOOK_GENRES[0].value);
   const debouncedSearch = useDebounce(searchQuery, 400);
 
@@ -66,19 +68,6 @@ export function BooksPage() {
     if (debouncedSearch.length >= 2) search(debouncedSearch);
     else reset();
   }, [debouncedSearch, activeTab, search, reset]);
-
-  useEffect(() => {
-    if (!filtersOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setFiltersOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [filtersOpen]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -139,19 +128,22 @@ export function BooksPage() {
     }
   }, [findByGoogleBooksId, updateEntry]);
 
-  const showReadSort = libraryFilter === "read";
+  const toggleLibraryFilter = (status: BookLibraryStatus) =>
+    setLibraryFilter((prev) =>
+      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
+    );
 
   const collectionGroups = useMemo(() => filterGroupsBySearch(
     filterGroupsByStatus(
-      buildBookCollectionGroups(libraryEntries, scoreSortDir, readSortDir, showReadSort),
+      buildBookCollectionGroups(libraryEntries, scoreSortDir, readSortDir, sort.field === "read", publishedSortDir),
       libraryFilter
     ),
     librarySearch
-  ), [libraryEntries, scoreSortDir, readSortDir, showReadSort, libraryFilter, librarySearch]);
+  ), [libraryEntries, scoreSortDir, readSortDir, publishedSortDir, sort.field, libraryFilter, librarySearch]);
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${readSortDir}-${scoreSortDir}-${librarySearch}`
+      ? `library-${libraryFilter.join(",")}-${sort.field}-${sort.dir}-${librarySearch}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
       : `discover-${selectedGenre}`;
@@ -192,88 +184,31 @@ export function BooksPage() {
       )}
 
       {activeTab === "library" && (
-        <div className={styles.libraryControls}>
-          <div className={styles.searchWrapper}>
-            <SearchBar
-              value={librarySearch}
-              onChange={setLibrarySearch}
-              placeholder="Buscar na biblioteca..."
-            />
-          </div>
-          <button
-            type="button"
-            className={styles.filterToggle}
-            onClick={() => setFiltersOpen(true)}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 6h16M7 12h10M10 18h4" />
-            </svg>
-            <span>Filtros</span>
-          </button>
-          {collectionGroups.length > 0 && (
-            <span className={styles.libraryCount}>
-              <span className={styles.libraryCountNum}>{collectionGroups.length}</span>
-              <span className={styles.libraryCountWord}>
-                {collectionGroups.length === 1 ? " resultado" : " resultados"}
-              </span>
-            </span>
-          )}
-          {filtersOpen && <div className={styles.filterOverlay} onClick={() => setFiltersOpen(false)} />}
-          <div className={`${styles.filterWrapper} ${filtersOpen ? styles.filterWrapperOpen : ""}`}>
-          <div className={styles.filterSheetHeader}>
-            <span>Filtros</span>
-            <button type="button" className={styles.filterSheetClose} onClick={() => setFiltersOpen(false)}>
-              ✕
-            </button>
-          </div>
-          <select
-            className={styles.filterSelect}
-            value={libraryFilter}
-            onChange={(e) => setLibraryFilter(e.target.value as BookLibraryStatus | "all")}
-          >
-            <option value="all">Todos</option>
-            {STATUS_OPTIONS.map(([status, label]) => (
-              <option key={status} value={status}>
-                {label}
-              </option>
-            ))}
-          </select>
-          {showReadSort && (
-            <button
-              className={styles.sortButton}
-              onClick={() => setReadSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
-              title={readSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
-            >
-              <span>Leitura</span>
-              <span className={`${styles.sortIcon} ${readSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
-              </span>
-            </button>
-          )}
-          <button
-            className={`${styles.sortButton} ${scoreSortDir !== "off" ? styles.sortButtonActive : ""}`}
-            onClick={() => setScoreSortDir(nextScoreSortDir(scoreSortDir))}
-            title={
-              scoreSortDir === "off"
-                ? "Ordenar por nota"
-                : scoreSortDir === "desc"
-                ? "Maior nota primeiro"
-                : "Menor nota primeiro"
-            }
-          >
-            <span>Nota</span>
-            {scoreSortDir !== "off" && (
-              <span className={`${styles.sortIcon} ${scoreSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
-              </span>
-            )}
-          </button>
-          </div>
-        </div>
+        <LibraryControls
+          searchValue={librarySearch}
+          onSearchChange={setLibrarySearch}
+          count={collectionGroups.length}
+          filterGroups={[
+            {
+              key: "status",
+              title: "Status",
+              options: STATUS_OPTIONS.map(([value, label]) => ({ value, label })),
+              selected: libraryFilter,
+              onToggle: (v) => toggleLibraryFilter(v as BookLibraryStatus),
+            },
+          ]}
+          onClearFilters={() => setLibraryFilter([])}
+          sort={{
+            active: sort.field,
+            dir: sort.dir,
+            options: [
+              { field: "published", label: "Publicação" },
+              { field: "read", label: "Leitura" },
+              { field: "score", label: "Nota" },
+            ],
+            onSelect: sort.select,
+          }}
+        />
       )}
 
       {activeTab === "library" ? (

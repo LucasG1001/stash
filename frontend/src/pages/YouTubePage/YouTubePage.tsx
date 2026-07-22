@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
 import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { YoutubeDrawer } from "../../components/YoutubeDrawer/YoutubeDrawer";
 import { YoutubeLibraryModal } from "../../components/YoutubeLibraryModal/YoutubeLibraryModal";
-import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { LibraryControls } from "../../components/LibraryControls/LibraryControls";
 import { youtubeCardConfig } from "../../config/cards";
 import { useYoutubeLibrary } from "../../hooks/useYoutubeLibrary";
 import { useYoutubeCollections } from "../../hooks/useYoutubeCollections";
@@ -30,27 +30,13 @@ function matchesSearch(group: YoutubeGroup, query: string): boolean {
 export function YouTubePage() {
   const [activeStatus, setActiveStatus] = useState<YoutubeLibraryStatus>("liked");
   const [search, setSearch] = useState("");
-  const [collectionFilter, setCollectionFilter] = useState<number | "all" | "none">("all");
+  const [collectionFilter, setCollectionFilter] = useState<(number | "none")[]>([]);
   const [urlInput, setUrlInput] = useState("");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [addNotice, setAddNotice] = useState<string | null>(null);
   const [drawerVideoId, setDrawerVideoId] = useState<string | null>(null);
   const [modalVideoId, setModalVideoId] = useState<string | null>(null);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-
-  useEffect(() => {
-    if (!filtersOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setFiltersOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [filtersOpen]);
 
   const {
     entries,
@@ -115,11 +101,17 @@ export function YouTubePage() {
     [removeEntry, collections]
   );
 
+  const toggleCollectionFilter = (value: number | "none") =>
+    setCollectionFilter((prev) =>
+      prev.includes(value) ? prev.filter((c) => c !== value) : [...prev, value]
+    );
+
   let groups = buildYoutubeCollectionGroups(entries);
-  if (collectionFilter === "none") {
-    groups = groups.filter((g) => g.representative.collectionId == null);
-  } else if (collectionFilter !== "all") {
-    groups = groups.filter((g) => g.representative.collectionId === collectionFilter);
+  if (collectionFilter.length > 0) {
+    groups = groups.filter((g) => {
+      const cid = g.representative.collectionId;
+      return collectionFilter.some((f) => (f === "none" ? cid == null : cid === f));
+    });
   }
   groups = applyStatusView(groups, activeStatus);
   groups = groups.filter((g) => matchesSearch(g, search));
@@ -136,7 +128,7 @@ export function YouTubePage() {
     return 0;
   });
 
-  const gridKey = `${activeStatus}-${collectionFilter}-${search}`;
+  const gridKey = `${activeStatus}-${collectionFilter.join(",")}-${search}`;
 
   const drawerEntry = drawerVideoId ? findByVideoId(drawerVideoId) : undefined;
   const modalEntry = modalVideoId ? findByVideoId(modalVideoId) : undefined;
@@ -168,60 +160,29 @@ export function YouTubePage() {
       {addError && <div className={styles.addError}>{addError}</div>}
       {addNotice && <div className={styles.addNotice}>{addNotice}</div>}
 
-      <div className={styles.libraryControls}>
-        <div className={styles.searchWrapper}>
-          <SearchBar value={search} onChange={setSearch} placeholder="Buscar por título ou canal..." />
-        </div>
-        {collections.collections.length > 0 && (
-          <button
-            type="button"
-            className={styles.filterToggle}
-            onClick={() => setFiltersOpen(true)}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 6h16M7 12h10M10 18h4" />
-            </svg>
-            <span>Filtros</span>
-          </button>
-        )}
-        {groups.length > 0 && (
-          <span className={styles.libraryCount}>
-            <span className={styles.libraryCountNum}>{groups.length}</span>
-            <span className={styles.libraryCountWord}>
-              {groups.length === 1 ? " resultado" : " resultados"}
-            </span>
-          </span>
-        )}
-        {collections.collections.length > 0 && (
-          <>
-            {filtersOpen && <div className={styles.filterOverlay} onClick={() => setFiltersOpen(false)} />}
-            <div className={`${styles.filterWrapper} ${filtersOpen ? styles.filterWrapperOpen : ""}`}>
-              <div className={styles.filterSheetHeader}>
-                <span>Filtros</span>
-                <button type="button" className={styles.filterSheetClose} onClick={() => setFiltersOpen(false)}>
-                  ✕
-                </button>
-              </div>
-              <select
-                className={styles.filterSelect}
-                value={collectionFilter}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setCollectionFilter(v === "all" || v === "none" ? v : Number(v));
-                }}
-              >
-                <option value="all">Todas as coleções</option>
-                <option value="none">Sem coleção</option>
-                {collections.collections.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        )}
-      </div>
+      <LibraryControls
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Buscar por título ou canal..."
+        count={groups.length}
+        filterGroups={
+          collections.collections.length > 0
+            ? [
+                {
+                  key: "collection",
+                  title: "Coleção",
+                  options: [
+                    { value: "none", label: "Sem coleção" },
+                    ...collections.collections.map((c) => ({ value: String(c.id), label: c.name })),
+                  ],
+                  selected: collectionFilter.map(String),
+                  onToggle: (v) => toggleCollectionFilter(v === "none" ? "none" : Number(v)),
+                },
+              ]
+            : []
+        }
+        onClearFilters={() => setCollectionFilter([])}
+      />
 
       <FranchiseGrid
         groups={groups}

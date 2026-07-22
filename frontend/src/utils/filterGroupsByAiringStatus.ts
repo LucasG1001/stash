@@ -1,7 +1,10 @@
 export function filterGroupsByAiringStatus<T extends { members: { animeStatus?: string }[] }>(
   groups: T[],
-  filter: string
+  filter: string | string[]
 ): T[] {
-  if (filter === "all") return groups;
-  return groups.filter((g) => g.members.some((m) => m.animeStatus === filter));
+  const filters = Array.isArray(filter) ? filter : [filter];
+  if (filters.length === 0 || (filters.length === 1 && filters[0] === "all")) return groups;
+  return groups.filter((g) =>
+    g.members.some((m) => m.animeStatus != null && filters.includes(m.animeStatus))
+  );
 }

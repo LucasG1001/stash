@@ -9,12 +9,13 @@ import { gameCardConfig } from "../../config/cards";
 import { useGames } from "../../hooks/useGames";
 import { useGameLibrary } from "../../hooks/useGameLibrary";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useSingleSort } from "../../hooks/useSingleSort";
+import { LibraryControls } from "../../components/LibraryControls/LibraryControls";
 import type { GameCard, GameDetail } from "../../types/game";
 import type { GameLibraryStatus } from "../../types/gameLibrary";
 import { GAME_LIBRARY_STATUS_LABELS } from "../../types/gameLibrary";
 import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
-import { nextScoreSortDir, type ScoreSortDir } from "../../utils/librarySort";
 import { buildGameCollectionGroups } from "../../utils/gameCollectionGroups";
 import { gameLibraryEntryToCard } from "../../utils/gameLibraryEntryToCard";
 import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
@@ -36,10 +37,10 @@ export function GamesPage() {
   const [librarySearch, setLibrarySearch] = useState("");
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [selectedGameForModal, setSelectedGameForModal] = useState<GameCard | null>(null);
-  const [libraryFilter, setLibraryFilter] = useState<GameLibraryStatus | "all">("all");
-  const [releaseSortDir, setReleaseSortDir] = useState<"desc" | "asc">("desc");
-  const [scoreSortDir, setScoreSortDir] = useState<ScoreSortDir>("off");
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [libraryFilter, setLibraryFilter] = useState<GameLibraryStatus[]>([]);
+  const sort = useSingleSort("release");
+  const releaseSortDir = sort.field === "release" ? sort.dir : "desc";
+  const scoreSortDir = sort.field === "score" ? sort.dir : "off";
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -70,19 +71,6 @@ export function GamesPage() {
     if (debouncedSearch.length >= 2) search(debouncedSearch);
     else reset();
   }, [debouncedSearch, activeTab, search, reset]);
-
-  useEffect(() => {
-    if (!filtersOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setFiltersOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [filtersOpen]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -144,6 +132,11 @@ export function GamesPage() {
     }
   }, [findByIgdbId, updateEntry]);
 
+  const toggleLibraryFilter = (status: GameLibraryStatus) =>
+    setLibraryFilter((prev) =>
+      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
+    );
+
   const collectionGroups = useMemo(() => filterGroupsBySearch(
     filterGroupsByStatus(
       buildGameCollectionGroups(libraryEntries, scoreSortDir, releaseSortDir),
@@ -155,7 +148,7 @@ export function GamesPage() {
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${releaseSortDir}-${scoreSortDir}-${librarySearch}`
+      ? `library-${libraryFilter.join(",")}-${sort.field}-${sort.dir}-${librarySearch}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
       : activeTab === "popular"
@@ -210,86 +203,30 @@ export function GamesPage() {
       )}
 
       {activeTab === "library" && (
-        <div className={styles.libraryControls}>
-          <div className={styles.searchWrapper}>
-            <SearchBar
-              value={librarySearch}
-              onChange={setLibrarySearch}
-              placeholder="Buscar na biblioteca..."
-            />
-          </div>
-          <button
-            type="button"
-            className={styles.filterToggle}
-            onClick={() => setFiltersOpen(true)}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 6h16M7 12h10M10 18h4" />
-            </svg>
-            <span>Filtros</span>
-          </button>
-          {collectionGroups.length > 0 && (
-            <span className={styles.libraryCount}>
-              <span className={styles.libraryCountNum}>{collectionGroups.length}</span>
-              <span className={styles.libraryCountWord}>
-                {collectionGroups.length === 1 ? " resultado" : " resultados"}
-              </span>
-            </span>
-          )}
-          {filtersOpen && <div className={styles.filterOverlay} onClick={() => setFiltersOpen(false)} />}
-          <div className={`${styles.filterWrapper} ${filtersOpen ? styles.filterWrapperOpen : ""}`}>
-          <div className={styles.filterSheetHeader}>
-            <span>Filtros</span>
-            <button type="button" className={styles.filterSheetClose} onClick={() => setFiltersOpen(false)}>
-              ✕
-            </button>
-          </div>
-          <select
-            className={styles.filterSelect}
-            value={libraryFilter}
-            onChange={(e) => setLibraryFilter(e.target.value as GameLibraryStatus | "all")}
-          >
-            <option value="all">Todos</option>
-            {STATUS_OPTIONS.map(([status, label]) => (
-              <option key={status} value={status}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <button
-            className={styles.sortButton}
-            onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
-            title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
-          >
-            <span>Lançamento</span>
-            <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M5 12l7 7 7-7" />
-              </svg>
-            </span>
-          </button>
-          <button
-            className={`${styles.sortButton} ${scoreSortDir !== "off" ? styles.sortButtonActive : ""}`}
-            onClick={() => setScoreSortDir(nextScoreSortDir(scoreSortDir))}
-            title={
-              scoreSortDir === "off"
-                ? "Ordenar por nota"
-                : scoreSortDir === "desc"
-                ? "Maior nota primeiro"
-                : "Menor nota primeiro"
-            }
-          >
-            <span>Nota</span>
-            {scoreSortDir !== "off" && (
-              <span className={`${styles.sortIcon} ${scoreSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
-              </span>
-            )}
-          </button>
-          </div>
-        </div>
+        <LibraryControls
+          searchValue={librarySearch}
+          onSearchChange={setLibrarySearch}
+          count={collectionGroups.length}
+          filterGroups={[
+            {
+              key: "status",
+              title: "Status",
+              options: STATUS_OPTIONS.map(([value, label]) => ({ value, label })),
+              selected: libraryFilter,
+              onToggle: (v) => toggleLibraryFilter(v as GameLibraryStatus),
+            },
+          ]}
+          onClearFilters={() => setLibraryFilter([])}
+          sort={{
+            active: sort.field,
+            dir: sort.dir,
+            options: [
+              { field: "release", label: "Lançamento" },
+              { field: "score", label: "Nota" },
+            ],
+            onSelect: sort.select,
+          }}
+        />
       )}
 
       {activeTab === "library" ? (

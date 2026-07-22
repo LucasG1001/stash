@@ -33,7 +33,8 @@ export function buildBookCollectionGroups(
   entries: BookLibraryEntry[],
   scoreSortDir: ScoreSortDir,
   readSortDir: "desc" | "asc",
-  readSort: boolean
+  readSort: boolean,
+  publishedSortDir: "desc" | "asc" = "desc"
 ): BookGroup[] {
   const groups = buildCollectionGroups(entries, {
     getKey: (e) => {
@@ -54,5 +55,8 @@ export function buildBookCollectionGroups(
     });
   }
 
-  return groups.sort((a, b) => repTime(b.representative) - repTime(a.representative));
+  return groups.sort((a, b) => {
+    const diff = repTime(a.representative) - repTime(b.representative);
+    return publishedSortDir === "desc" ? -diff : diff;
+  });
 }

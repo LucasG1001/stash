@@ -8,12 +8,14 @@ import { SearchBar } from "../../components/SearchBar/SearchBar";
 import { useSeries } from "../../hooks/useSeries";
 import { useSeriesLibrary } from "../../hooks/useSeriesLibrary";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useSingleSort } from "../../hooks/useSingleSort";
+import { LibraryControls } from "../../components/LibraryControls/LibraryControls";
 import type { SeriesCard, SeriesDetail } from "../../types/series";
 import type { SeriesLibraryStatus } from "../../types/seriesLibrary";
 import { SERIES_LIBRARY_STATUS_LABELS } from "../../types/seriesLibrary";
 import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
-import { nextScoreSortDir, compareByScore, type ScoreSortDir } from "../../utils/librarySort";
+import { compareByScore } from "../../utils/librarySort";
 import styles from "./SeriesPage.module.css";
 
 const TABS = [
@@ -30,10 +32,10 @@ export function SeriesPage() {
   const [librarySearch, setLibrarySearch] = useState("");
   const [selectedSeriesId, setSelectedSeriesId] = useState<number | null>(null);
   const [selectedSeriesForModal, setSelectedSeriesForModal] = useState<SeriesCard | null>(null);
-  const [libraryFilter, setLibraryFilter] = useState<SeriesLibraryStatus | "all">("all");
-  const [releaseSortDir, setReleaseSortDir] = useState<"desc" | "asc">("desc");
-  const [scoreSortDir, setScoreSortDir] = useState<ScoreSortDir>("off");
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [libraryFilter, setLibraryFilter] = useState<SeriesLibraryStatus[]>([]);
+  const sort = useSingleSort("release");
+  const releaseSortDir = sort.field === "release" ? sort.dir : "desc";
+  const scoreSortDir = sort.field === "score" ? sort.dir : "off";
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -61,19 +63,6 @@ export function SeriesPage() {
     if (debouncedSearch.length >= 2) search(debouncedSearch);
     else reset();
   }, [debouncedSearch, activeTab, search, reset]);
-
-  useEffect(() => {
-    if (!filtersOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setFiltersOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [filtersOpen]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -136,10 +125,15 @@ export function SeriesPage() {
     }
   }, [findByTmdbId, updateEntry]);
 
+  const toggleLibraryFilter = (status: SeriesLibraryStatus) =>
+    setLibraryFilter((prev) =>
+      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
+    );
+
   const librarySeriesCards = useMemo<SeriesCard[]>(() => {
-    const statusLibraryEntries = libraryFilter === "all"
+    const statusLibraryEntries = libraryFilter.length === 0
       ? libraryEntries.filter(entry => entry.status !== "dropped")
-      : libraryEntries.filter(entry => entry.status === libraryFilter || (libraryFilter === "plan_to_watch" && entry.isRewatching));
+      : libraryEntries.filter(entry => libraryFilter.some(f => entry.status === f) || (libraryFilter.includes("plan_to_watch") && entry.isRewatching));
 
     const searchTerm = librarySearch.trim().toLowerCase();
     const filteredLibraryEntries = searchTerm
@@ -173,7 +167,7 @@ export function SeriesPage() {
 
   const gridKey =
     activeTab === "library"
-      ? `library-${libraryFilter}-${releaseSortDir}-${scoreSortDir}-${librarySearch}`
+      ? `library-${libraryFilter.join(",")}-${sort.field}-${sort.dir}-${librarySearch}`
       : activeTab === "search"
       ? `search-${debouncedSearch}`
       : `popular-${selectedYear}-${selectedMonth}`;
@@ -226,86 +220,30 @@ export function SeriesPage() {
       )}
 
       {activeTab === "library" && (
-        <div className={styles.libraryControls}>
-          <div className={styles.searchWrapper}>
-            <SearchBar
-              value={librarySearch}
-              onChange={setLibrarySearch}
-              placeholder="Buscar na biblioteca..."
-            />
-          </div>
-          <button
-            type="button"
-            className={styles.filterToggle}
-            onClick={() => setFiltersOpen(true)}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 6h16M7 12h10M10 18h4" />
-            </svg>
-            <span>Filtros</span>
-          </button>
-          {displaySeries.length > 0 && (
-            <span className={styles.libraryCount}>
-              <span className={styles.libraryCountNum}>{displaySeries.length}</span>
-              <span className={styles.libraryCountWord}>
-                {displaySeries.length === 1 ? " resultado" : " resultados"}
-              </span>
-            </span>
-          )}
-          {filtersOpen && <div className={styles.filterOverlay} onClick={() => setFiltersOpen(false)} />}
-          <div className={`${styles.filterWrapper} ${filtersOpen ? styles.filterWrapperOpen : ""}`}>
-          <div className={styles.filterSheetHeader}>
-            <span>Filtros</span>
-            <button type="button" className={styles.filterSheetClose} onClick={() => setFiltersOpen(false)}>
-              ✕
-            </button>
-          </div>
-          <select
-            className={styles.filterSelect}
-            value={libraryFilter}
-            onChange={(e) => setLibraryFilter(e.target.value as SeriesLibraryStatus | "all")}
-          >
-            <option value="all">Todos</option>
-            {STATUS_OPTIONS.map(([status, label]) => (
-              <option key={status} value={status}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <button
-            className={styles.sortButton}
-            onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
-            title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
-          >
-            <span>Lançamento</span>
-            <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M5 12l7 7 7-7" />
-              </svg>
-            </span>
-          </button>
-          <button
-            className={`${styles.sortButton} ${scoreSortDir !== "off" ? styles.sortButtonActive : ""}`}
-            onClick={() => setScoreSortDir(nextScoreSortDir(scoreSortDir))}
-            title={
-              scoreSortDir === "off"
-                ? "Ordenar por nota"
-                : scoreSortDir === "desc"
-                ? "Maior nota primeiro"
-                : "Menor nota primeiro"
-            }
-          >
-            <span>Nota</span>
-            {scoreSortDir !== "off" && (
-              <span className={`${styles.sortIcon} ${scoreSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
-              </span>
-            )}
-          </button>
-          </div>
-        </div>
+        <LibraryControls
+          searchValue={librarySearch}
+          onSearchChange={setLibrarySearch}
+          count={displaySeries.length}
+          filterGroups={[
+            {
+              key: "status",
+              title: "Status",
+              options: STATUS_OPTIONS.map(([value, label]) => ({ value, label })),
+              selected: libraryFilter,
+              onToggle: (v) => toggleLibraryFilter(v as SeriesLibraryStatus),
+            },
+          ]}
+          onClearFilters={() => setLibraryFilter([])}
+          sort={{
+            active: sort.field,
+            dir: sort.dir,
+            options: [
+              { field: "release", label: "Lançamento" },
+              { field: "score", label: "Nota" },
+            ],
+            onSelect: sort.select,
+          }}
+        />
       )}
 
       <MediaGrid
