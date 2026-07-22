@@ -5,7 +5,6 @@ import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { GameDrawer } from "../../components/GameDrawer/GameDrawer";
 import { GameLibraryModal } from "../../components/GameLibraryModal/GameLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
-import { ResultCount } from "../../components/ResultCount/ResultCount";
 import { gameCardConfig } from "../../config/cards";
 import { useGames } from "../../hooks/useGames";
 import { useGameLibrary } from "../../hooks/useGameLibrary";
@@ -196,13 +195,6 @@ export function GamesPage() {
               </option>
             ))}
           </select>
-          {games.length > 0 && <ResultCount count={games.length} />}
-        </div>
-      )}
-
-      {activeTab === "upcoming" && games.length > 0 && (
-        <div className={styles.countBar}>
-          <ResultCount count={games.length} />
         </div>
       )}
 
@@ -214,7 +206,6 @@ export function GamesPage() {
             loading={loading && searchQuery.length > 0}
             placeholder="Buscar jogo..."
           />
-          {games.length > 0 && <ResultCount count={games.length} />}
         </div>
       )}
 

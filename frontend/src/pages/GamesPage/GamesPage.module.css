@@ -25,12 +25,6 @@
   gap: var(--spacing-base);
 }
 
-.countBar {
-  margin-bottom: var(--spacing-xl);
-  display: flex;
-  align-items: center;
-}
-
 .selectorWrapper {
   margin-bottom: var(--spacing-xl);
   display: flex;

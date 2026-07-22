@@ -5,7 +5,6 @@ import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { MovieDrawer } from "../../components/MovieDrawer/MovieDrawer";
 import { MovieLibraryModal } from "../../components/MovieLibraryModal/MovieLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
-import { ResultCount } from "../../components/ResultCount/ResultCount";
 import { movieCardConfig } from "../../config/cards";
 import { useMovies } from "../../hooks/useMovies";
 import { useMovieLibrary } from "../../hooks/useMovieLibrary";
@@ -195,13 +194,6 @@ export function MoviesPage() {
               </option>
             ))}
           </select>
-          {movies.length > 0 && <ResultCount count={movies.length} />}
-        </div>
-      )}
-
-      {activeTab === "now_playing" && movies.length > 0 && (
-        <div className={styles.countBar}>
-          <ResultCount count={movies.length} />
         </div>
       )}
 
@@ -213,7 +205,6 @@ export function MoviesPage() {
             loading={loading && searchQuery.length > 0}
             placeholder="Buscar filme..."
           />
-          {movies.length > 0 && <ResultCount count={movies.length} />}
         </div>
       )}
 

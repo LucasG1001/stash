@@ -6,7 +6,6 @@ import { bookCardConfig } from "../../config/cards";
 import { BookDrawer } from "../../components/BookDrawer/BookDrawer";
 import { BookLibraryModal } from "../../components/BookLibraryModal/BookLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
-import { ResultCount } from "../../components/ResultCount/ResultCount";
 import { useBooks } from "../../hooks/useBooks";
 import { useBookLibrary } from "../../hooks/useBookLibrary";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -178,7 +177,6 @@ export function BooksPage() {
               </option>
             ))}
           </select>
-          {books.length > 0 && <ResultCount count={books.length} />}
         </div>
       )}
 
@@ -190,7 +188,6 @@ export function BooksPage() {
             loading={loading && searchQuery.length > 0}
             placeholder="Buscar livro..."
           />
-          {books.length > 0 && <ResultCount count={books.length} />}
         </div>
       )}
 

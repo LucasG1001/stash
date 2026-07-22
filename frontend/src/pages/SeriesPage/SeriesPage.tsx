@@ -5,7 +5,6 @@ import { seriesCardConfig } from "../../config/cards";
 import { SeriesDrawer } from "../../components/SeriesDrawer/SeriesDrawer";
 import { SeriesLibraryModal } from "../../components/SeriesLibraryModal/SeriesLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
-import { ResultCount } from "../../components/ResultCount/ResultCount";
 import { useSeries } from "../../hooks/useSeries";
 import { useSeriesLibrary } from "../../hooks/useSeriesLibrary";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -212,7 +211,6 @@ export function SeriesPage() {
               </option>
             ))}
           </select>
-          {displaySeries.length > 0 && <ResultCount count={displaySeries.length} />}
         </div>
       )}
 
@@ -224,7 +222,6 @@ export function SeriesPage() {
             loading={loading && searchQuery.length > 0}
             placeholder="Buscar série..."
           />
-          {displaySeries.length > 0 && <ResultCount count={displaySeries.length} />}
         </div>
       )}
 
