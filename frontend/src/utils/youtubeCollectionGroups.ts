@@ -53,7 +53,8 @@ export function applyStatusView(groups: YoutubeGroup[], status: YoutubeLibrarySt
         key: g.key,
         representative,
         members: [...ordered].reverse(),
-        count: ordered.length,
+        // Denominador = total da coleção (não muda); numerador = curtidos mostrados. Ex.: 3/4.
+        count: g.count,
         completedCount: ordered.length,
       });
     } else if (g.representative.status === "liked") {
