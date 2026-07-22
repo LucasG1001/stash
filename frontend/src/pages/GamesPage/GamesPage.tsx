@@ -136,12 +136,14 @@ export function GamesPage() {
     );
 
   const collectionGroups = useMemo(() => {
-    const memberFilter = (m: GameLibraryEntry) =>
-      libraryFilter.length === 0 ||
-      libraryFilter.includes(m.status as GameLibraryStatus) ||
-      (libraryFilter.includes("plan_to_play") && m.isRewatching);
+    const hasFilter = libraryFilter.length > 0;
+    const memberFilter = hasFilter
+      ? (m: GameLibraryEntry) =>
+          libraryFilter.includes(m.status as GameLibraryStatus) ||
+          (libraryFilter.includes("plan_to_play") && m.isRewatching)
+      : undefined;
     let groups = buildGameCollectionGroups(libraryEntries, memberFilter);
-    if (libraryFilter.length === 0) {
+    if (!hasFilter) {
       groups = groups.filter((g) => g.members.some((m) => m.status !== "dropped"));
     }
     groups =

@@ -21,7 +21,6 @@ export function buildMovieCollectionGroups(
   return buildCollectionGroups(entries, {
     getKey: (e) => (e.collectionId != null ? `collection-${e.collectionId}` : `single-${e.tmdbId}`),
     compareMembers: byChronology,
-    isCompleted: (m) => m.status === "watched",
     memberFilter,
   });
 }

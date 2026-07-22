@@ -135,12 +135,14 @@ export function MoviesPage() {
     );
 
   const collectionGroups = useMemo(() => {
-    const memberFilter = (m: MovieLibraryEntry) =>
-      libraryFilter.length === 0 ||
-      libraryFilter.includes(m.status as MovieLibraryStatus) ||
-      (libraryFilter.includes("plan_to_watch") && m.isRewatching);
+    const hasFilter = libraryFilter.length > 0;
+    const memberFilter = hasFilter
+      ? (m: MovieLibraryEntry) =>
+          libraryFilter.includes(m.status as MovieLibraryStatus) ||
+          (libraryFilter.includes("plan_to_watch") && m.isRewatching)
+      : undefined;
     let groups = buildMovieCollectionGroups(libraryEntries, memberFilter);
-    if (libraryFilter.length === 0) {
+    if (!hasFilter) {
       groups = groups.filter((g) => g.members.some((m) => m.status !== "dropped"));
     }
     groups =

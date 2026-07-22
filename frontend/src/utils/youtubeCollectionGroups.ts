@@ -25,7 +25,6 @@ export function buildYoutubeCollectionGroups(entries: YoutubeLibraryEntry[]): Yo
   return buildCollectionGroups(entries, {
     getKey: (e) => (e.collectionId != null ? `collection-${e.collectionId}` : `single-${e.videoId}`),
     compareMembers: byPublishedAsc,
-    isCompleted: (m) => m.status === "liked",
   });
 }
 

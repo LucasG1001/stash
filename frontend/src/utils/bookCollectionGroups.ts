@@ -34,7 +34,6 @@ export function buildBookCollectionGroups(
       return author ? `author-${author}` : `single-${e.googleBooksId}`;
     },
     compareMembers: byChronology,
-    isCompleted: (m) => m.status === "read",
     reverseMembers: false,
     memberFilter,
   });

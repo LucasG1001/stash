@@ -150,13 +150,16 @@ export function AnimePage() {
     );
 
   const franchiseGroups = useMemo(() => {
-    const memberFilter = (m: LibraryEntry) =>
-      (libraryFilter.length === 0 ||
-        libraryFilter.includes(m.status as LibraryStatus) ||
-        (libraryFilter.includes("plan_to_watch") && m.isRewatching)) &&
-      (airingFilter.length === 0 || (m.animeStatus != null && airingFilter.includes(m.animeStatus)));
+    const hasFilter = libraryFilter.length > 0 || airingFilter.length > 0;
+    const memberFilter = hasFilter
+      ? (m: LibraryEntry) =>
+          (libraryFilter.length === 0 ||
+            libraryFilter.includes(m.status as LibraryStatus) ||
+            (libraryFilter.includes("plan_to_watch") && m.isRewatching)) &&
+          (airingFilter.length === 0 || (m.animeStatus != null && airingFilter.includes(m.animeStatus)))
+      : undefined;
     let groups = buildFranchiseGroups(libraryEntries, memberFilter);
-    if (libraryFilter.length === 0) {
+    if (!hasFilter) {
       groups = groups.filter((g) => g.members.some((m) => m.status !== "dropped"));
     }
     groups =

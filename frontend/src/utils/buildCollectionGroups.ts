@@ -9,7 +9,6 @@ export interface CollectionGroup<T> {
 export interface BuildGroupsConfig<T> {
   getKey: (entry: T) => string;
   compareMembers: (a: T, b: T) => number;
-  isCompleted: (entry: T) => boolean;
   reverseMembers?: boolean;
   // Quando presente, cada coleção é reduzida aos membros que passam no filtro
   // (recalculando capa/contagem); coleções sem nenhum membro que passa somem.
@@ -24,7 +23,7 @@ export function buildCollectionGroups<T extends { isCover?: boolean }>(
   entries: T[],
   config: BuildGroupsConfig<T>
 ): CollectionGroup<T>[] {
-  const { getKey, compareMembers, isCompleted, reverseMembers = true, memberFilter } = config;
+  const { getKey, compareMembers, reverseMembers = true, memberFilter } = config;
 
   const map = new Map<string, T[]>();
   for (const entry of entries) {
@@ -36,16 +35,20 @@ export function buildCollectionGroups<T extends { isCover?: boolean }>(
 
   const groups: CollectionGroup<T>[] = [];
   map.forEach((members, key) => {
-    let ordered = [...members].sort(compareMembers);
-    if (memberFilter) ordered = ordered.filter(memberFilter);
-    if (ordered.length === 0) return;
-    const completedCount = ordered.filter(isCompleted).length;
+    const ordered = [...members].sort(compareMembers);
+    // `shown` = subconjunto que aparece (capa/expansão) quando há filtro; sem
+    // filtro, todos. `count` é SEMPRE o total da coleção (denominador não muda);
+    // com filtro, `completedCount` (numerador) vira a quantidade que bate.
+    const shown = memberFilter ? ordered.filter(memberFilter) : ordered;
+    if (shown.length === 0) return;
     groups.push({
       key,
-      representative: pickRepresentative(ordered),
-      members: reverseMembers ? [...ordered].reverse() : ordered,
+      representative: pickRepresentative(shown),
+      members: reverseMembers ? [...shown].reverse() : shown,
       count: ordered.length,
-      completedCount,
+      // Numerador = quantidade mostrada: total quando sem filtro (ex.: 6/6),
+      // ou a quantidade que bate no filtro (ex.: 3/6).
+      completedCount: shown.length,
     });
   });
 

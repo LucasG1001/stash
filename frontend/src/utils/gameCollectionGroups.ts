@@ -21,7 +21,6 @@ export function buildGameCollectionGroups(
   return buildCollectionGroups(entries, {
     getKey: (e) => (e.collectionId != null ? `collection-${e.collectionId}` : `single-${e.igdbId}`),
     compareMembers: byChronology,
-    isCompleted: (m) => m.status === "beaten",
     memberFilter,
   });
 }

@@ -21,7 +21,6 @@ export function buildFranchiseGroups(
   return buildCollectionGroups(entries, {
     getKey: (e) => (e.franchiseId != null ? `franchise-${e.franchiseId}` : `single-${e.anilistId}`),
     compareMembers: byChronology,
-    isCompleted: (m) => m.status === "watched",
     memberFilter,
   });
 }

@@ -131,10 +131,12 @@ export function BooksPage() {
     );
 
   const collectionGroups = useMemo(() => {
-    const memberFilter = (m: BookLibraryEntry) =>
-      libraryFilter.length === 0 || libraryFilter.includes(m.status as BookLibraryStatus);
+    const hasFilter = libraryFilter.length > 0;
+    const memberFilter = hasFilter
+      ? (m: BookLibraryEntry) => libraryFilter.includes(m.status as BookLibraryStatus)
+      : undefined;
     let groups = buildBookCollectionGroups(libraryEntries, memberFilter);
-    if (libraryFilter.length === 0) {
+    if (!hasFilter) {
       groups = groups.filter((g) => g.members.some((m) => m.status !== "dropped"));
     }
     groups =
