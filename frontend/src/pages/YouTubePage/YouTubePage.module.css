@@ -226,6 +226,23 @@
     flex: 1 1 auto;
   }
 
+  .libraryControls .searchWrapper {
+    order: 1;
+  }
+
+  .filterWrapper {
+    order: 2;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+  }
+
+  .libraryControls > span {
+    order: 3;
+    flex: 1 1 100%;
+    margin-left: 0;
+    text-align: right;
+  }
+
   .filterSelect {
     flex: 1 1 0;
     min-width: 0;

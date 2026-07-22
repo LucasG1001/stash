@@ -164,13 +164,16 @@
     order: 1;
   }
 
-  .libraryControls > span {
+  .libraryControls .filterWrapper {
     order: 2;
+    flex: 1 1 100%;
   }
 
-  .libraryControls .filterWrapper {
+  .libraryControls > span {
     order: 3;
     flex: 1 1 100%;
+    margin-left: 0;
+    text-align: right;
   }
 
   .seasonSelect {
@@ -181,19 +184,13 @@
     flex-wrap: nowrap;
   }
 
-  .filterWrapper .seasonSelect,
-  .filterWrapper .sortButton {
+  .filterWrapper .seasonSelect {
     flex: 1 1 0;
     min-width: 0;
     width: auto;
   }
 
   .filterWrapper .sortButton {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .filterWrapper .sortButton:last-child {
-    flex: 0 0 auto;
+    display: none;
   }
 }

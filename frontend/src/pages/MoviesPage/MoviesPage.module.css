@@ -172,31 +172,30 @@
     order: 1;
   }
 
-  .libraryControls > span {
-    order: 2;
-  }
-
   .libraryControls .filterWrapper {
-    order: 3;
+    order: 2;
     flex: 1 1 100%;
   }
 
+  .libraryControls > span {
+    order: 3;
+    flex: 1 1 100%;
+    margin-left: 0;
+    text-align: right;
+  }
+
   .filterWrapper {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
 
   .filterSelect,
   .sortButton {
-    flex: 1 1 0;
+    flex: 1 1 auto;
     min-width: 0;
   }
 
   .sortButton {
     padding-left: 10px;
     padding-right: 10px;
-  }
-
-  .filterWrapper .sortButton:last-child {
-    flex: 0 0 auto;
   }
 }
