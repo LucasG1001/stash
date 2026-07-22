@@ -33,31 +33,20 @@ export function applyStatusView(groups: YoutubeGroup[], status: YoutubeLibrarySt
   for (const g of groups) {
     const isCollection = g.representative.collectionId != null;
 
-    if (status === "removed") {
-      // Coleção com ao menos um removido aparece inteira; avulso só se for removido.
-      if (isCollection) {
-        if (g.members.some((m) => m.status === "removed")) result.push(g);
-      } else if (g.representative.status === "removed") {
-        result.push(g);
-      }
-      continue;
-    }
-
-    // status === "liked": esconder membros removidos das coleções.
+    // Coleção reduz aos membros da aba ativa (curtidos/removidos); denominador =
+    // total da coleção (não muda), numerador = quantidade mostrada. Ex.: 3/4, 1/4.
     if (isCollection) {
-      const liked = g.members.filter((m) => m.status === "liked");
-      if (liked.length === 0) continue;
-      const ordered = [...liked].sort(byPublishedAsc);
-      const representative = pickRepresentative(ordered);
+      const matched = g.members.filter((m) => m.status === status);
+      if (matched.length === 0) continue;
+      const ordered = [...matched].sort(byPublishedAsc);
       result.push({
         key: g.key,
-        representative,
+        representative: pickRepresentative(ordered),
         members: [...ordered].reverse(),
-        // Denominador = total da coleção (não muda); numerador = curtidos mostrados. Ex.: 3/4.
         count: g.count,
         completedCount: ordered.length,
       });
-    } else if (g.representative.status === "liked") {
+    } else if (g.representative.status === status) {
       result.push(g);
     }
   }
