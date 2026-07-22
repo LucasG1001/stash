@@ -51,11 +51,48 @@
   flex: 0 1 auto;
 }
 
+.sortWrapper {
+  margin-bottom: var(--spacing-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.libraryControls .sortWrapper {
+  margin-bottom: 0;
+  flex: 0 1 auto;
+}
+
 .filterToggle,
+.sortToggle,
 .filterOverlay,
 .filterSheetHeader,
 .filterSheetClose {
   display: none;
+}
+
+.inlineFilters {
+  display: contents;
+}
+
+.checkboxFilters {
+  display: none;
+}
+
+.clearButton {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.clearButton:disabled {
+  color: var(--color-text-tertiary);
+  cursor: default;
 }
 
 .libraryCount {
@@ -180,16 +217,17 @@
   }
 
   .libraryControls {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
 
   .libraryControls .searchWrapper {
-    flex: 1 1 auto;
+    flex: 1 1 100%;
     min-width: 0;
     order: 1;
   }
 
-  .filterToggle {
+  .filterToggle,
+  .sortToggle {
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-sm);
@@ -209,7 +247,7 @@
   .libraryCount {
     order: 3;
     flex: 0 0 auto;
-    margin-left: 0;
+    margin-left: auto;
     padding: 8px 12px;
     border-radius: var(--radius-sm);
     background: var(--color-bg-card);
@@ -229,7 +267,8 @@
     z-index: 200;
   }
 
-  .libraryControls .filterWrapper {
+  .libraryControls .filterWrapper,
+  .libraryControls .sortWrapper {
     position: fixed;
     left: 0;
     right: 0;
@@ -250,7 +289,8 @@
     flex-wrap: nowrap;
   }
 
-  .libraryControls .filterWrapperOpen {
+  .libraryControls .filterWrapperOpen,
+  .libraryControls .sortWrapperOpen {
     transform: translateY(0);
   }
 
@@ -279,9 +319,58 @@
   }
 
   .filterWrapper .seasonSelect,
-  .filterWrapper .sortButton {
+  .sortWrapper .sortButton {
     width: 100%;
     flex: none;
     justify-content: center;
+  }
+
+  .inlineFilters {
+    display: none;
+  }
+
+  .checkboxFilters {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-base);
+  }
+
+  .filterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .filterGroupTitle {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .checkboxRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  .checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-base);
+    cursor: pointer;
+  }
+
+  .checkbox input {
+    accent-color: var(--color-accent);
+    cursor: pointer;
+    margin: 0;
   }
 }
