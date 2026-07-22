@@ -1,5 +1,3 @@
-import { compareByScore, type ScoreSortDir } from "./librarySort";
-
 export interface CollectionGroup<T> {
   key: string;
   representative: T;
@@ -13,6 +11,9 @@ export interface BuildGroupsConfig<T> {
   compareMembers: (a: T, b: T) => number;
   isCompleted: (entry: T) => boolean;
   reverseMembers?: boolean;
+  // Quando presente, cada coleção é reduzida aos membros que passam no filtro
+  // (recalculando capa/contagem); coleções sem nenhum membro que passa somem.
+  memberFilter?: (entry: T) => boolean;
 }
 
 export function pickRepresentative<T extends { isCover?: boolean }>(ordered: T[]): T {
@@ -23,7 +24,7 @@ export function buildCollectionGroups<T extends { isCover?: boolean }>(
   entries: T[],
   config: BuildGroupsConfig<T>
 ): CollectionGroup<T>[] {
-  const { getKey, compareMembers, isCompleted, reverseMembers = true } = config;
+  const { getKey, compareMembers, isCompleted, reverseMembers = true, memberFilter } = config;
 
   const map = new Map<string, T[]>();
   for (const entry of entries) {
@@ -35,7 +36,9 @@ export function buildCollectionGroups<T extends { isCover?: boolean }>(
 
   const groups: CollectionGroup<T>[] = [];
   map.forEach((members, key) => {
-    const ordered = [...members].sort(compareMembers);
+    let ordered = [...members].sort(compareMembers);
+    if (memberFilter) ordered = ordered.filter(memberFilter);
+    if (ordered.length === 0) return;
     const completedCount = ordered.filter(isCompleted).length;
     groups.push({
       key,
@@ -47,12 +50,4 @@ export function buildCollectionGroups<T extends { isCover?: boolean }>(
   });
 
   return groups;
-}
-
-export function sortGroupsByScore<T extends { score: number }>(
-  groups: CollectionGroup<T>[],
-  scoreSortDir: Exclude<ScoreSortDir, "off">
-): CollectionGroup<T>[] {
-  const groupScore = (g: CollectionGroup<T>) => g.members.reduce((max, m) => Math.max(max, m.score), 0);
-  return groups.sort((a, b) => compareByScore({ score: groupScore(a) }, { score: groupScore(b) }, scoreSortDir));
 }

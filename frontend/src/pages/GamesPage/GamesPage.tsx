@@ -12,14 +12,14 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useSingleSort } from "../../hooks/useSingleSort";
 import { LibraryControls } from "../../components/LibraryControls/LibraryControls";
 import type { GameCard, GameDetail } from "../../types/game";
-import type { GameLibraryStatus } from "../../types/gameLibrary";
+import type { GameLibraryStatus, GameLibraryEntry } from "../../types/gameLibrary";
 import { GAME_LIBRARY_STATUS_LABELS } from "../../types/gameLibrary";
 import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
-import { buildGameCollectionGroups } from "../../utils/gameCollectionGroups";
+import { buildGameCollectionGroups, releaseTimeOf } from "../../utils/gameCollectionGroups";
 import { gameLibraryEntryToCard } from "../../utils/gameLibraryEntryToCard";
-import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
 import { filterGroupsBySearch } from "../../utils/filterGroupsBySearch";
+import { sortGroupsByAvgScore, sortGroupsByMemberDate } from "../../utils/sortGroups";
 import styles from "./GamesPage.module.css";
 
 const TABS = [
@@ -39,8 +39,6 @@ export function GamesPage() {
   const [selectedGameForModal, setSelectedGameForModal] = useState<GameCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<GameLibraryStatus[]>([]);
   const sort = useSingleSort("release");
-  const releaseSortDir = sort.field === "release" ? sort.dir : "desc";
-  const scoreSortDir = sort.field === "score" ? sort.dir : "off";
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -137,14 +135,21 @@ export function GamesPage() {
       prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
     );
 
-  const collectionGroups = useMemo(() => filterGroupsBySearch(
-    filterGroupsByStatus(
-      buildGameCollectionGroups(libraryEntries, scoreSortDir, releaseSortDir),
-      libraryFilter,
-      (member, filter) => filter === "plan_to_play" && member.isRewatching
-    ),
-    librarySearch
-  ), [libraryEntries, scoreSortDir, releaseSortDir, libraryFilter, librarySearch]);
+  const collectionGroups = useMemo(() => {
+    const memberFilter = (m: GameLibraryEntry) =>
+      libraryFilter.length === 0 ||
+      libraryFilter.includes(m.status as GameLibraryStatus) ||
+      (libraryFilter.includes("plan_to_play") && m.isRewatching);
+    let groups = buildGameCollectionGroups(libraryEntries, memberFilter);
+    if (libraryFilter.length === 0) {
+      groups = groups.filter((g) => g.members.some((m) => m.status !== "dropped"));
+    }
+    groups =
+      sort.field === "score"
+        ? sortGroupsByAvgScore(groups, sort.dir)
+        : sortGroupsByMemberDate(groups, releaseTimeOf, sort.dir);
+    return filterGroupsBySearch(groups, librarySearch);
+  }, [libraryEntries, libraryFilter, sort.field, sort.dir, librarySearch]);
 
   const gridKey =
     activeTab === "library"

@@ -1,9 +1,3 @@
-export type ScoreSortDir = "off" | "desc" | "asc";
-
-export function nextScoreSortDir(dir: ScoreSortDir): ScoreSortDir {
-  return dir === "off" ? "desc" : dir === "desc" ? "asc" : "off";
-}
-
 export function compareByScore<T extends { score: number }>(
   a: T,
   b: T,

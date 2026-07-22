@@ -7,9 +7,17 @@ import { LibraryControls } from "../../components/LibraryControls/LibraryControl
 import { youtubeCardConfig } from "../../config/cards";
 import { useYoutubeLibrary } from "../../hooks/useYoutubeLibrary";
 import { useYoutubeCollections } from "../../hooks/useYoutubeCollections";
+import { useSingleSort } from "../../hooks/useSingleSort";
 import type { YoutubeCard, YoutubeLibraryStatus } from "../../types/youtubeLibrary";
 import { YOUTUBE_LIBRARY_STATUS_LABELS } from "../../types/youtubeLibrary";
-import { buildYoutubeCollectionGroups, applyStatusView, type YoutubeGroup } from "../../utils/youtubeCollectionGroups";
+import {
+  buildYoutubeCollectionGroups,
+  applyStatusView,
+  videoDateOf,
+  viewsOf,
+  type YoutubeGroup,
+} from "../../utils/youtubeCollectionGroups";
+import { sortGroupsByName, sortGroupsByMemberDate, sortGroupsBySumViews } from "../../utils/sortGroups";
 import { youtubeLibraryEntryToCard } from "../../utils/youtubeLibraryEntryToCard";
 import { formatDurationLong } from "../../utils/formatDuration";
 import { formatViews } from "../../utils/formatViews";
@@ -37,6 +45,7 @@ export function YouTubePage() {
   const [addNotice, setAddNotice] = useState<string | null>(null);
   const [drawerVideoId, setDrawerVideoId] = useState<string | null>(null);
   const [modalVideoId, setModalVideoId] = useState<string | null>(null);
+  const sort = useSingleSort("alpha", "asc");
 
   const {
     entries,
@@ -115,20 +124,19 @@ export function YouTubePage() {
   }
   groups = applyStatusView(groups, activeStatus);
   groups = groups.filter((g) => matchesSearch(g, search));
-  // Coleções em ordem alfabética (por nome); avulsos mantêm a ordem (depois das coleções).
-  groups = [...groups].sort((a, b) => {
-    const aColl = a.representative.collectionId;
-    const bColl = b.representative.collectionId;
-    if ((aColl != null) !== (bColl != null)) return aColl != null ? -1 : 1;
-    if (aColl != null && bColl != null) {
-      const an = (collections.byId.get(aColl) ?? "").toLowerCase();
-      const bn = (collections.byId.get(bColl) ?? "").toLowerCase();
-      return an.localeCompare(bn, "pt");
-    }
-    return 0;
-  });
 
-  const gridKey = `${activeStatus}-${collectionFilter.join(",")}-${search}`;
+  const nameOf = (g: YoutubeGroup) => {
+    const cid = g.representative.collectionId;
+    return cid != null ? collections.byId.get(cid) ?? "" : g.representative.title;
+  };
+  groups =
+    sort.field === "views"
+      ? sortGroupsBySumViews(groups, viewsOf, sort.dir)
+      : sort.field === "date"
+      ? sortGroupsByMemberDate(groups, videoDateOf, sort.dir)
+      : sortGroupsByName(groups, nameOf, sort.dir);
+
+  const gridKey = `${activeStatus}-${collectionFilter.join(",")}-${sort.field}-${sort.dir}-${search}`;
 
   const drawerEntry = drawerVideoId ? findByVideoId(drawerVideoId) : undefined;
   const modalEntry = modalVideoId ? findByVideoId(modalVideoId) : undefined;
@@ -182,6 +190,16 @@ export function YouTubePage() {
             : []
         }
         onClearFilters={() => setCollectionFilter([])}
+        sort={{
+          active: sort.field,
+          dir: sort.dir,
+          options: [
+            { field: "alpha", label: "Alfabética" },
+            { field: "date", label: "Data" },
+            { field: "views", label: "Visualizações" },
+          ],
+          onSelect: sort.select,
+        }}
       />
 
       <FranchiseGrid

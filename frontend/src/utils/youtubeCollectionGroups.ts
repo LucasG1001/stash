@@ -3,12 +3,17 @@ import type { YoutubeLibraryEntry, YoutubeLibraryStatus } from "../types/youtube
 
 export type YoutubeGroup = CollectionGroup<YoutubeLibraryEntry>;
 
-function addedTime(entry: YoutubeLibraryEntry): number {
-  return entry.createdAt ? new Date(entry.createdAt).getTime() : 0;
-}
-
 function publishedTime(entry: YoutubeLibraryEntry): number {
   return entry.publishedAt ? new Date(entry.publishedAt).getTime() : 0;
+}
+
+// Para a ordenação por data: vídeo sem data não deve virar "o mais antigo".
+export function videoDateOf(entry: YoutubeLibraryEntry): number {
+  return entry.publishedAt ? new Date(entry.publishedAt).getTime() : Number.POSITIVE_INFINITY;
+}
+
+export function viewsOf(entry: YoutubeLibraryEntry): number {
+  return entry.viewCount ?? 0;
 }
 
 function byPublishedAsc(a: YoutubeLibraryEntry, b: YoutubeLibraryEntry): number {
@@ -17,19 +22,10 @@ function byPublishedAsc(a: YoutubeLibraryEntry, b: YoutubeLibraryEntry): number 
 }
 
 export function buildYoutubeCollectionGroups(entries: YoutubeLibraryEntry[]): YoutubeGroup[] {
-  const groups = buildCollectionGroups(entries, {
+  return buildCollectionGroups(entries, {
     getKey: (e) => (e.collectionId != null ? `collection-${e.collectionId}` : `single-${e.videoId}`),
     compareMembers: byPublishedAsc,
     isCompleted: (m) => m.status === "liked",
-  });
-
-  const isCollection = (g: YoutubeGroup) => g.representative.collectionId != null;
-
-  // Coleções primeiro; avulsos depois (mais recentes primeiro). A ordenação
-  // alfabética das coleções (por nome) é aplicada na página, que conhece os nomes.
-  return groups.sort((a, b) => {
-    const collDiff = Number(isCollection(b)) - Number(isCollection(a));
-    return collDiff !== 0 ? collDiff : addedTime(b.representative) - addedTime(a.representative);
   });
 }
 

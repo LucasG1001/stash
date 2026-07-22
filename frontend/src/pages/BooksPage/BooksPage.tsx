@@ -12,13 +12,13 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useSingleSort } from "../../hooks/useSingleSort";
 import { LibraryControls } from "../../components/LibraryControls/LibraryControls";
 import type { BookCard, BookDetail } from "../../types/book";
-import type { BookLibraryStatus } from "../../types/bookLibrary";
+import type { BookLibraryStatus, BookLibraryEntry } from "../../types/bookLibrary";
 import { BOOK_LIBRARY_STATUS_LABELS } from "../../types/bookLibrary";
 import { BOOK_GENRES } from "../../utils/bookGenres";
-import { buildBookCollectionGroups, authorKey } from "../../utils/bookCollectionGroups";
+import { buildBookCollectionGroups, authorKey, pubTimeOf, readTimeOf } from "../../utils/bookCollectionGroups";
 import { bookLibraryEntryToCard } from "../../utils/bookLibraryEntryToCard";
-import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
 import { filterGroupsBySearch } from "../../utils/filterGroupsBySearch";
+import { sortGroupsByAvgScore, sortGroupsByMemberDate } from "../../utils/sortGroups";
 import styles from "./BooksPage.module.css";
 
 const TABS = [
@@ -37,9 +37,6 @@ export function BooksPage() {
   const [selectedBookForModal, setSelectedBookForModal] = useState<BookCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<BookLibraryStatus[]>([]);
   const sort = useSingleSort("published");
-  const scoreSortDir = sort.field === "score" ? sort.dir : "off";
-  const readSortDir = sort.field === "read" ? sort.dir : "desc";
-  const publishedSortDir = sort.field === "published" ? sort.dir : "desc";
   const [selectedGenre, setSelectedGenre] = useState(BOOK_GENRES[0].value);
   const debouncedSearch = useDebounce(searchQuery, 400);
 
@@ -133,13 +130,21 @@ export function BooksPage() {
       prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
     );
 
-  const collectionGroups = useMemo(() => filterGroupsBySearch(
-    filterGroupsByStatus(
-      buildBookCollectionGroups(libraryEntries, scoreSortDir, readSortDir, sort.field === "read", publishedSortDir),
-      libraryFilter
-    ),
-    librarySearch
-  ), [libraryEntries, scoreSortDir, readSortDir, publishedSortDir, sort.field, libraryFilter, librarySearch]);
+  const collectionGroups = useMemo(() => {
+    const memberFilter = (m: BookLibraryEntry) =>
+      libraryFilter.length === 0 || libraryFilter.includes(m.status as BookLibraryStatus);
+    let groups = buildBookCollectionGroups(libraryEntries, memberFilter);
+    if (libraryFilter.length === 0) {
+      groups = groups.filter((g) => g.members.some((m) => m.status !== "dropped"));
+    }
+    groups =
+      sort.field === "score"
+        ? sortGroupsByAvgScore(groups, sort.dir)
+        : sort.field === "read"
+        ? sortGroupsByMemberDate(groups, readTimeOf, sort.dir, "latest")
+        : sortGroupsByMemberDate(groups, pubTimeOf, sort.dir);
+    return filterGroupsBySearch(groups, librarySearch);
+  }, [libraryEntries, libraryFilter, sort.field, sort.dir, librarySearch]);
 
   const gridKey =
     activeTab === "library"

@@ -1,5 +1,4 @@
-import { buildCollectionGroups, sortGroupsByScore, type CollectionGroup } from "./buildCollectionGroups";
-import { type ScoreSortDir } from "./librarySort";
+import { buildCollectionGroups, type CollectionGroup } from "./buildCollectionGroups";
 import type { BookLibraryEntry } from "../types/bookLibrary";
 
 export type BookGroup = CollectionGroup<BookLibraryEntry>;
@@ -10,33 +9,26 @@ export function authorKey(entry: BookLibraryEntry): string | null {
   return first || null;
 }
 
-function pubTime(entry: BookLibraryEntry): number {
+export function pubTimeOf(entry: BookLibraryEntry): number {
   return entry.publishedDate ? new Date(entry.publishedDate).getTime() : Number.POSITIVE_INFINITY;
 }
 
+export function readTimeOf(entry: BookLibraryEntry): number {
+  return entry.readAt ? new Date(entry.readAt).getTime() : 0;
+}
+
 function byChronology(a: BookLibraryEntry, b: BookLibraryEntry): number {
-  const ta = pubTime(a);
-  const tb = pubTime(b);
+  const ta = pubTimeOf(a);
+  const tb = pubTimeOf(b);
   if (ta !== tb) return ta - tb;
   return a.title.localeCompare(b.title);
 }
 
-function latestReadTime(members: BookLibraryEntry[]): number {
-  return members.reduce((max, m) => Math.max(max, m.readAt ? new Date(m.readAt).getTime() : 0), 0);
-}
-
-function repTime(entry: BookLibraryEntry): number {
-  return entry.publishedDate ? new Date(entry.publishedDate).getTime() : 0;
-}
-
 export function buildBookCollectionGroups(
   entries: BookLibraryEntry[],
-  scoreSortDir: ScoreSortDir,
-  readSortDir: "desc" | "asc",
-  readSort: boolean,
-  publishedSortDir: "desc" | "asc" = "desc"
+  memberFilter?: (entry: BookLibraryEntry) => boolean
 ): BookGroup[] {
-  const groups = buildCollectionGroups(entries, {
+  return buildCollectionGroups(entries, {
     getKey: (e) => {
       const author = authorKey(e);
       return author ? `author-${author}` : `single-${e.googleBooksId}`;
@@ -44,19 +36,6 @@ export function buildBookCollectionGroups(
     compareMembers: byChronology,
     isCompleted: (m) => m.status === "read",
     reverseMembers: false,
-  });
-
-  if (scoreSortDir !== "off") return sortGroupsByScore(groups, scoreSortDir);
-
-  if (readSort) {
-    return groups.sort((a, b) => {
-      const diff = latestReadTime(a.members) - latestReadTime(b.members);
-      return readSortDir === "desc" ? -diff : diff;
-    });
-  }
-
-  return groups.sort((a, b) => {
-    const diff = repTime(a.representative) - repTime(b.representative);
-    return publishedSortDir === "desc" ? -diff : diff;
+    memberFilter,
   });
 }

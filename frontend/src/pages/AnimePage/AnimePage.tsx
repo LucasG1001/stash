@@ -13,15 +13,14 @@ import { useSingleSort } from "../../hooks/useSingleSort";
 import { LibraryControls } from "../../components/LibraryControls/LibraryControls";
 import type { AnimeCard } from "../../types/anime";
 import type { AnimeDetail } from "../../types/anime";
-import type { LibraryStatus } from "../../types/library";
+import type { LibraryStatus, LibraryEntry } from "../../types/library";
 import { LIBRARY_STATUS_LABELS } from "../../types/library";
 import { SEASON_PT, getCurrentRealSeason, getSurroundingSeasons } from "../../utils/season";
 import { getRecentYears } from "../../utils/year";
-import { buildFranchiseGroups } from "../../utils/franchiseGroups";
+import { buildFranchiseGroups, seasonYearOf } from "../../utils/franchiseGroups";
 import { libraryEntryToCard } from "../../utils/libraryEntryToCard";
-import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
-import { filterGroupsByAiringStatus } from "../../utils/filterGroupsByAiringStatus";
 import { filterGroupsBySearch } from "../../utils/filterGroupsBySearch";
+import { sortGroupsByAvgScore, sortGroupsByMemberDate } from "../../utils/sortGroups";
 import styles from "./AnimePage.module.css";
 
 const TABS = [
@@ -48,8 +47,6 @@ export function AnimePage() {
   const [libraryFilter, setLibraryFilter] = useState<LibraryStatus[]>([]);
   const [airingFilter, setAiringFilter] = useState<string[]>([]);
   const sort = useSingleSort("release");
-  const releaseSortDir = sort.field === "release" ? sort.dir : "desc";
-  const scoreSortDir = sort.field === "score" ? sort.dir : "off";
   const [selectedSeasonObj, setSelectedSeasonObj] = useState(getCurrentRealSeason());
   const [selectedPopularYear, setSelectedPopularYear] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -153,15 +150,21 @@ export function AnimePage() {
     );
 
   const franchiseGroups = useMemo(() => {
-    const base = buildFranchiseGroups(libraryEntries, releaseSortDir, scoreSortDir);
-    const byStatus = filterGroupsByStatus(
-      base,
-      libraryFilter,
-      (member, filter) => filter === "plan_to_watch" && member.isRewatching
-    );
-    const byAiring = filterGroupsByAiringStatus(byStatus, airingFilter);
-    return filterGroupsBySearch(byAiring, librarySearch);
-  }, [libraryEntries, releaseSortDir, scoreSortDir, libraryFilter, airingFilter, librarySearch]);
+    const memberFilter = (m: LibraryEntry) =>
+      (libraryFilter.length === 0 ||
+        libraryFilter.includes(m.status as LibraryStatus) ||
+        (libraryFilter.includes("plan_to_watch") && m.isRewatching)) &&
+      (airingFilter.length === 0 || (m.animeStatus != null && airingFilter.includes(m.animeStatus)));
+    let groups = buildFranchiseGroups(libraryEntries, memberFilter);
+    if (libraryFilter.length === 0) {
+      groups = groups.filter((g) => g.members.some((m) => m.status !== "dropped"));
+    }
+    groups =
+      sort.field === "score"
+        ? sortGroupsByAvgScore(groups, sort.dir)
+        : sortGroupsByMemberDate(groups, seasonYearOf, sort.dir);
+    return filterGroupsBySearch(groups, librarySearch);
+  }, [libraryEntries, libraryFilter, airingFilter, sort.field, sort.dir, librarySearch]);
 
   const gridKey =
     activeTab === "library"

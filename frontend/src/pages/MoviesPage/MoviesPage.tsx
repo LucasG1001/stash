@@ -12,14 +12,14 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useSingleSort } from "../../hooks/useSingleSort";
 import { LibraryControls } from "../../components/LibraryControls/LibraryControls";
 import type { MovieCard, MovieDetail } from "../../types/movie";
-import type { MovieLibraryStatus } from "../../types/movieLibrary";
+import type { MovieLibraryStatus, MovieLibraryEntry } from "../../types/movieLibrary";
 import { MOVIE_LIBRARY_STATUS_LABELS } from "../../types/movieLibrary";
 import { MONTH_PT } from "../../utils/month";
 import { getCurrentYear, getRecentYears } from "../../utils/year";
-import { buildMovieCollectionGroups } from "../../utils/movieCollectionGroups";
+import { buildMovieCollectionGroups, releaseTimeOf } from "../../utils/movieCollectionGroups";
 import { movieLibraryEntryToCard } from "../../utils/movieLibraryEntryToCard";
-import { filterGroupsByStatus } from "../../utils/filterGroupsByStatus";
 import { filterGroupsBySearch } from "../../utils/filterGroupsBySearch";
+import { sortGroupsByAvgScore, sortGroupsByMemberDate } from "../../utils/sortGroups";
 import styles from "./MoviesPage.module.css";
 
 const TABS = [
@@ -39,8 +39,6 @@ export function MoviesPage() {
   const [selectedMovieForModal, setSelectedMovieForModal] = useState<MovieCard | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<MovieLibraryStatus[]>([]);
   const sort = useSingleSort("release");
-  const releaseSortDir = sort.field === "release" ? sort.dir : "desc";
-  const scoreSortDir = sort.field === "score" ? sort.dir : "off";
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -136,14 +134,21 @@ export function MoviesPage() {
       prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
     );
 
-  const collectionGroups = useMemo(() => filterGroupsBySearch(
-    filterGroupsByStatus(
-      buildMovieCollectionGroups(libraryEntries, scoreSortDir, releaseSortDir),
-      libraryFilter,
-      (member, filter) => filter === "plan_to_watch" && member.isRewatching
-    ),
-    librarySearch
-  ), [libraryEntries, scoreSortDir, releaseSortDir, libraryFilter, librarySearch]);
+  const collectionGroups = useMemo(() => {
+    const memberFilter = (m: MovieLibraryEntry) =>
+      libraryFilter.length === 0 ||
+      libraryFilter.includes(m.status as MovieLibraryStatus) ||
+      (libraryFilter.includes("plan_to_watch") && m.isRewatching);
+    let groups = buildMovieCollectionGroups(libraryEntries, memberFilter);
+    if (libraryFilter.length === 0) {
+      groups = groups.filter((g) => g.members.some((m) => m.status !== "dropped"));
+    }
+    groups =
+      sort.field === "score"
+        ? sortGroupsByAvgScore(groups, sort.dir)
+        : sortGroupsByMemberDate(groups, releaseTimeOf, sort.dir);
+    return filterGroupsBySearch(groups, librarySearch);
+  }, [libraryEntries, libraryFilter, sort.field, sort.dir, librarySearch]);
 
   const gridKey =
     activeTab === "library"
