@@ -277,10 +277,12 @@ export function AnimePage() {
             className={styles.sortToggle}
             onClick={() => setSortOpen(true)}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 6h11M3 12h7M3 18h4M18 8v11m0 0l-3-3m3 3l3-3" />
-            </svg>
-            <span>Ordenação</span>
+            <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h11M3 12h7M3 18h4M18 8v11m0 0l-3-3m3 3l3-3" />
+              </svg>
+            </span>
+            <span>Lançamento</span>
           </button>
           {franchiseGroups.length > 0 && (
             <span className={styles.libraryCount}>
@@ -379,23 +381,44 @@ export function AnimePage() {
           </div>
           <div className={`${styles.sortWrapper} ${sortOpen ? styles.sortWrapperOpen : ""}`}>
             <div className={styles.filterSheetHeader}>
-              <span>Ordenação</span>
+              <span className={styles.filterGroupTitle}>Ordenação</span>
               <button type="button" className={styles.filterSheetClose} onClick={() => setSortOpen(false)}>
                 ✕
               </button>
             </div>
-            <button
-              className={styles.sortButton}
-              onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
-              title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
-            >
-              <span>Lançamento</span>
-              <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
-              </span>
-            </button>
+            <div className={styles.inlineFilters}>
+              <button
+                className={styles.sortButton}
+                onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
+                title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
+              >
+                <span>Lançamento</span>
+                <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 5v14M5 12l7 7 7-7" />
+                  </svg>
+                </span>
+              </button>
+            </div>
+            <div className={styles.checkboxFilters}>
+              <div className={styles.filterGroup}>
+                <div className={styles.checkboxRow}>
+                  <button
+                    type="button"
+                    className={`${styles.sortOption} ${styles.sortOptionActive}`}
+                    onClick={() => setReleaseSortDir((prev) => (prev === "desc" ? "asc" : "desc"))}
+                    title={releaseSortDir === "desc" ? "Mais recentes primeiro" : "Mais antigas primeiro"}
+                  >
+                    <span className={`${styles.sortIcon} ${releaseSortDir === "asc" ? styles.sortIconAsc : ""}`}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h11M3 12h7M3 18h4M18 8v11m0 0l-3-3m3 3l3-3" />
+                      </svg>
+                    </span>
+                    <span>Lançamento</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
