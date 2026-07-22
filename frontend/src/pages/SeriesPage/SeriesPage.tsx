@@ -34,6 +34,7 @@ export function SeriesPage() {
   const [libraryFilter, setLibraryFilter] = useState<SeriesLibraryStatus | "all">("all");
   const [releaseSortDir, setReleaseSortDir] = useState<"desc" | "asc">("desc");
   const [scoreSortDir, setScoreSortDir] = useState<ScoreSortDir>("off");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [selectedMonth, setSelectedMonth] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -61,6 +62,19 @@ export function SeriesPage() {
     if (debouncedSearch.length >= 2) search(debouncedSearch);
     else reset();
   }, [debouncedSearch, activeTab, search, reset]);
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFiltersOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [filtersOpen]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -223,7 +237,32 @@ export function SeriesPage() {
               placeholder="Buscar na biblioteca..."
             />
           </div>
-          <div className={styles.filterWrapper}>
+          <button
+            type="button"
+            className={styles.filterToggle}
+            onClick={() => setFiltersOpen(true)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 6h16M7 12h10M10 18h4" />
+            </svg>
+            <span>Filtros</span>
+          </button>
+          {displaySeries.length > 0 && (
+            <span className={styles.libraryCount}>
+              <span className={styles.libraryCountNum}>{displaySeries.length}</span>
+              <span className={styles.libraryCountWord}>
+                {displaySeries.length === 1 ? " resultado" : " resultados"}
+              </span>
+            </span>
+          )}
+          {filtersOpen && <div className={styles.filterOverlay} onClick={() => setFiltersOpen(false)} />}
+          <div className={`${styles.filterWrapper} ${filtersOpen ? styles.filterWrapperOpen : ""}`}>
+          <div className={styles.filterSheetHeader}>
+            <span>Filtros</span>
+            <button type="button" className={styles.filterSheetClose} onClick={() => setFiltersOpen(false)}>
+              ✕
+            </button>
+          </div>
           <select
             className={styles.filterSelect}
             value={libraryFilter}
@@ -269,7 +308,6 @@ export function SeriesPage() {
             )}
           </button>
           </div>
-          {displaySeries.length > 0 && <ResultCount count={displaySeries.length} />}
         </div>
       )}
 

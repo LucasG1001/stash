@@ -248,7 +248,14 @@ export function AnimePage() {
             </svg>
             <span>Filtros</span>
           </button>
-          {franchiseGroups.length > 0 && <ResultCount count={franchiseGroups.length} />}
+          {franchiseGroups.length > 0 && (
+            <span className={styles.libraryCount}>
+              <span className={styles.libraryCountNum}>{franchiseGroups.length}</span>
+              <span className={styles.libraryCountWord}>
+                {franchiseGroups.length === 1 ? " resultado" : " resultados"}
+              </span>
+            </span>
+          )}
           {filtersOpen && <div className={styles.filterOverlay} onClick={() => setFiltersOpen(false)} />}
           <div className={`${styles.filterWrapper} ${filtersOpen ? styles.filterWrapperOpen : ""}`}>
           <div className={styles.filterSheetHeader}>

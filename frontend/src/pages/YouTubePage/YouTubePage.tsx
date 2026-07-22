@@ -1,10 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { TabNav } from "../../components/TabNav/TabNav";
 import { FranchiseGrid } from "../../components/FranchiseGrid/FranchiseGrid";
 import { YoutubeDrawer } from "../../components/YoutubeDrawer/YoutubeDrawer";
 import { YoutubeLibraryModal } from "../../components/YoutubeLibraryModal/YoutubeLibraryModal";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
-import { ResultCount } from "../../components/ResultCount/ResultCount";
 import { youtubeCardConfig } from "../../config/cards";
 import { useYoutubeLibrary } from "../../hooks/useYoutubeLibrary";
 import { useYoutubeCollections } from "../../hooks/useYoutubeCollections";
@@ -38,6 +37,20 @@ export function YouTubePage() {
   const [addNotice, setAddNotice] = useState<string | null>(null);
   const [drawerVideoId, setDrawerVideoId] = useState<string | null>(null);
   const [modalVideoId, setModalVideoId] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFiltersOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [filtersOpen]);
 
   const {
     entries,
@@ -159,27 +172,55 @@ export function YouTubePage() {
         <div className={styles.searchWrapper}>
           <SearchBar value={search} onChange={setSearch} placeholder="Buscar por título ou canal..." />
         </div>
-        <div className={styles.filterWrapper}>
-          {collections.collections.length > 0 && (
-            <select
-              className={styles.filterSelect}
-              value={collectionFilter}
-              onChange={(e) => {
-                const v = e.target.value;
-                setCollectionFilter(v === "all" || v === "none" ? v : Number(v));
-              }}
-            >
-              <option value="all">Todas as coleções</option>
-              <option value="none">Sem coleção</option>
-              {collections.collections.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-        {groups.length > 0 && <ResultCount count={groups.length} />}
+        {collections.collections.length > 0 && (
+          <button
+            type="button"
+            className={styles.filterToggle}
+            onClick={() => setFiltersOpen(true)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 6h16M7 12h10M10 18h4" />
+            </svg>
+            <span>Filtros</span>
+          </button>
+        )}
+        {groups.length > 0 && (
+          <span className={styles.libraryCount}>
+            <span className={styles.libraryCountNum}>{groups.length}</span>
+            <span className={styles.libraryCountWord}>
+              {groups.length === 1 ? " resultado" : " resultados"}
+            </span>
+          </span>
+        )}
+        {collections.collections.length > 0 && (
+          <>
+            {filtersOpen && <div className={styles.filterOverlay} onClick={() => setFiltersOpen(false)} />}
+            <div className={`${styles.filterWrapper} ${filtersOpen ? styles.filterWrapperOpen : ""}`}>
+              <div className={styles.filterSheetHeader}>
+                <span>Filtros</span>
+                <button type="button" className={styles.filterSheetClose} onClick={() => setFiltersOpen(false)}>
+                  ✕
+                </button>
+              </div>
+              <select
+                className={styles.filterSelect}
+                value={collectionFilter}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setCollectionFilter(v === "all" || v === "none" ? v : Number(v));
+                }}
+              >
+                <option value="all">Todas as coleções</option>
+                <option value="none">Sem coleção</option>
+                {collections.collections.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
       </div>
 
       <FranchiseGrid
